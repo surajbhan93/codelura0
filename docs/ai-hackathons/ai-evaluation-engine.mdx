@@ -1,0 +1,177 @@
+# AI Evaluation Engine
+
+The CodeLura AI Evaluation Engine is designed to automate and enhance the hackathon judging process.
+
+It evaluates submissions using structured AI logic and mathematical similarity scoring.
+
+---
+
+## 🚀 Evaluation Criteria
+
+The AI engine evaluates submissions based on:
+
+- Code similarity (plagiarism detection)
+- Feature completeness
+- Documentation clarity
+- Problem relevance
+- Optional innovation scoring (AI-assisted)
+
+---
+
+## 🧠 Cosine Similarity System
+
+We use cosine similarity to measure how closely a submission matches:
+
+- The original problem statement
+- Other submissions (to detect duplication)
+- Expected feature vectors
+
+### 📐 Formula
+
+```
+
+Similarity = (A · B) / (||A|| ||B||)
+
+```
+
+Where:
+
+- A = Submission vector
+- B = Problem statement vector
+
+The result ranges between:
+
+- `1` → Highly similar
+- `0` → Completely different
+- `-1` → Opposite direction (rare in this context)
+
+---
+
+## 🔍 How Vector Matching Works
+
+1. Convert problem statement into keyword vector
+2. Extract keywords from submission (README, description)
+3. Convert both into numeric embeddings
+4. Apply cosine similarity formula
+5. Generate similarity score
+
+---
+
+## 🧪 AI Scoring Breakdown
+
+The AI score is calculated using weighted logic:
+
+```
+
+Final AI Score =
+(Feature Score × 0.4) +
+(Documentation Score × 0.2) +
+(Problem Relevance Score × 0.2) +
+(Code Originality Score × 0.2)
+
+```
+
+---
+
+## 📊 Evaluation Output Example
+
+```json
+{
+  "aiScore": 82,
+  "similarityScore": 0.23,
+  "featureScore": 78,
+  "documentationScore": 85,
+  "originalityScore": 90
+}
+```
+
+---
+
+## 🔐 Plagiarism Detection
+
+If similarity score between two submissions exceeds:
+
+```
+0.85
+```
+
+The system flags it for manual review.
+
+---
+
+## 🏗 Backend Processing Flow
+
+1. Submission stored in database
+2. AI engine processes submission
+3. Similarity scores calculated
+4. Feature extraction performed
+5. Score stored in `scores` collection
+6. Data forwarded to judge panel
+
+---
+
+## 🧾 Database Schema Example
+
+```json
+{
+  "submissionId": "abc123",
+  "aiScore": 82,
+  "judgeScore": null,
+  "finalScore": null,
+  "similarityScore": 0.23,
+  "flagged": false
+}
+```
+
+---
+
+## ⚡ Final Ranking Formula
+
+After judge evaluation:
+
+```
+Final Score = (AI Score × 0.4) + (Judge Score × 0.6)
+```
+
+Leaderboard updates automatically after scoring.
+
+---
+
+## 🎯 Why AI Evaluation?
+
+- Reduces manual workload
+- Ensures fairness
+- Detects duplicate logic
+- Speeds up ranking process
+- Improves transparency
+
+---
+
+## 🚀 Future Enhancements
+
+Planned upgrades:
+
+- Code AST analysis
+- Git commit history scoring
+- ML-based innovation prediction
+- Automated feedback report generation
+- Real-time evaluation dashboard
+
+---
+
+The AI Evaluation Engine ensures that hackathons remain fair, scalable, and intelligent.
+
+```
+
+---
+
+# ✅ This Version:
+
+- No `{}` parsing error
+- Proper code blocks
+- Professional structure
+- Technical explanation included
+- Production-ready documentation
+
+---
+```

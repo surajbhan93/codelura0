@@ -1,0 +1,113 @@
+# Environment Configuration
+
+This page outlines all required environment variables and configuration settings for running the full CodeLura platform.
+
+CodeLura includes frontend, backend, AI engine, authentication, and payment systems — each requiring proper configuration.
+
+---
+
+## 🌍 Application Ports
+
+| Service     | Default Port |
+| ----------- | ------------ |
+| Frontend    | 3001         |
+| Backend API | 3000         |
+| MongoDB     | 27017        |
+
+---
+
+## 🔐 Backend Environment Variables
+
+Create a `.env` file inside the `server/` directory.
+
+```env
+PORT=3000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_super_secret_key
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+CLIENT_URL=http://localhost:3001
+EMAIL_USER=xyz@gmail.com
+EMAIL_PASS=asdfafggasdgar
+RAZORPAY_KEY_ID=your_key
+RAZORPAY_SECRET=your_secret
+
+OPENAI_API_KEY=your_openai_key
+```
+
+````
+
+---
+
+## 💻 Frontend Environment Variables
+
+Create a `.env.local` file inside `Codelura-backend/`:
+
+```env
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_unsigned_preset
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
+
+```
+
+---
+
+## 🔐 Security Configuration
+
+- Passwords hashed using bcrypt
+- JWT for secure session handling
+- CORS enabled for frontend-backend communication
+- Helmet middleware for HTTP security headers
+- Environment variables stored securely (never commit `.env`)
+
+---
+
+## 🤖 AI Configuration
+
+If AI features are enabled:
+
+- Ensure OpenAI API key is valid
+- Enable cosine similarity engine
+- Ensure MongoDB stores user skill vectors
+
+---
+
+## 💳 Payment Webhooks
+
+For Razorpay:
+
+1. Create webhook endpoint in backend
+2. Add webhook URL in Razorpay dashboard
+3. Enable signature verification
+
+Example webhook route:
+
+```
+POST /api/payment/webhook
+```
+
+---
+
+## 🚀 Production Notes
+
+Before deploying:
+
+- Replace local URLs with production domain
+- Use production payment keys
+- Enable HTTPS
+- Configure environment variables securely (Vercel / Railway / Render)
+
+---
+
+## ⚠️ Important
+
+Never expose:
+
+- JWT_SECRET
+- Payment secret keys
+- AI secret keys
+- Database credentials
+````

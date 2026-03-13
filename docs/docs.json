@@ -1,0 +1,80 @@
+{
+  "name": "CodeLura Platform",
+  "theme": "mint",
+  "colors": {
+    "primary": "#6366f1"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Overview",
+        "pages": ["index"]
+      },
+      {
+        "group": "Setup",
+        "pages": ["getting-started", "environment"]
+      },
+      {
+        "group": "Architecture",
+        "pages": ["tech-stack", "project-structure"]
+      },
+      {
+        "group": "Development",
+        "pages": ["scripts", "ui-and-features"]
+      },
+      {
+        "group": "AI Blogs",
+        "pages": [
+          "ai-blogs/index",
+          "ai-blogs/overview",
+          "ai-blogs/ai-content-engine",
+          "ai-blogs/seo-optimization",
+          "ai-blogs/moderation-system",
+          "ai-blogs/publishing-workflow",
+          "ai-blogs/jobs-and-referrals"
+        ]
+      },
+      {
+        "group": "AI Hackathons",
+        "pages": [
+          "ai-hackathons/index",
+          "ai-hackathons/overview",
+          "ai-hackathons/how-it-works",
+          "ai-hackathons/ai-evaluation-engine",
+          "ai-hackathons/judging-system",
+          "ai-hackathons/participation-guide",
+          "ai-hackathons/rewards-and-certificates"
+        ]
+      },
+      {
+        "group": "Web Services",
+        "pages": [
+          "Web-services/index",
+          "Web-services/development-services",
+          "Web-services/ai-solutions",
+          "Web-services/startup-consulting",
+          "Web-services/enterprise-solutions"
+        ]
+      },
+      {
+        "group": "mentorship",
+        "pages": [
+          "mentorship/index",
+          "mentorship/one-to-one-guidance",
+          "mentorship/career-programs",
+          "Web-services/membership-plans",
+          "Web-services/mentor-dashboard"
+        ]
+      },
+      {
+        "group": "advanced-learning",
+        "pages": [
+          "advanced-learning/index",
+          "advanced-learning/roadmap-system",
+          "advanced-learning/personalized-learning"
+          
+        ]
+      }
+    ]
+  }
+}
