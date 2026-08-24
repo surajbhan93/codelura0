@@ -1,6 +1,13 @@
 // app/api/stats/route.ts
 import { NextResponse } from 'next/server';
 
+interface StatsData {
+  developers: number;
+  resources: number;
+  sessions: number;
+  websites: number;
+}
+
 // Cache stats in memory with TTL
 let cachedStats: StatsData | null = null;
 let cacheTimestamp = 0;
