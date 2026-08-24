@@ -53,7 +53,7 @@ export default function ProgramCard({ program }: { program: Program }) {
           <p className="mt-2 text-xs text-slate-400">
             Part of:{" "}
             <span className="font-medium text-slate-600">
-              {program.careerTrack.title}
+              {typeof program.careerTrack === "object" ? program.careerTrack.title : "Career Track"}
             </span>
           </p>
         )}
