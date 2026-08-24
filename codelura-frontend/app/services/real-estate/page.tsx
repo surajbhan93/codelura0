@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 // import Navbar from "@/components/Navbar";
 // import Footer from "@/components/Footer";
-import CTABand from "@/components/Services/CTABand";
+import CTABand from "@/components/services/Ctaband";
 
 export const metadata: Metadata = {
   title: "Real Estate Website Design | Property Listings & Lead Systems — Pixelnext",

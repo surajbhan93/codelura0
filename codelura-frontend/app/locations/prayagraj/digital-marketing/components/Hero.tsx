@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { images } from '@/lib/images';
+import { images } from '@/lib/images/images';
 import { COMPANY_DETAILS } from '../constants';
 import { MapPin, ArrowRight, MessageSquare, Phone, CheckCircle } from 'lucide-react';
 

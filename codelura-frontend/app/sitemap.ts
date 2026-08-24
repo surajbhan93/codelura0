@@ -4,7 +4,7 @@
 // (Save this as app/sitemap.ts)
 
 import type { MetadataRoute } from "next";
-import { allSEOPages } from "../seo/seoConfig";
+import { allSEOPages } from "./seo/seoConfig";
 
 // ─── Fetch all published blog slugs ───
 async function getAllBlogSlugs() {

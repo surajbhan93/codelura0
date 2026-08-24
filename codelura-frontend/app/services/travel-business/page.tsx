@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 // import Navbar from "@/components/Navbar";
 // import Footer from "@/components/Footer";
-import CTABand from "@/components/Services/ctAband";
+import CTABand from "@/components/services/Ctaband";
 
 export const metadata: Metadata = {
   title: "Travel & Business Website Design | Service Websites & Growth Systems — Pixelnext",
