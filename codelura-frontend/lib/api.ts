@@ -1,16 +1,14 @@
-
 import axios from "axios";
-// import toast from "react-hot-toast";
+
+const isServer = typeof window === "undefined";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true, // ⭐ COOKIE SEND KARNE KE LIYE
-  // headers: {
-  //   "Content-Type": "application/json",
-  // },
+  baseURL: isServer
+    ? process.env.API_URL
+    : process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
 });
 
-/* ---------------- REQUEST INTERCEPTOR ---------------- */
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
@@ -23,7 +21,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ✅ Interceptor: NO redirect, only logging
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -34,7 +31,9 @@ api.interceptors.response.use(
         err.response?.data
       );
     }
+
     return Promise.reject(err);
   }
 );
+
 export default api;
