@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import {
   HiOutlineShoppingBag,
-  HiOutlineUserCheck,
+  HiOutlineUser,
   HiOutlineAcademicCap,
   HiOutlineTrendingUp,
   HiOutlineSearch,
