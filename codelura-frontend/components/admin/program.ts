@@ -102,6 +102,15 @@ export interface Program {
   status?: "draft" | "published" | "archived";
   isActive?: boolean;
 
+  // SEO Fields
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string[];
+  canonicalUrl?: string;
+  ogImage?: string;
+  robots?: string;
+  structuredData?: any;
+
   createdAt?: string;
   updatedAt?: string;
 }
