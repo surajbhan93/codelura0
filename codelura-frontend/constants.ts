@@ -7,8 +7,12 @@ export const COMPANY_DETAILS = {
   phone: "+91-98765-43210",
   whatsappPhone: "919876543210",
   email: "contact@codelura.com",
+  prayagrajEmail: "prayagraj@codelura.com",
   hqAddress: "Codelura Tech Center, Civil Lines, Near Subhash Chouraha, Prayagraj (Allahabad), Uttar Pradesh 211001, India",
+  address: "Codelura Tech Center, Civil Lines, Near Subhash Chouraha, Prayagraj (Allahabad), Uttar Pradesh 211001, India",
   websiteUrl: "https://codelura.com",
+  googleMapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3602.3!2d81.8349!3d25.4520!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjXCsDI3JzA3LjIiTiA4McKwNTAnMDUuNiJF!5e0!3m2!1sen!2sin!4v1234567890",
+  coordinates: { lat: 25.4520, lng: 81.8349 },
 };
 
 export const NEARBY_AREAS = [
