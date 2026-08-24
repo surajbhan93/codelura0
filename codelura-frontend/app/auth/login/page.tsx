@@ -1,73 +1,72 @@
 "use client";
 import { Button, TextInput, Checkbox, Label } from "flowbite-react";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
 import AbstractBackground from "@/components/AbstractBackground";
 import { GoogleLogin } from "@react-oauth/google";
 import { useTheme } from "next-themes";
 import { useRouter, useSearchParams } from "next/navigation";
-export default function LoginPage() {
+
+function LoginForm() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
-const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
 
-const redirect = searchParams.get("redirect") || "/";
+  const redirect = searchParams.get("redirect") || "/";
   const [form, setForm] = useState({
     email: "",
     password: "",
     remember: false
   });
 
-useEffect(() => {
-  const token = localStorage.getItem("token");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
 
-  const isLoggedIn =
-    token &&
-    token !== "undefined" &&
-    token !== "null" &&
-    token.trim() !== "";
+    const isLoggedIn =
+      token &&
+      token !== "undefined" &&
+      token !== "null" &&
+      token.trim() !== "";
 
-  if (isLoggedIn) {
-    router.push(redirect);
-  }
-}, []);
+    if (isLoggedIn) {
+      router.push(redirect);
+    }
+  }, [redirect, router]);
 
-const submit = async () => {
-  if (!form.email || !form.password) {
-    toast.error("Please fill all fields");
-    return;
-  }
-
-  try {
-    const res = await api.post("/auth/login", {
-      email: form.email,
-      password: form.password
-    });
-
-    const { user, token } = res.data;
-
-    // ✅ TOKEN + ROLE SAVE
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", user.role);
-
-    toast.success("Welcome back to Codelura 🚀");
-
-    if (user.role === "admin") {
-      window.location.href = "/admin";
-    } else {
-      // window.location.href = "/";
-      // 🔥 redirect back to premium page
-  localStorage.setItem("openBuyModal", "true");
-  router.push(redirect);
+  const submit = async () => {
+    if (!form.email || !form.password) {
+      toast.error("Please fill all fields");
+      return;
     }
 
-  } catch (err: any) {
-    toast.error(err.response?.data?.message || "Login failed");
-  }
-};
+    try {
+      const res = await api.post("/auth/login", {
+        email: form.email,
+        password: form.password
+      });
 
+      const { user, token } = res.data;
+
+      // ✅ TOKEN + ROLE SAVE
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", user.role);
+
+      toast.success("Welcome back to Codelura 🚀");
+
+      if (user.role === "admin") {
+        window.location.href = "/admin";
+      } else {
+        // 🔥 redirect back to premium page
+        localStorage.setItem("openBuyModal", "true");
+        router.push(redirect);
+      }
+
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Login failed");
+    }
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-white dark:bg-[#0b0d17]">
@@ -120,8 +119,7 @@ const submit = async () => {
               />
             </div>
 
-
-            {/* login by github  */}
+            {/* login by github */}
             <a href="http://localhost:3002/api/auth/github">
               <button>Login with GitHub</button>
             </a>
@@ -210,3 +208,18 @@ const submit = async () => {
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white dark:bg-[#0b0d17] flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
+  );
+}
+

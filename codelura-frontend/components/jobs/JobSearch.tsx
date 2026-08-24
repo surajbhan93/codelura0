@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const TYPES = [
@@ -11,33 +11,33 @@ const TYPES = [
   { value: "contract",   label: "Contract"   },
 ];
 
-export default function JobSearch() {
+function JobSearchContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
   const [query,    setQuery]    = useState(searchParams.get("q")    ?? "");
   const [type,     setType]     = useState(searchParams.get("type") ?? "");
   const [focused,  setFocused]  = useState(false);
-//   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
-const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* Push search params to URL so the server can re-filter */
- useEffect(() => {
-  if (debounceRef.current) {
-    clearTimeout(debounceRef.current);
-  }
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
 
-  debounceRef.current = setTimeout(() => {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (type) params.set("type", type);
-    router.push(`?${params.toString()}`, { scroll: false });
-  }, 350);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (query) params.set("q", query);
+      if (type) params.set("type", type);
+      router.push(`?${params.toString()}`, { scroll: false });
+    }, 350);
 
-  return () => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-  };
-}, [query, type]);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, type]);
+
   return (
     <>
       <style>{`
@@ -191,3 +191,11 @@ const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     </>
   );
 }
+
+export default function JobSearch() {
+  return (
+    <Suspense fallback={<div className="h-14 w-full bg-white/5 animate-pulse rounded-xl" />}>
+      <JobSearchContent />
+    </Suspense>
+  );
+}
