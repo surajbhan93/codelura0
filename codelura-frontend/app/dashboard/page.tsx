@@ -382,7 +382,7 @@ export default function Profile() {
             animationDelay: "0.18s",
           }}
         >
-          <div style={{ display: "flex", justify: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <p
               style={{
                 margin: 0,
