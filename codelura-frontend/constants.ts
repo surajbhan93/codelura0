@@ -1,5 +1,4 @@
-// constants.ts for /location/* components
-// All generic location page data — used by location/CTA.tsx, Hero.tsx, FAQ.tsx, etc.
+// constants.ts — for /location/* components
 
 export const COMPANY_DETAILS = {
   name: "Codelura",
@@ -8,11 +7,14 @@ export const COMPANY_DETAILS = {
   whatsappPhone: "919876543210",
   email: "contact@codelura.com",
   prayagrajEmail: "prayagraj@codelura.com",
-  hqAddress: "Codelura Tech Center, Civil Lines, Near Subhash Chouraha, Prayagraj (Allahabad), Uttar Pradesh 211001, India",
-  address: "Codelura Tech Center, Civil Lines, Near Subhash Chouraha, Prayagraj (Allahabad), Uttar Pradesh 211001, India",
+  hqAddress:
+    "Codelura Tech Center, Civil Lines, Near Subhash Chouraha, Prayagraj (Allahabad), Uttar Pradesh 211001, India",
+  address:
+    "Codelura Tech Center, Civil Lines, Near Subhash Chouraha, Prayagraj (Allahabad), Uttar Pradesh 211001, India",
   websiteUrl: "https://codelura.com",
-  googleMapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3602.3!2d81.8349!3d25.4520!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjXCsDI3JzA3LjIiTiA4McKwNTAnMDUuNiJF!5e0!3m2!1sen!2sin!4v1234567890",
-  coordinates: { lat: 25.4520, lng: 81.8349 },
+  googleMapEmbedUrl:
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3602.3!2d81.8349!3d25.4520!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjXCsDI3JzA3LjIiTiA4McKwNTAnMDUuNiJF!5e0!3m2!1sen!2sin!4v1234567890",
+  coordinates: { lat: 25.452, lng: 81.8349 },
 };
 
 export const NEARBY_AREAS = [
@@ -87,36 +89,79 @@ export const FAQS = [
   },
 ];
 
+// ✅ Fields match exactly what Industries.tsx expects: name, location, description, count
 export const INDUSTRIES = [
-  { name: "Coaching & Education", icon: "🎓", desc: "ERP, LMS, admission portals, attendance tracking." },
-  { name: "Healthcare & Clinics", icon: "🏥", desc: "Patient booking, HMS, telemedicine, lab portals." },
-  { name: "Retail & Ecommerce", icon: "🛒", desc: "Shopify, custom cart, multi-vendor, COD OTP." },
-  { name: "Real Estate", icon: "🏠", desc: "Property listings, lead CRM, builder portals." },
-  { name: "Manufacturing", icon: "🏭", desc: "Inventory, B2B wholesale, supply chain systems." },
-  { name: "Hospitality & Travel", icon: "✈️", desc: "Hotel booking, itinerary, review management." },
-  { name: "Finance & FinTech", icon: "💳", desc: "Loan portals, payment gateways, NBFC software." },
-  { name: "Legal & Consulting", icon: "⚖️", desc: "Client portals, document management, CRM." },
+  {
+    name: "Coaching & Education",
+    location: "Katra, Civil Lines, Allahpur",
+    description: "ERP, LMS, admission portals, attendance tracking, and fee management systems for coaching centres.",
+    count: "40+ Institutes Served",
+  },
+  {
+    name: "Healthcare & Clinics",
+    location: "George Town, Kidwai Nagar",
+    description: "Patient booking, HMS, telemedicine portals, lab report systems, and clinic management software.",
+    count: "30+ Clinics Served",
+  },
+  {
+    name: "Retail & Ecommerce",
+    location: "Katra Bazar, Mumfordganj",
+    description: "Shopify stores, custom cart systems, multi-vendor marketplaces, COD OTP, and UPI checkout.",
+    count: "60+ Retailers Served",
+  },
+  {
+    name: "Real Estate",
+    location: "Civil Lines, Naini",
+    description: "Property listing portals, lead CRM, builder websites, and virtual site tour integrations.",
+    count: "20+ Builders Served",
+  },
+  {
+    name: "Manufacturing & Industrial",
+    location: "Naini Industrial Area",
+    description: "B2B inventory software, supply chain portals, GST-ready billing, and wholesale order management.",
+    count: "15+ Factories Served",
+  },
+  {
+    name: "Hospitality & Travel",
+    location: "Jhunsi, Daraganj, Phaphamau",
+    description: "Hotel booking engines, travel itinerary portals, review management, and event management platforms.",
+    count: "25+ Hotels Served",
+  },
+  {
+    name: "Finance & NBFC",
+    location: "Civil Lines, George Town",
+    description: "Loan management portals, NBFC software, payment gateways, and KYC onboarding automation.",
+    count: "10+ FinTech Clients",
+  },
+  {
+    name: "Legal & Consulting",
+    location: "High Court Road, Civil Lines",
+    description: "Client portals, document management, case tracking CRM, and billing automation for law firms.",
+    count: "12+ Law Firms Served",
+  },
 ];
 
+// ✅ Fields match exactly what Packages.tsx expects: popular (boolean), description, name, price, features
 export const PACKAGES = [
   {
     name: "Starter",
     price: "₹24,999",
-    desc: "Perfect for solopreneurs, freelancers, and local shops.",
+    description: "Perfect for solopreneurs, freelancers, and local shops getting online.",
+    popular: false,
     features: [
       "5-page responsive website",
       "Mobile-first design",
       "Basic on-page SEO",
       "Contact form integration",
       "Google Maps embed",
-      "30-day support",
+      "30-day post-launch support",
     ],
-    highlight: false,
   },
   {
     name: "Growth",
     price: "₹59,999",
-    desc: "Ideal for SMEs and coaching centres scaling digitally.",
+    description: "Ideal for SMEs, coaching centres, and clinics scaling their digital presence.",
+    popular: true,
     features: [
       "15-page Next.js website",
       "CMS / blog integration",
@@ -124,14 +169,14 @@ export const PACKAGES = [
       "Lead capture & CRM",
       "Google Analytics 4",
       "WhatsApp chatbot",
-      "3-month support",
+      "3-month post-launch support",
     ],
-    highlight: true,
   },
   {
     name: "Enterprise",
     price: "Custom",
-    desc: "Built for hospitals, universities, and large businesses.",
+    description: "Built for hospitals, universities, and large businesses requiring custom systems.",
+    popular: false,
     features: [
       "Unlimited pages & features",
       "Custom software / ERP",
@@ -140,44 +185,131 @@ export const PACKAGES = [
       "Dedicated project manager",
       "SLA-backed 12-month support",
     ],
-    highlight: false,
   },
 ];
 
+// ✅ Fields match exactly what Services.tsx expects: id, title, iconName, tag, fullDesc
 export const SERVICES_LIST = [
-  { title: "Website Development", slug: "website-development", icon: "🌐", desc: "Next.js & React responsive business websites with sub-second load times." },
-  { title: "SEO Services", slug: "seo-services", icon: "🔍", desc: "Local SEO, Google Maps 3-Pack, entity SEO, and AI Overviews optimization." },
-  { title: "App Development", slug: "app-development", icon: "📱", desc: "Flutter, React Native, iOS Swift, and Android Kotlin mobile apps." },
-  { title: "Software Development", slug: "software-development", icon: "💻", desc: "Custom CRM, ERP, HMS, and business automation software." },
-  { title: "Ecommerce Development", slug: "ecommerce-development", icon: "🛒", desc: "Full-stack online stores with multi-vendor support and payment gateways." },
-  { title: "WordPress Development", slug: "wordpress-development", icon: "📝", desc: "Custom themes, WooCommerce, and 95+ PageSpeed optimized WordPress sites." },
-  { title: "Shopify Development", slug: "shopify-development", icon: "🏪", desc: "Shopify OS 2.0 themes, Headless commerce, Razorpay & Shiprocket integration." },
-  { title: "Digital Marketing", slug: "digital-marketing", icon: "📣", desc: "Google Ads, Meta Ads, WhatsApp automation, and performance marketing." },
+  {
+    id: "website-development",
+    title: "Website Development",
+    iconName: "Globe",
+    tag: "Core Service",
+    fullDesc:
+      "Next.js & React responsive business websites with sub-second load times, Core Web Vitals compliance, and conversion-first design.",
+  },
+  {
+    id: "seo-services",
+    title: "SEO Services",
+    iconName: "Zap",
+    tag: "Growth",
+    fullDesc:
+      "Local SEO, Google Maps 3-Pack dominance, entity SEO, and AI Overviews optimization to drive organic traffic from Prayagraj searches.",
+  },
+  {
+    id: "app-development",
+    title: "App Development",
+    iconName: "Building2",
+    tag: "Mobile",
+    fullDesc:
+      "Flutter, React Native, iOS Swift, and Android Kotlin mobile apps ready for Google Play and App Store launch.",
+  },
+  {
+    id: "software-development",
+    title: "Custom Software",
+    iconName: "Code",
+    tag: "Enterprise",
+    fullDesc:
+      "Custom CRM, ERP, HMS, institute management, and business automation software built for Indian SMEs.",
+  },
+  {
+    id: "ecommerce-development",
+    title: "Ecommerce Development",
+    iconName: "ShoppingCart",
+    tag: "Ecommerce",
+    fullDesc:
+      "Full-stack online stores with multi-vendor support, Razorpay/UPI payment gateways, and COD OTP verification.",
+  },
+  {
+    id: "wordpress-development",
+    title: "WordPress Development",
+    iconName: "Layout",
+    tag: "CMS",
+    fullDesc:
+      "Custom Gutenberg themes, WooCommerce, and 95+ PageSpeed optimized WordPress websites with full-stack PHP expertise.",
+  },
+  {
+    id: "shopify-development",
+    title: "Shopify Development",
+    iconName: "Store",
+    tag: "Shopify",
+    fullDesc:
+      "Shopify OS 2.0 themes, Headless commerce with Next.js, Razorpay & Shiprocket logistics integration.",
+  },
+  {
+    id: "digital-marketing",
+    title: "Digital Marketing",
+    iconName: "GraduationCap",
+    tag: "Marketing",
+    fullDesc:
+      "Google Ads, Meta Ads (Facebook & Instagram), WhatsApp automation, and performance marketing for measurable ROI.",
+  },
 ];
 
+// ✅ Fields match exactly what Testimonials.tsx expects: quote, author, role, company, location, rating
 export const TESTIMONIALS = [
   {
-    name: "Rajesh Gupta",
-    role: "Director, Pioneer Coaching Centre, Prayagraj",
-    text: "Codelura built our complete student management system and website. Admissions increased by 40% in the first semester. Outstanding team!",
+    quote:
+      "Codelura built our complete student management system and website. Admissions increased by 40% in the first semester. Outstanding team!",
+    author: "Rajesh Gupta",
+    role: "Director",
+    company: "Pioneer Coaching Centre",
+    location: "Katra, Prayagraj",
     rating: 5,
   },
   {
-    name: "Dr. Priya Sharma",
-    role: "Orthopaedic Surgeon, Medicity Clinic, Allahabad",
-    text: "Our patient booking portal has reduced front-desk calls by 60%. The HMS integration with our lab is seamless. Highly recommended.",
+    quote:
+      "Our patient booking portal has reduced front-desk calls by 60%. The HMS integration with our lab is seamless. Highly recommended.",
+    author: "Dr. Priya Sharma",
+    role: "Orthopaedic Surgeon",
+    company: "Medicity Clinic",
+    location: "George Town, Allahabad",
     rating: 5,
   },
   {
-    name: "Ankit Agarwal",
-    role: "Founder, SwadeshiMart Ecommerce",
-    text: "From Shopify store setup to Razorpay integration and WhatsApp order automation — Codelura delivered everything on time and within budget.",
+    quote:
+      "From Shopify store setup to Razorpay integration and WhatsApp order automation — Codelura delivered everything on time and within budget.",
+    author: "Ankit Agarwal",
+    role: "Founder",
+    company: "SwadeshiMart",
+    location: "Katra Bazar, Prayagraj",
     rating: 5,
   },
   {
-    name: "Suresh Verma",
-    role: "MD, Verma Construction, Prayagraj",
-    text: "Our real estate portal with property listings, lead forms, and CRM is generating 20+ quality leads per week. Great ROI!",
+    quote:
+      "Our real estate portal with property listings, lead forms, and CRM is generating 20+ quality leads per week. Great ROI!",
+    author: "Suresh Verma",
+    role: "Managing Director",
+    company: "Verma Construction",
+    location: "Civil Lines, Prayagraj",
+    rating: 5,
+  },
+  {
+    quote:
+      "The ERP system Codelura built for our factory handles GST billing, stock, and vendor payments all in one place. Game changer!",
+    author: "Manoj Tiwari",
+    role: "Operations Head",
+    company: "Tiwari Industries",
+    location: "Naini, Prayagraj",
+    rating: 5,
+  },
+  {
+    quote:
+      "Website speed went from 32 to 96 on PageSpeed after Codelura's optimization. Our Google ranking improved significantly.",
+    author: "Neha Srivastava",
+    role: "Marketing Manager",
+    company: "Hotel Sangam View",
+    location: "Daraganj, Prayagraj",
     rating: 5,
   },
 ];
