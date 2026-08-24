@@ -12,9 +12,24 @@ export const COMPANY_DETAILS = {
 };
 
 export const NEARBY_AREAS = [
-  "Civil Lines", "George Town", "Allahpur", "Katra", "Naini",
-  "Jhunsi", "Phaphamau", "Kareli", "Kidwai Nagar", "Mumfordganj",
-  "Baghambari", "Rajapur", "Lukerganj", "Daraganj", "Soraon",
+  { name: "Civil Lines", zipCode: "211001", landmark: "Near High Court" },
+  { name: "George Town", zipCode: "211002", landmark: "Bank Road Area" },
+  { name: "Allahpur", zipCode: "211006", landmark: "Tagore Town" },
+  { name: "Katra", zipCode: "211002", landmark: "Katra Bazar" },
+  { name: "Naini", zipCode: "211008", landmark: "Naini Bridge" },
+  { name: "Jhunsi", zipCode: "211019", landmark: "Sector Road" },
+  { name: "Phaphamau", zipCode: "211013", landmark: "NH 30" },
+  { name: "Kareli", zipCode: "211016", landmark: "Kareli Market" },
+  { name: "Mumfordganj", zipCode: "211002", landmark: "Sadar Bazar" },
+  { name: "Baghambari", zipCode: "211002", landmark: "Near Hanuman Mandir" },
+  { name: "Rajapur", zipCode: "211010", landmark: "Rajapur Chauraha" },
+  { name: "Lukerganj", zipCode: "211001", landmark: "Lukerganj Naka" },
+  { name: "Daraganj", zipCode: "211006", landmark: "Ganga Ghat" },
+  { name: "Soraon", zipCode: "212507", landmark: "Tehsil Road" },
+  { name: "Kidwai Nagar", zipCode: "211003", landmark: "Stanley Road" },
+  { name: "Ashok Nagar", zipCode: "211001", landmark: "Ashok Nagar Colony" },
+  { name: "Hastings Road", zipCode: "211001", landmark: "Cantonment Area" },
+  { name: "Colonelganj", zipCode: "211002", landmark: "Near Railway Station" },
 ];
 
 export const INTERNAL_LINKS = [
