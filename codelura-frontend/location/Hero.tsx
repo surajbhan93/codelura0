@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { images } from '@/lib/images';
-import { COMPANY_DETAILS } from '../constants';
+import { COMPANY_DETAILS } from '@/constants';
 import { MapPin, ArrowRight, MessageSquare, Phone, CheckCircle } from 'lucide-react';
 
 export default function Hero() {
@@ -119,3 +119,4 @@ export default function Hero() {
     </section>
   );
 }
+

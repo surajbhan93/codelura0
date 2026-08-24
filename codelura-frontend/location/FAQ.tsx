@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { FAQS } from '../constants';
+import { FAQS } from '@/constants';
 import { ChevronDown } from 'lucide-react';
 
 export default function FAQ() {
@@ -42,3 +42,4 @@ export default function FAQ() {
     </section>
   );
 }
+

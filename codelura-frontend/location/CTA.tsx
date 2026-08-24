@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { images } from '@/lib/images';
-import { COMPANY_DETAILS, NEARBY_AREAS, INTERNAL_LINKS } from '../constants';
+import { COMPANY_DETAILS, NEARBY_AREAS, INTERNAL_LINKS } from '@/constants';
 import { Phone, MessageSquare, ArrowRight, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
@@ -89,3 +89,4 @@ export default function CTA() {
     </section>
   );
 }
+

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import GoogleMap from './GoogleMap';
-import { COMPANY_DETAILS } from '../constants';
+import { COMPANY_DETAILS } from '@/constants';
 import { MapPin, Phone, Mail, Clock, MessageSquare, Send } from 'lucide-react';
 
 export default function Contact() {
@@ -124,3 +124,4 @@ export default function Contact() {
     </section>
   );
 }
+

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { SERVICES_LIST } from '../constants';
+import { SERVICES_LIST } from '@/constants';
 import {
   Building2,
   Globe,
@@ -91,3 +91,4 @@ export default function Services() {
     </section>
   );
 }
+

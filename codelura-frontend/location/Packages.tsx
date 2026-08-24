@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { PACKAGES } from '../constants';
+import { PACKAGES } from '@/constants';
 import { Check } from 'lucide-react';
 
 export default function Packages() {
@@ -70,3 +70,4 @@ export default function Packages() {
     </section>
   );
 }
+

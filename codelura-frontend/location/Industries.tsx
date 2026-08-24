@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { INDUSTRIES } from '../constants';
+import { INDUSTRIES } from '@/constants';
 import { MapPin } from 'lucide-react';
 
 export default function Industries() {
@@ -44,3 +44,4 @@ export default function Industries() {
     </section>
   );
 }
+
