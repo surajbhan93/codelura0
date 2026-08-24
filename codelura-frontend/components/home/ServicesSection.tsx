@@ -1,8 +1,3 @@
-"use client";
-
-import { useRef } from "react";
-import Link from "next/link";
-import { motion, useInView } from "framer-motion";
 import {
   ShoppingCart,
   LayoutDashboard,
@@ -19,7 +14,24 @@ import {
 } from "lucide-react";
 import SectionWrapper from "@/components/shared/SectionWrapper";
 
-/* ─── Types ──────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────
+   PURE SERVER COMPONENT. No "use client", no hooks, no
+   framer-motion — zero client JS shipped.
+
+   What changed vs the original:
+   - useInView scroll-triggered fades → CSS animation playing
+     once on load with a per-card stagger delay.
+   - onMouseEnter/onMouseLeave inline box-shadow → CSS custom
+     property (--glow) + Tailwind hover: + arbitrary shadow.
+   - whileHover scale/lift on cards & stat tiles → CSS
+     hover:scale/-translate-y with transition.
+   - The infinite marquee (animate x: 0% → -50%) → a single CSS
+     @keyframes running on the compositor thread — this is
+     actually a bigger perf win than JS-driven, since
+     framer-motion was recalculating this transform every frame
+     on the main thread before.
+   ──────────────────────────────────────────────────────────── */
+
 interface Service {
   title: string;
   desc: string;
@@ -45,7 +57,6 @@ interface ClientLogo {
   color: string;
 }
 
-/* ─── Data ───────────────────────────────────────────────────── */
 const SERVICES: Service[] = [
   {
     title: "E-Commerce Websites",
@@ -104,38 +115,10 @@ const SERVICES: Service[] = [
 ];
 
 const TRUST_STATS: TrustStat[] = [
-  {
-    icon: Star,
-    value: "200+",
-    label: "Websites Delivered",
-    iconColor: "text-amber-400",
-    bg: "bg-amber-500/8",
-    border: "border-amber-500/20",
-  },
-  {
-    icon: Calendar,
-    value: "4+ Yrs",
-    label: "Industry Experience",
-    iconColor: "text-violet-400",
-    bg: "bg-violet-500/8",
-    border: "border-violet-500/20",
-  },
-  {
-    icon: Users,
-    value: "Global",
-    label: "Clients Worldwide",
-    iconColor: "text-emerald-400",
-    bg: "bg-emerald-500/8",
-    border: "border-emerald-500/20",
-  },
-  {
-    icon: Rocket,
-    value: "48hrs",
-    label: "Average First Draft",
-    iconColor: "text-rose-400",
-    bg: "bg-rose-500/8",
-    border: "border-rose-500/20",
-  },
+  { icon: Star, value: "200+", label: "Websites Delivered", iconColor: "text-amber-400", bg: "bg-amber-500/8", border: "border-amber-500/20" },
+  { icon: Calendar, value: "4+ Yrs", label: "Industry Experience", iconColor: "text-violet-400", bg: "bg-violet-500/8", border: "border-violet-500/20" },
+  { icon: Users, value: "Global", label: "Clients Worldwide", iconColor: "text-emerald-400", bg: "bg-emerald-500/8", border: "border-emerald-500/20" },
+  { icon: Rocket, value: "48hrs", label: "Average First Draft", iconColor: "text-rose-400", bg: "bg-rose-500/8", border: "border-rose-500/20" },
 ];
 
 const CLIENT_LOGOS: ClientLogo[] = [
@@ -149,30 +132,33 @@ const CLIENT_LOGOS: ClientLogo[] = [
   { name: "CloudBase", initials: "CB", color: "#f97316" },
 ];
 
-/* ─── Service Card ───────────────────────────────────────────── */
+function ServiceStyles() {
+  return (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes svcFadeUp { from { opacity:0; transform:translateY(36px);} to { opacity:1; transform:translateY(0);} }
+          @keyframes marqueeScroll { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+
+          .svc-card { opacity:0; animation: svcFadeUp 0.5s ease-out forwards; }
+          .svc-marquee-track {
+            animation: marqueeScroll 28s linear infinite;
+            will-change: transform;
+          }
+        `,
+      }}
+    />
+  );
+}
+
 function ServiceCard({ s, i }: { s: Service; i: number }) {
   const Icon = s.icon;
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 36 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: i * 0.08 }}
-      className="group relative flex flex-col"
-    >
-      <motion.div
-        whileHover={{ y: -6, scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 280, damping: 20 }}
-        className={`relative h-full overflow-hidden rounded-3xl border ${s.border} bg-white/4 p-7 backdrop-blur-xl transition-all duration-300`}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 48px ${s.glow}`;
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.boxShadow = "none";
-        }}
+    <div className="group relative flex flex-col">
+      <div
+        className={`svc-card relative h-full overflow-hidden rounded-3xl border ${s.border} bg-white/4 p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-[0_12px_48px_var(--glow)]`}
+        style={{ animationDelay: `${i * 0.08}s`, ["--glow" as string]: s.glow }}
       >
         {/* Top glow line on hover */}
         <div
@@ -182,7 +168,7 @@ function ServiceCard({ s, i }: { s: Service; i: number }) {
 
         {/* Icon */}
         <div
-          className={`mb-5 flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-br ${s.gradient} shadow-lg`}
+          className={`mb-5 flex items-center justify-center rounded-2xl bg-gradient-to-br ${s.gradient} shadow-lg`}
           style={{ width: 52, height: 52 }}
         >
           <Icon className="h-6 w-6 text-white" />
@@ -218,12 +204,11 @@ function ServiceCard({ s, i }: { s: Service; i: number }) {
         >
           <Icon className="h-24 w-24 text-white" />
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
-/* ─── Marquee Logos ──────────────────────────────────────────── */
 function LogoMarquee() {
   const doubled = [...CLIENT_LOGOS, ...CLIENT_LOGOS];
   return (
@@ -232,15 +217,10 @@ function LogoMarquee() {
         Trusted by startups, brands &amp; global clients
       </p>
       <div className="relative overflow-hidden">
-        {/* Fade edges */}
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-[#07060f] to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-[#07060f] to-transparent" />
 
-        <motion.div
-          className="flex gap-6 items-center"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ repeat: Infinity, duration: 28, ease: "linear" }}
-        >
+        <div className="svc-marquee-track flex gap-6 items-center w-max">
           {doubled.map((logo, i) => (
             <div
               key={`${logo.name}-${i}`}
@@ -257,19 +237,17 @@ function LogoMarquee() {
               </span>
             </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── Main Export ────────────────────────────────────────────── */
 export default function ServicesSection() {
-  const headerRef = useRef<HTMLDivElement>(null);
-  const headerInView = useInView(headerRef, { once: true });
-
   return (
     <SectionWrapper bg="bg-[#07060f]">
+      <ServiceStyles />
+
       {/* SEO structured data */}
       <script
         type="application/ld+json"
@@ -280,7 +258,7 @@ export default function ServicesSection() {
             name: "Website Development Services — Codelura",
             description:
               "Codelura offers e-commerce, SaaS dashboards, landing pages, admin panels, portfolios and full-stack development services.",
-            provider: { "@type": "Organization", name: "Codelura", url: "https://codelura.com" },
+            provider: { "@type": "Organization", name: "Codelura", url: "https://build.codelura.com/services" },
             hasOfferCatalog: {
               "@type": "OfferCatalog",
               name: "Web Development Services",
@@ -295,10 +273,10 @@ export default function ServicesSection() {
       />
 
       <div className="relative overflow-hidden">
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute left-1/2 top-0 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-violet-700/10 blur-[160px]" />
-          <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-cyan-700/8 blur-[140px]" />
+        {/* Ambient glow — hidden on mobile */}
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden hidden sm:block">
+          <div className="absolute left-1/2 top-0 h-[400px] w-[640px] -translate-x-1/2 rounded-full bg-violet-700/10 blur-[120px]" />
+          <div className="absolute right-0 bottom-0 h-[320px] w-[320px] rounded-full bg-cyan-700/8 blur-[110px]" />
           <div
             className="absolute inset-0 opacity-[0.022]"
             style={{
@@ -309,14 +287,8 @@ export default function ServicesSection() {
           />
         </div>
 
-        {/* ── Header ── */}
-        <motion.div
-          ref={headerRef}
-          initial={{ opacity: 0, y: 28 }}
-          animate={headerInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="mb-16 text-center"
-        >
+        {/* Header */}
+        <div className="svc-card mb-16 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-500/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-violet-400">
             <Zap className="h-3 w-3 fill-violet-400" />
             Professional Development
@@ -333,67 +305,51 @@ export default function ServicesSection() {
             We design and develop high-quality websites, SaaS platforms and
             e-commerce solutions — trusted by clients worldwide.
           </p>
-        </motion.div>
+        </div>
 
-        {/* ── Services Grid ── */}
-        <div
-          className="grid gap-5 sm:grid-cols-2 md:grid-cols-3"
-          aria-label="Web development service offerings"
-        >
+        {/* Services Grid */}
+        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3" aria-label="Web development service offerings">
           {SERVICES.map((s, i) => (
             <ServiceCard key={s.title} s={s} i={i} />
           ))}
         </div>
 
-        {/* ── Trust Stats ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-16 grid gap-4 sm:grid-cols-2 md:grid-cols-4"
+        {/* Trust Stats */}
+        <div
+          className="svc-card mt-16 grid gap-4 sm:grid-cols-2 md:grid-cols-4"
+          style={{ animationDelay: "0.2s" }}
           aria-label="Service trust statistics"
         >
           {TRUST_STATS.map(({ icon: Icon, value, label, iconColor, bg, border }) => (
-            <motion.div
+            <div
               key={label}
-              whileHover={{ scale: 1.04, y: -3 }}
-              transition={{ type: "spring", stiffness: 280, damping: 18 }}
-              className={`flex flex-col items-center gap-2 rounded-2xl border ${border} ${bg} p-6 text-center backdrop-blur`}
+              className={`flex flex-col items-center gap-2 rounded-2xl border ${border} ${bg} p-6 text-center backdrop-blur transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.04]`}
             >
               <Icon className={`h-5 w-5 ${iconColor}`} />
               <p className="text-2xl font-black text-white">{value}</p>
               <p className="text-xs text-white/40 font-medium">{label}</p>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* ── Logo Marquee ── */}
+        {/* Logo Marquee */}
         <LogoMarquee />
 
-        {/* ── CTA ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-          className="mt-16 flex flex-col items-center gap-4"
-        >
-          <p className="text-sm text-white/30">
-            Ready to build something great?
-          </p>
-          <Link href="/services" aria-label="View all Codelura web development services">
-            <motion.span
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-9 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-700/30 transition-all duration-300 hover:shadow-violet-700/55"
-            >
-              <Sparkles className="h-4 w-4" />
-              View All Services
-              <ArrowRight className="h-4 w-4" />
-            </motion.span>
-          </Link>
-        </motion.div>
+        {/* CTA */}
+        <div className="svc-card mt-16 flex flex-col items-center gap-4" style={{ animationDelay: "0.3s" }}>
+          <p className="text-sm text-white/30">Ready to build something great?</p>
+          <a
+            href="https://build.codelura.com/services"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View all Codelura web development services"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-9 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-700/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-violet-700/55 active:scale-[0.97]"
+          >
+            <Sparkles className="h-4 w-4" />
+            View All Services
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
       </div>
     </SectionWrapper>
   );

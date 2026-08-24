@@ -136,6 +136,16 @@ export default function SubscriptionTable({ subscriptions, refresh, loading }) {
                       </>
                     )}
                   </button>
+                   {sub.startDate && sub.endDate ? (
+    <>
+      {new Date(sub.startDate).toLocaleDateString("en-IN")} <br />
+      <span className="text-gray-400 text-[10px]">
+        to {new Date(sub.endDate).toLocaleDateString("en-IN")}
+      </span>
+    </>
+  ) : (
+    "—"
+  )}
                 </td>
 
                 {/* Actions */}
@@ -210,6 +220,17 @@ export default function SubscriptionTable({ subscriptions, refresh, loading }) {
                         <DetailItem label="Telegram" value={sub.telegramUsername} />
                         <DetailItem label="Transaction ID" value={sub.transactionId} mono />
                         <DetailItem label="Coupon" value={sub.coupon?.code} />
+                        
+                         {/* 🔥 ADD THESE */}
+                      <DetailItem label="Note" value={sub.note} />
+                      <DetailItem 
+                        label="Start Date" 
+                        value={sub.startDate ? new Date(sub.startDate).toLocaleDateString("en-IN") : ""} 
+                      />
+                      <DetailItem 
+                        label="End Date" 
+                        value={sub.endDate ? new Date(sub.endDate).toLocaleDateString("en-IN") : ""} 
+                      />
                       </div>
                     </div>
                   </td>

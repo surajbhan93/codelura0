@@ -1,3 +1,48 @@
+// {
+//   "compilerOptions": {
+//     "target": "ES2017",
+//     "lib": [
+//       "dom",
+//       "dom.iterable",
+//       "esnext"
+//     ],
+//     "allowJs": true,
+//     "skipLibCheck": true,
+//     "strict": true,
+//     "noEmit": true,
+//     "esModuleInterop": true,
+//     "module": "esnext",
+//     "moduleResolution": "bundler",
+//     "resolveJsonModule": true,
+//     "isolatedModules": true,
+//     "jsx": "preserve",
+//     "incremental": true,
+//     "plugins": [
+//       {
+//         "name": "next"
+//       }
+//     ],
+//     "paths": {
+//       "@/*": [
+//         "./*"
+//       ]
+//     }
+//   },
+//   "include": [
+//     "next-env.d.ts",
+//     "**/*.ts",
+//     "**/*.tsx",
+//     ".next/types/**/*.ts",
+//     ".next/dev/types/**/*.ts",
+//     "**/*.mts",
+//     "next.config.js"
+// , "components/premium/PremiumCard.jsx", "app/about/FounderSection.tsx", "components/services/Testimonials.jsx", "app/premium/[slug]/page.jsx", "app/premium/page.jsx", "components/career/navbar.jsx"  ],
+//   "exclude": [
+//     "node_modules"
+//   ]
+// }
+// //  "app/services/page.jsx", "app/programs/page.jsx", "app/programs/page.tsx"
+
 {
   "compilerOptions": {
     "target": "ES2017",
@@ -10,13 +55,13 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    "incremental": false,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
     "plugins": [
       {
         "name": "next"
@@ -32,13 +77,11 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    "next.config.js"
+    "**/*.js",
+    "**/*.jsx",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
   ]
 }
-//  "app/services/page.jsx", "app/programs/page.jsx", "app/programs/page.tsx"

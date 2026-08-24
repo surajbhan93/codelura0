@@ -3,12 +3,12 @@
 import Image from "next/image";
 
 const teamRoles = [
-  { title: "Frontend Developer", img: "/team/frontend.jpg" },
+  { title: "Frontend & UI/UX Designer", img: "/team/frontend.jpg" },
   { title: "Backend Developer", img: "/team/backend.jpg" },
-  { title: "Co-Founder & CEO", img: "/team/ceo.jpg" },
+  { title: "Team head & backend doveloper", img: "/team/ceo.jpg" },
   { title: "HR Manager", img: "/team/hr.png" },
   { title: "ML Developer", img: "/team/ML.jpg" },
-  { title: "UI/UX Designer", img: "/team/ui.png" },
+  { title: "Backend Developer", img: "/team/ui.png" },
   { title: "Marketing Head", img: "/team/marketing.png" },
   { title: "Database Engineer", img: "/team/database.png" },
   { title: "Social Media Handler", img: "/team/social.jpeg" },

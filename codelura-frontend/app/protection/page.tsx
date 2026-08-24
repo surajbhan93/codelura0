@@ -1,7 +1,6 @@
-"use client";
-
-import React, { useState } from "react";
-import { motion,Variants  } from "framer-motion";
+import React from "react";
+import { Metadata } from "next";
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronUp,
@@ -18,10 +17,23 @@ import {
   BarChart3,
 } from "lucide-react";
 
-interface ExpandedSections {
-  [key: number]: boolean;
-}
+// Metadata for SEO
+export const metadata: Metadata = {
+  title: "Data Protection Policy | Codelura - GDPR & CCPA Compliance",
+  description: "Codelura's comprehensive Data Protection Policy. Learn how we protect your personal information, ensure GDPR compliance, CCPA compliance, and maintain data security.",
+  keywords: "data protection, GDPR compliance, CCPA compliance, data security, privacy policy, data encryption, user rights, data retention",
+  openGraph: {
+    title: "Data Protection Policy | Codelura",
+    description: "Your data is sacred. Learn about Codelura's commitment to data protection and security.",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
+// Types
 interface PolicySection {
   id: number;
   title: string;
@@ -29,45 +41,9 @@ interface PolicySection {
   icon?: React.ReactNode;
   content: React.ReactNode;
 }
-const fadeInUp: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 40,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut", // ✅ now valid
-    },
-  },
-};
 
-const fadeInDown: Variants = {
-  hidden: {
-    opacity: 0,
-    y: -40,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.7,
-      ease: "easeOut",
-    },
-  },
-};
-export default function DataProtectionPage(): React.ReactElement {
-  const [expandedSections, setExpandedSections] = useState<ExpandedSections>({});
-
-  const toggleSection = (sectionId: number): void => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [sectionId]: !prev[sectionId],
-    }));
-  };
-
+// Server Component
+export default function DataProtectionPage() {
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -76,12 +52,13 @@ export default function DataProtectionPage(): React.ReactElement {
 
   const currentYear = new Date().getFullYear();
 
+  // Static sections data
   const sections: PolicySection[] = [
     {
       id: 1,
-      title: "1. Data Protection Overview &amp; Commitment",
+      title: "1. Data Protection Overview & Commitment",
       subtitle: "Our Promise to Protect Your Information",
-      icon: <Shield className="w-5 h-5 text-blue-400" />,
+      icon: <Shield className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -93,28 +70,28 @@ export default function DataProtectionPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">Our Core Principles</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-green-300">Transparency:</span> We clearly communicate what data we collect
                   and how it&apos;s used
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-green-300">Security:</span> We employ industry-leading security measures to
                   protect your information
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-green-300">Control:</span> You have complete control over your data and can
                   access or delete it anytime
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-green-300">Compliance:</span> We strictly adhere to GDPR, CCPA, and all
                   applicable international regulations
@@ -131,9 +108,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 2,
-      title: "2. Legal Framework &amp; Regulatory Compliance",
+      title: "2. Legal Framework & Regulatory Compliance",
       subtitle: "We Follow Global Data Protection Laws",
-      icon: <FileText className="w-5 h-5 text-purple-400" />,
+      icon: <FileText className="w-5 h-5 text-purple-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -143,7 +120,7 @@ export default function DataProtectionPage(): React.ReactElement {
           <div className="space-y-3">
             <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-400" />
+                <Shield className="w-4 h-4 text-blue-400" aria-hidden="true" />
                 GDPR (General Data Protection Regulation)
               </h4>
               <p className="text-sm mb-2">
@@ -160,7 +137,7 @@ export default function DataProtectionPage(): React.ReactElement {
 
             <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-yellow-400" />
+                <Shield className="w-4 h-4 text-yellow-400" aria-hidden="true" />
                 CCPA (California Consumer Privacy Act)
               </h4>
               <p className="text-sm mb-2">
@@ -177,7 +154,7 @@ export default function DataProtectionPage(): React.ReactElement {
 
             <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-green-400" />
+                <Shield className="w-4 h-4 text-green-400" aria-hidden="true" />
                 Other International Standards
               </h4>
               <ul className="list-disc ml-6 space-y-1 text-sm">
@@ -201,9 +178,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 3,
-      title: "3. Data Encryption &amp; Security Technologies",
+      title: "3. Data Encryption & Security Technologies",
       subtitle: "How We Protect Your Data in Transit and at Rest",
-      icon: <Lock className="w-5 h-5 text-red-400" />,
+      icon: <Lock className="w-5 h-5 text-red-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -280,9 +257,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 4,
-      title: "4. Data Collection &amp; Usage Practices",
+      title: "4. Data Collection & Usage Practices",
       subtitle: "What Information We Collect and Why",
-      icon: <Database className="w-5 h-5 text-cyan-400" />,
+      icon: <Database className="w-5 h-5 text-cyan-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -294,31 +271,31 @@ export default function DataProtectionPage(): React.ReactElement {
               <h4 className="text-white font-semibold mb-3">Categories of Data Collected</h4>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Personal Information:</span> Name, email, phone, address (for billing)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Account Data:</span> Username, profile information, preferences
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">User Generated Content:</span> Projects, courses, blogs, comments
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Technical Data:</span> IP address, device type, browser, usage patterns
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Behavioral Data:</span> Pages visited, features used, time spent
                   </span>
@@ -364,9 +341,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 5,
-      title: "5. User Rights &amp; Data Access",
+      title: "5. User Rights & Data Access",
       subtitle: "Your Control Over Your Personal Information",
-      icon: <Eye className="w-5 h-5 text-green-400" />,
+      icon: <Eye className="w-5 h-5 text-green-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -378,38 +355,38 @@ export default function DataProtectionPage(): React.ReactElement {
               <h4 className="text-white font-semibold mb-3">Your Data Rights</h4>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Right to Access:</span> Request and receive copy of your personal data in a
                     machine-readable format
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Right to Rectification:</span> Correct inaccurate or incomplete personal data
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Right to Erasure:</span> Request deletion of your data under certain conditions
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Right to Restrict Processing:</span> Limit how your data is used or processed
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Right to Data Portability:</span> Transfer your data to another service provider
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Right to Object:</span> Withdraw consent or object to specific processing
                   </span>
@@ -441,9 +418,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 6,
-      title: "6. Data Retention &amp; Deletion Policies",
+      title: "6. Data Retention & Deletion Policies",
       subtitle: "How Long We Keep Your Information",
-      icon: <BarChart3 className="w-5 h-5 text-yellow-400" />,
+      icon: <BarChart3 className="w-5 h-5 text-yellow-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -491,7 +468,8 @@ export default function DataProtectionPage(): React.ReactElement {
                   <span className="font-semibold">Cryptographic Erasure:</span> Deletion of encryption keys making data unrecoverable
                 </li>
                 <li>
-                  <span className="font-semibold">Overwriting:</span> Multiple overwrite passes to prevent recovery</li>
+                  <span className="font-semibold">Overwriting:</span> Multiple overwrite passes to prevent recovery
+                </li>
                 <li>
                   <span className="font-semibold">Physical Destruction:</span> For hardware reaching end-of-life
                 </li>
@@ -511,9 +489,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 7,
-      title: "7. Data Breach &amp; Incident Response",
+      title: "7. Data Breach & Incident Response",
       subtitle: "How We Handle Security Incidents",
-      icon: <AlertCircle className="w-5 h-5 text-orange-400" />,
+      icon: <AlertCircle className="w-5 h-5 text-orange-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -577,9 +555,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 8,
-      title: "8. Third-Party Data Sharing &amp; Processors",
+      title: "8. Third-Party Data Sharing & Processors",
       subtitle: "Who We Share Your Data With",
-      icon: <Users className="w-5 h-5 text-cyan-400" />,
+      icon: <Users className="w-5 h-5 text-cyan-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -591,31 +569,31 @@ export default function DataProtectionPage(): React.ReactElement {
               <h4 className="text-white font-semibold mb-3">Categories of Data Processors</h4>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Payment Processors:</span> Stripe, Razorpay (secure payment processing)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Cloud Infrastructure:</span> AWS, Google Cloud (hosting &amp; storage)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Analytics:</span> Google Analytics, Mixpanel (usage analytics)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Email Services:</span> SendGrid, Mailgun (transactional emails)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Security Services:</span> Cloudflare (DDoS protection &amp; security)
                   </span>
@@ -651,9 +629,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 9,
-      title: "9. Privacy by Design &amp; Default",
+      title: "9. Privacy by Design & Default",
       subtitle: "Data Protection Embedded in Our Systems",
-      icon: <Zap className="w-5 h-5 text-purple-400" />,
+      icon: <Zap className="w-5 h-5 text-purple-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -665,39 +643,39 @@ export default function DataProtectionPage(): React.ReactElement {
               <h4 className="text-white font-semibold mb-3">Privacy by Design Principles</h4>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Proactive Not Reactive:</span> We anticipate data protection challenges and
                     address them before they occur
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Default Settings:</span> Privacy-friendly settings are defaults; users can opt
                     for less privacy if desired
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Data Minimization:</span> We collect only necessary data and no more
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Transparency:</span> Users understand what data is collected and why
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">User Control:</span> Users have ability to view, modify, and delete their data
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" />
+                  <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-1" aria-hidden="true" />
                   <span>
                     <span className="font-semibold">Security &amp; Integrity:</span> Strong encryption and security measures protect
                     data throughout
@@ -719,9 +697,9 @@ export default function DataProtectionPage(): React.ReactElement {
     },
     {
       id: 10,
-      title: "10. Policy Updates &amp; Contact Information",
-      subtitle: "Stay Informed &amp; Get in Touch",
-      icon: <Mail className="w-5 h-5 text-blue-400" />,
+      title: "10. Policy Updates & Contact Information",
+      subtitle: "Stay Informed & Get in Touch",
+      icon: <Mail className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -740,33 +718,27 @@ export default function DataProtectionPage(): React.ReactElement {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <motion.div
-                variants={fadeInUp}
-                className="bg-gradient-to-r from-blue-900/50 to-blue-800/50 rounded-lg p-4 border border-blue-700 hover:border-blue-600 transition-colors"
-              >
+              <div className="bg-gradient-to-r from-blue-900/50 to-blue-800/50 rounded-lg p-4 border border-blue-700 hover:border-blue-600 transition-colors">
                 <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-blue-400" />
+                  <Mail className="w-4 h-4 text-blue-400" aria-hidden="true" />
                   Data Protection Officer
                 </h4>
                 <p className="text-blue-400 font-medium hover:text-blue-300 transition-colors text-sm">
                   <a href="mailto:dpo@codelura.com">dpo@codelura.com</a>
                 </p>
                 <p className="text-xs text-gray-400 mt-2">For data protection &amp; GDPR inquiries</p>
-              </motion.div>
+              </div>
 
-              <motion.div
-                variants={fadeInUp}
-                className="bg-gradient-to-r from-green-900/50 to-green-800/50 rounded-lg p-4 border border-green-700 hover:border-green-600 transition-colors"
-              >
+              <div className="bg-gradient-to-r from-green-900/50 to-green-800/50 rounded-lg p-4 border border-green-700 hover:border-green-600 transition-colors">
                 <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-green-400" />
+                  <Mail className="w-4 h-4 text-green-400" aria-hidden="true" />
                   Privacy Team
                 </h4>
                 <p className="text-blue-400 font-medium hover:text-blue-300 transition-colors text-sm">
                   <a href="mailto:privacy@codelura.com">privacy@codelura.com</a>
                 </p>
                 <p className="text-xs text-gray-400 mt-2">For privacy &amp; data requests</p>
-              </motion.div>
+              </div>
             </div>
 
             <div className="bg-blue-950/20 border border-blue-900 rounded-lg p-4">
@@ -783,6 +755,39 @@ export default function DataProtectionPage(): React.ReactElement {
     },
   ];
 
+  // Server-side Accordion Component (No useState required)
+const AccordionSection = ({ section }: { section: PolicySection }) => {
+  return (
+    <details className="group bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-gray-600">
+      <summary className="list-none cursor-pointer w-full px-6 py-5 flex items-center justify-between hover:bg-gray-800/50 transition-colors">
+        <div className="flex items-center gap-3 text-left">
+          {section.icon}
+          <div>
+            <h3 className="text-lg font-semibold text-white">
+              {section.title}
+            </h3>
+            {section.subtitle && (
+              <p className="text-sm text-gray-500">
+                {section.subtitle}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <ChevronDown
+          className="w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300 group-open:rotate-180"
+          aria-hidden="true"
+        />
+      </summary>
+
+      <div className="overflow-hidden">
+        <div className="px-6 py-4 border-t border-gray-700 bg-black/30">
+          {section.content}
+        </div>
+      </div>
+    </details>
+  );
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-gray-900 text-gray-300 px-6 md:px-16 py-20">
       {/* SEO Hidden Heading */}
@@ -790,19 +795,11 @@ export default function DataProtectionPage(): React.ReactElement {
         Codelura Data Protection Policy - GDPR, CCPA &amp; Data Security Compliance
       </h1>
 
-      {/* HEADER */}
-      <motion.section
-        variants={fadeInDown}
-        initial="hidden"
-        animate="show"
-        className="max-w-5xl mx-auto text-center mb-20"
-      >
-        <motion.div
-          variants={fadeInUp}
-          className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-blue-950/40 to-blue-900/40 border border-blue-900 rounded-full"
-        >
+      {/* Header */}
+      <header className="max-w-5xl mx-auto text-center mb-20">
+        <div className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-blue-950/40 to-blue-900/40 border border-blue-900 rounded-full">
           <p className="text-blue-300 text-sm font-semibold">DATA PROTECTION &amp; SECURITY</p>
-        </motion.div>
+        </div>
 
         <h2 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
           Data Protection Policy
@@ -827,94 +824,40 @@ export default function DataProtectionPage(): React.ReactElement {
             </p>
           </div>
         </div>
-      </motion.section>
+      </header>
 
-      {/* TABLE OF CONTENTS */}
-      <motion.section
-        variants={fadeInUp}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="max-w-5xl mx-auto mb-16"
-      >
+      {/* Table of Contents */}
+      <section className="max-w-5xl mx-auto mb-16">
         <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg p-6">
           <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-400" />
+            <FileText className="w-5 h-5 text-blue-400" aria-hidden="true" />
             Quick Navigation
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {sections.map((section: PolicySection) => (
-              <button
+            {sections.map((section) => (
+              <Link
                 key={section.id}
-                onClick={() => toggleSection(section.id)}
-                className="text-left text-blue-400 hover:text-blue-300 text-sm transition-colors hover:translate-x-1"
+                href={`#section-${section.id}`}
+                className="text-blue-400 hover:text-blue-300 text-sm transition-colors hover:translate-x-1"
               >
                 → {section.title}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* CONTENT SECTIONS */}
+      {/* Content Sections */}
       <div className="max-w-5xl mx-auto space-y-4 mb-16">
-        {sections.map((section: PolicySection) => (
-          <motion.section
-            key={section.id}
-            variants={fadeInUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-gray-600"
-          >
-            <button
-              onClick={() => toggleSection(section.id)}
-              className="w-full px-6 py-5 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
-            >
-              <div className="flex items-center gap-3 text-left">
-                {section.icon}
-                <div>
-                  <h3 className="text-lg font-semibold text-white">{section.title}</h3>
-                  {section.subtitle && <p className="text-sm text-gray-500">{section.subtitle}</p>}
-                </div>
-              </div>
-              <motion.div
-                animate={{ rotate: expandedSections[section.id] ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {expandedSections[section.id] ? (
-                  <ChevronUp className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                )}
-              </motion.div>
-            </button>
-
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{
-                height: expandedSections[section.id] ? "auto" : 0,
-                opacity: expandedSections[section.id] ? 1 : 0,
-              }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="px-6 py-4 border-t border-gray-700 bg-black/30">
-                {section.content}
-              </div>
-            </motion.div>
-          </motion.section>
+        {sections.map((section) => (
+          <div key={section.id} id={`section-${section.id}`}>
+            <AccordionSection section={section} />
+          </div>
         ))}
       </div>
 
-      {/* FOOTER */}
-      <motion.footer
-        variants={fadeInUp}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="max-w-5xl mx-auto border-t border-gray-800 pt-12"
-      >
+      {/* Footer */}
+      <footer className="max-w-5xl mx-auto border-t border-gray-800 pt-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div>
             <h3 className="text-white font-semibold mb-3">Our Commitment</h3>
@@ -927,19 +870,19 @@ export default function DataProtectionPage(): React.ReactElement {
             <h3 className="text-white font-semibold mb-3">Related Policies</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/cookies" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/cookies" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Cookie Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Terms &amp; Conditions
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -962,7 +905,7 @@ export default function DataProtectionPage(): React.ReactElement {
             Data Protection Policy | Last Updated: {currentDate} | Version 2.0 | GDPR &amp; CCPA Compliant
           </p>
         </div>
-      </motion.footer>
+      </footer>
     </div>
   );
 }

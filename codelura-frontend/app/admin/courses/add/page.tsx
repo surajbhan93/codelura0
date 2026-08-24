@@ -20,6 +20,7 @@ type FormState = {
   level: "beginner" | "intermediate" | "advanced";
   language: string;
   tags: string;
+  bannerUrl: string;   // ← add this, banner File hata do
   previewPages: number;
   accessType: AccessType;
   showAdsForFreeUsers: boolean;
@@ -42,6 +43,7 @@ export default function AddCoursePage() {
     language: "Hindi",
     tags: "",
     previewPages: 3,
+    bannerUrl: "",   // ← add this
     accessType: "login_required",
     showAdsForFreeUsers: true,
     allowDownloadAfterPurchase: true,
@@ -85,10 +87,15 @@ export default function AddCoursePage() {
     }
 
     const fd = new FormData();
-    Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
-    fd.append("pdf", pdf);
-    if (banner) fd.append("banner", banner);
-
+    // ✅ bannerUrl ko Object.entries loop se bahar rakho
+  const { bannerUrl, ...restForm } = form;
+  Object.entries(restForm).forEach(([k, v]) => fd.append(k, String(v)));
+    // Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
+    // fd.append("pdf", pdf);
+    // if (banner) fd.append("banner", banner);
+  // ✅ Sirf ek baar append karo
+  if (bannerUrl.trim()) fd.append("bannerUrl", bannerUrl.trim());
+  fd.append("pdf", pdf);
     try {
       setLoading(true);
       await api.post("/admin/courses", fd);
@@ -101,6 +108,23 @@ export default function AddCoursePage() {
       setLoading(false);
     }
   };
+
+  const uploadImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await api.post("/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  if (!res.data?.url) {
+    throw new Error("Upload failed");
+  }
+
+  return res.data.url;
+};
 
   /* ===============================
      UI
@@ -199,13 +223,100 @@ export default function AddCoursePage() {
               file={pdf}
               onChange={(e) => setPdf(e.target.files?.[0] || null)}
             />
-            <FileInput
+            {/* <FileInput
               label="Banner Image"
               sublabel="Optional"
               accept="image/*"
               file={banner}
               onChange={(e) => setBanner(e.target.files?.[0] || null)}
-            />
+            /> */}
+             {/* ✅ Banner: Cloudinary URL input */}
+
+ <div className="space-y-3">
+  <label className="text-sm font-semibold text-gray-700">
+    Banner Image
+  </label>
+
+  <label className="
+    flex items-center gap-4
+    w-full
+    border-2 border-dashed border-gray-300
+    rounded-2xl
+    px-4 py-4
+    bg-gray-50
+    hover:bg-indigo-50
+    hover:border-indigo-400
+    cursor-pointer
+    transition-all duration-200
+    group
+  ">
+    {/* Icon */}
+    <div className="
+      w-10 h-10
+      flex items-center justify-center
+      rounded-xl
+      bg-white
+      border
+      text-gray-400
+      group-hover:text-indigo-600
+      transition
+    ">
+      📤
+    </div>
+
+    {/* Text */}
+    <div className="flex flex-col">
+      <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600">
+        Click to upload banner
+      </span>
+      <span className="text-xs text-gray-400">
+        PNG, JPG, WebP (max 2MB)
+      </span>
+    </div>
+
+    {/* Hidden input */}
+    <input
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+          const url = await uploadImage(file);
+
+          setForm((prev) => ({
+            ...prev,
+            bannerUrl: url,
+          }));
+
+          toast.success("Banner uploaded ✅");
+        } catch (err: any) {
+          console.error("UPLOAD ERROR 👉", err?.response?.data || err.message);
+          toast.error("Upload failed ❌");
+        }
+      }}
+    />
+  </label>
+
+  {/* Preview */}
+  {form.bannerUrl && (
+    <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+      <img
+        src={form.bannerUrl}
+        className="w-full h-44 object-cover"
+      />
+
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition flex items-center justify-center opacity-0 hover:opacity-100">
+        <span className="text-white text-sm font-medium">
+          Change Image
+        </span>
+      </div>
+    </div>
+  )}
+</div>
           </Section>
 
           {/* Submit */}
@@ -359,5 +470,71 @@ function Checkbox(props: React.InputHTMLAttributes<HTMLInputElement> & { label: 
       </div>
       <span className="text-sm text-gray-700">{label}</span>
     </label>
+  );
+}
+
+function CloudinaryBannerInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const isValid =
+    value.trim().startsWith("https://res.cloudinary.com/") ||
+    value.trim() === "";
+
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+        Banner Image
+        <span className="text-xs font-normal px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">
+          Optional
+        </span>
+      </label>
+
+      <div className="relative">
+        {/* Cloudinary icon */}
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base select-none">
+          ☁️
+        </span>
+        <input
+          type="url"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://res.cloudinary.com/your-cloud/image/upload/..."
+          className={`w-full border ${
+            !isValid
+              ? "border-red-300 focus:ring-red-400 focus:border-red-400"
+              : "border-gray-200 focus:ring-indigo-500 focus:border-indigo-500"
+          } bg-gray-50 focus:bg-white rounded-lg pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 transition`}
+        />
+      </div>
+
+      {/* Validation hint */}
+      {!isValid && (
+        <p className="text-xs text-red-500">
+          URL should start with https://res.cloudinary.com/
+        </p>
+      )}
+
+      {/* Live preview */}
+      {value && isValid && (
+        <div className="mt-2 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 h-36 flex items-center justify-center">
+          <img
+            src={value}
+            alt="Banner preview"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+      )}
+
+      <p className="text-xs text-gray-400">
+        Cloudinary Console → Media Library → koi bhi image copy karke yahan paste karo.
+      </p>
+    </div>
   );
 }

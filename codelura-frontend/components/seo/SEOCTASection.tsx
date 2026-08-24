@@ -1,50 +1,39 @@
+import Link from 'next/link';
+import type { SEOPageData } from '@/app/seo/seoConfig';
 
-// ═══════════════════════════════════════════════════════════════
-// components/seo/SEOCTASection.tsx
-// ═══════════════════════════════════════════════════════════════
-import Link from "next/link";
-import type { SEOPageData } from "@/app/seo/seoConfig";
-export function SEOCTASection({ page }: { page: SEOPageData }) {
+interface SEOCTASectionProps {
+  page?: SEOPageData;
+}
+
+export function SEOCTASection({ page }: SEOCTASectionProps) {
+  const isTopic = page?.category === 'topic' || page?.category === 'guidance';
+
   return (
-    <section className="py-24 px-6">
-      <div
-        className="max-w-4xl mx-auto rounded-3xl p-12 md:p-16 text-center relative overflow-hidden border border-white/10"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,245,255,0.12), transparent 70%), rgba(255,255,255,0.03)",
-        }}
-      >
-        <div className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: "linear-gradient(#00F5FF22 1px, transparent 1px), linear-gradient(90deg, #00F5FF22 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
+    <section className="py-16 px-6 sm:px-8 bg-slate-50 border-t border-slate-200">
+      <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white rounded-3xl p-8 sm:p-12 shadow-lg relative overflow-hidden">
         <div className="relative z-10">
-          <p className="text-xs uppercase tracking-widest text-cyan-400 mb-4 font-semibold">
-            Ready to Start?
-          </p>
-          <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
-            Let's Build Something{" "}
-            <span className="text-cyan-400">Amazing Together</span>
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight mb-4">
+            {isTopic
+              ? 'Ready to Advance Your Technical Journey?'
+              : 'Have a Project Requirement in Mind?'}
           </h2>
-          <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
-            Join 500+ businesses who chose Codelura for {page.title.toLowerCase()}. 
-            Get a free consultation today — no strings attached.
+          <p className="text-blue-100 text-sm sm:text-base max-w-xl mx-auto mb-8 leading-relaxed">
+            {isTopic
+              ? 'Explore 1-on-1 mentorship, code reviews, and developer resources with Codelura.'
+              : 'Discuss your application architecture, timeline, and scope with our technical team for free.'}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/contact"
-              className="px-10 py-4 rounded-xl font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all duration-200 hover:scale-105 text-base"
-              style={{ boxShadow: "0 0 40px rgba(0,245,255,0.4)" }}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold bg-white text-blue-900 hover:bg-blue-50 transition-all text-sm shadow-md"
             >
-              Get Free Consultation →
+              {isTopic ? 'Book 1-on-1 Session' : 'Get Free Consultation'} →
             </Link>
             <Link
-              href="/premium"
-              className="px-10 py-4 rounded-xl font-semibold text-white border border-white/20 bg-white/5 hover:bg-white/10 transition-all duration-200 text-base"
+              href="/seo"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold bg-blue-700/50 hover:bg-blue-700 text-white border border-blue-400/30 transition-all text-sm"
             >
-              View Pricing
+              Explore All Directory Pages
             </Link>
           </div>
         </div>
@@ -52,3 +41,5 @@ export function SEOCTASection({ page }: { page: SEOPageData }) {
     </section>
   );
 }
+
+export default SEOCTASection;

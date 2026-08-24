@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,10 +11,20 @@ import {
   Youtube,
   ArrowRight,
   Heart,
+  Globe,
 } from "lucide-react";
 
 export default function Footer(): React.ReactElement {
   const currentYear = new Date().getFullYear();
+
+  const serviceCountries = [
+    { name: "India", flag: "🇮🇳" },
+    { name: "Australia", flag: "🇦🇺" },
+    { name: "USA", flag: "🇺🇸" },
+    { name: "UK", flag: "🇬🇧" },
+    { name: "Canada", flag: "🇨🇦" },
+    { name: "UAE", flag: "🇦🇪" },
+  ];
 
   return (
     <footer className="bg-gradient-to-b from-black via-gray-950 to-black text-gray-300">
@@ -41,7 +49,6 @@ export default function Footer(): React.ReactElement {
               and build high-performance projects.
             </p>
 
-            {/* CONTACT INFO */}
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-3 text-gray-400 hover:text-white transition">
                 <Mail className="w-4 h-4 text-blue-400" />
@@ -58,7 +65,6 @@ export default function Footer(): React.ReactElement {
             </div>
           </div>
 
-          {/* RESOURCES */}
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-5 flex items-center gap-2">
               <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
@@ -67,9 +73,9 @@ export default function Footer(): React.ReactElement {
             <ul className="space-y-3 text-sm">
               {[
                 ["Blogs", "/blogs"],
-                ["Study Material", "/courses"],
+                ["Study Material", "https://career.codelura.com/career/learning/study-material"],
                 ["Client Project", "/work"],
-                ["tech Services", "/services"],
+                ["tech Services", "https://build.codelura.com/services"],
                 ["Membership", "/premium"],
                 ["Hackathons", "/hackathons"],
               ].map(([label, href]) => (
@@ -86,7 +92,6 @@ export default function Footer(): React.ReactElement {
             </ul>
           </div>
 
-          {/* COMPANY */}
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-5 flex items-center gap-2">
               <span className="w-1 h-4 bg-green-500 rounded-full"></span>
@@ -114,7 +119,6 @@ export default function Footer(): React.ReactElement {
             </ul>
           </div>
 
-          {/* LEGAL */}
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-5 flex items-center gap-2">
               <span className="w-1 h-4 bg-purple-500 rounded-full"></span>
@@ -142,7 +146,24 @@ export default function Footer(): React.ReactElement {
           </div>
         </div>
 
-        {/* NEWSLETTER SECTION */}
+        <div className="mb-16">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-5 flex items-center gap-2">
+            <Globe className="w-4 h-4 text-blue-400" />
+            We Provide Technical Services In
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            {serviceCountries.map(({ name, flag }) => (
+              <div
+                key={name}
+                className="bg-gray-900/50 border border-gray-800 rounded-lg px-3 py-3 flex items-center gap-2 hover:border-blue-500 hover:bg-blue-500/10 transition duration-200"
+              >
+                <span className="text-lg">{flag}</span>
+                <span className="text-sm text-gray-300">{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="bg-gradient-to-r from-blue-950/30 to-purple-950/30 border border-blue-900/50 rounded-2xl p-8 mb-16">
           <div className="max-w-2xl">
             <h3 className="text-2xl font-bold text-white mb-2">
@@ -170,9 +191,7 @@ export default function Footer(): React.ReactElement {
           </div>
         </div>
 
-        {/* SOCIAL & APPS SECTION */}
         <div className="grid gap-10 md:grid-cols-3 mb-16">
-          {/* SOCIAL MEDIA */}
           <div>
             <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">
               Follow Us
@@ -199,7 +218,6 @@ export default function Footer(): React.ReactElement {
             </div>
           </div>
 
-          {/* DOWNLOAD APPS */}
           <div>
             <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">
               Download App
@@ -211,17 +229,15 @@ export default function Footer(): React.ReactElement {
                 rel="noopener noreferrer"
                 className="bg-gray-900/50 border border-gray-800 hover:border-green-500 hover:bg-green-500/10 rounded-lg px-4 py-2 flex items-center gap-3 transition duration-200 group"
               >
-                {/* import Image from "next/image"; */}
-
-          <div className="text-green-400 group-hover:scale-110 transition">
-            <Image
-              src="/footer/google-play.svg"
-              alt="Google Play"
-              width={24}
-              height={24}
-              className="invert"
-            />
-          </div>
+                <div className="text-green-400 group-hover:scale-110 transition">
+                  <Image
+                    src="/footer/google-play.svg"
+                    alt="Google Play"
+                    width={24}
+                    height={24}
+                    className="invert"
+                  />
+                </div>
                 <div className="text-left">
                   <p className="text-xs text-gray-500">Get it on</p>
                   <p className="text-sm font-semibold text-white">Google Play</p>
@@ -245,7 +261,6 @@ export default function Footer(): React.ReactElement {
             </div>
           </div>
 
-          {/* PAYMENT METHODS */}
           <div>
             <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">
               We Accept
@@ -272,13 +287,10 @@ export default function Footer(): React.ReactElement {
         </div>
       </div>
 
-      {/* DIVIDER */}
       <div className="border-t border-gray-800/50"></div>
 
-      {/* BOTTOM BAR */}
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* LEFT - COPYRIGHT */}
           <div className="text-sm text-gray-500 text-center md:text-left">
             <p className="flex items-center justify-center md:justify-start gap-2">
               © {currentYear} Codelura Inc. All rights reserved.
@@ -289,7 +301,6 @@ export default function Footer(): React.ReactElement {
             </p>
           </div>
 
-          {/* CENTER - QUICK LINKS */}
           <div className="flex items-center gap-6 text-sm">
             <Link href="/" className="text-gray-500 hover:text-white transition">
               Sitemap
@@ -304,14 +315,12 @@ export default function Footer(): React.ReactElement {
             </Link>
           </div>
 
-          {/* RIGHT - VERSION */}
           <div className="text-xs text-gray-600 text-center md:text-right">
             <p>Version 2.0 • Built with Next.js</p>
           </div>
         </div>
       </div>
 
-      {/* FLOATING BADGE */}
       <div className="fixed bottom-6 right-6 z-40 hidden lg:flex">
         <a
           href="https://status.codelura.com"

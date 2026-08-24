@@ -1,137 +1,106 @@
-// ═══════════════════════════════════════════════════════════════
-// components/seo/SEOSchemaScript.tsx
-// Generates JSON-LD schema per page type
-// ═══════════════════════════════════════════════════════════════
-import type { SEOPageData } from "@/app/seo/seoConfig";
+import type { SEOPageData } from '@/app/seo/seoConfig';
 
-export default function SEOSchemaScript({ page }: { page: SEOPageData }) {
-  const baseUrl = "https://codelura.com";
-  const url = `${baseUrl}/seo/${page.slug}`;
+interface SEOSchemaScriptProps {
+  page: SEOPageData;
+}
 
-  // ── FAQ Schema ──────────────────────────────────────────────
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: page.faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.a,
-      },
-    })),
+export default function SEOSchemaScript({ page }: SEOSchemaScriptProps) {
+  const canonicalUrl = `https://codelura.com/seo/${page.slug}`;
+
+  // Base Organization Schema
+  const orgSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Codelura',
+    url: 'https://codelura.com',
+    logo: 'https://codelura.com/logo.png',
+    description:
+      'Codelura is a modern software engineering platform and agency offering web development, mobile apps, and AI solutions.',
   };
 
-  // ── Service Schema ──────────────────────────────────────────
-  const serviceSchema =
-    page.schema === "Service"
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Service",
-          name: page.title,
-          description: page.metaDescription,
-          url,
-          provider: {
-            "@type": "Organization",
-            name: "Codelura",
-            url: baseUrl,
-            logo: `${baseUrl}/logo.png`,
-            contactPoint: {
-              "@type": "ContactPoint",
-              contactType: "customer support",
-              url: `${baseUrl}/contact`,
-            },
-          },
-          areaServed: ["IN", "US", "GB", "AE", "CA", "AU"],
-          serviceType: page.title,
-          keywords: page.keywords.join(", "),
-        }
-      : null;
+  // Specific Schema based on page type
+  let specificSchema: Record<string, unknown> = {};
 
-  // ── Organization Schema ─────────────────────────────────────
-  const orgSchema =
-    page.schema === "Organization"
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "Codelura",
-          url: baseUrl,
-          logo: `${baseUrl}/logo.png`,
-          description: page.metaDescription,
-          sameAs: [
-            "https://twitter.com/codelura",
-            "https://linkedin.com/company/codelura",
-            "https://instagram.com/codelura",
-          ],
-          contactPoint: {
-            "@type": "ContactPoint",
-            contactType: "sales",
-            url: `${baseUrl}/contact`,
-          },
-          address: {
-            "@type": "PostalAddress",
-            addressCountry: "IN",
-          },
-        }
-      : null;
+  if (page.schema === 'Service') {
+    specificSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: page.title,
+      description: page.metaDescription,
+      provider: {
+        '@type': 'Organization',
+        name: 'Codelura',
+        url: 'https://codelura.com',
+      },
+      url: canonicalUrl,
+    };
+  } else if (page.schema === 'Article') {
+    specificSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: page.title,
+      description: page.metaDescription,
+      author: {
+        '@type': 'Organization',
+        name: 'Codelura',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Codelura',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://codelura.com/logo.png',
+        },
+      },
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': canonicalUrl,
+      },
+    };
+  } else {
+    // Default Organization / WebPage
+    specificSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: page.title,
+      description: page.metaDescription,
+      url: canonicalUrl,
+    };
+  }
 
-  // ── Course / Topic Schema ───────────────────────────────────
-  const courseSchema =
-    page.schema === "Course"
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Course",
-          name: page.title,
-          description: page.metaDescription,
-          url,
-          provider: {
-            "@type": "Organization",
-            name: "Codelura",
-            url: baseUrl,
-          },
-        }
-      : null;
-
-  // ── Article Schema ──────────────────────────────────────────
-  const articleSchema =
-    page.schema === "Article"
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Blog",
-          name: page.title,
-          description: page.metaDescription,
-          url,
-          publisher: {
-            "@type": "Organization",
-            name: "Codelura",
-            url: baseUrl,
-            logo: {
-              "@type": "ImageObject",
-              url: `${baseUrl}/logo.png`,
-            },
-          },
-        }
-      : null;
-
-  const schemas = [
-    faqSchema,
-    serviceSchema,
-    orgSchema,
-    courseSchema,
-    articleSchema,
-  ].filter(Boolean);
+  // FAQ Schema if FAQs exist
+  let faqSchema: Record<string, unknown> | null = null;
+  if (page.faqs && page.faqs.length > 0) {
+    faqSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: page.faqs.map((faq) => ({
+        '@type': 'Question',
+        name: faq.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.a,
+        },
+      })),
+    };
+  }
 
   return (
     <>
-      {schemas.map((schema, i) => (
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(specificSchema) }}
+      />
+      {faqSchema && (
         <script
-          key={i}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
-      ))}
+      )}
     </>
   );
 }
-
-

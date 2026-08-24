@@ -1,7 +1,3 @@
-"use client";
-
-import { useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
 import {
   GraduationCap,
   Code2,
@@ -14,7 +10,21 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-/* ─── Types ──────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────
+   PURE SERVER COMPONENT. No "use client", no hooks, no
+   framer-motion — zero client JS shipped.
+
+   What changed vs the original:
+   - useInView scroll-triggered fades → CSS animation playing
+     once on load with a per-card stagger delay.
+   - useState(hovered) + inline boxShadow → CSS custom property
+     (--glow) + Tailwind hover: + arbitrary shadow value. No
+     re-render on hover at all now, purely browser-native.
+   - whileHover card lift / button nudge → CSS transitions.
+   - Pill stagger + CTA hover/tap → CSS keyframes + hover/active
+     scale utilities.
+   ──────────────────────────────────────────────────────────── */
+
 interface UseCase {
   title: string;
   desc: string;
@@ -28,7 +38,6 @@ interface UseCase {
   emoji: string;
 }
 
-/* ─── Data ───────────────────────────────────────────────────── */
 const USE_CASES: UseCase[] = [
   {
     title: "Students & Freshers",
@@ -104,28 +113,30 @@ const USE_CASES: UseCase[] = [
   },
 ];
 
-/* ─── Card ───────────────────────────────────────────────────── */
+function UseCaseStyles() {
+  return (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes ucFadeUp { from { opacity:0; transform:translateY(36px);} to { opacity:1; transform:translateY(0);} }
+          @keyframes ucPop { from { opacity:0; transform:scale(0.85);} to { opacity:1; transform:scale(1);} }
+
+          .uc-card { opacity:0; animation: ucFadeUp 0.5s ease-out forwards; }
+          .uc-pill { opacity:0; animation: ucPop 0.4s ease-out forwards; }
+        `,
+      }}
+    />
+  );
+}
+
 function UseCaseCard({ u, i }: { u: UseCase; i: number }) {
   const Icon = u.icon;
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
-  const [hovered, setHovered] = useState(false);
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 36 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: i * 0.08 }}
-      className="group relative flex flex-col"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <motion.div
-        whileHover={{ y: -7, scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 280, damping: 20 }}
-        className={`relative flex h-full flex-col overflow-hidden rounded-3xl border ${u.border} bg-white/4 p-7 backdrop-blur-xl`}
-        style={{ boxShadow: hovered ? `0 16px 56px ${u.glow}` : "none", transition: "box-shadow 0.3s" }}
+    <div className="group relative flex flex-col">
+      <div
+        className={`uc-card relative flex h-full flex-col overflow-hidden rounded-3xl border ${u.border} bg-white/4 p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-[7px] hover:scale-[1.02] hover:shadow-[0_16px_56px_var(--glow)]`}
+        style={{ animationDelay: `${i * 0.08}s`, ["--glow" as string]: u.glow }}
       >
         {/* Top glow line */}
         <div
@@ -136,7 +147,7 @@ function UseCaseCard({ u, i }: { u: UseCase; i: number }) {
         {/* Emoji + Icon row */}
         <div className="mb-5 flex items-center justify-between">
           <div
-            className={`flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-br ${u.gradient} shadow-lg`}
+            className={`flex items-center justify-center rounded-2xl bg-gradient-to-br ${u.gradient} shadow-lg`}
             style={{ width: 52, height: 52 }}
           >
             <Icon className="h-6 w-6 text-white" />
@@ -161,14 +172,13 @@ function UseCaseCard({ u, i }: { u: UseCase; i: number }) {
         </ul>
 
         {/* CTA */}
-        <motion.button
-          whileHover={{ x: 3 }}
-          className={`mt-auto inline-flex items-center gap-2 rounded-full ${u.accentBg} border ${u.border} px-4 py-2 text-xs font-bold text-white/60 transition-all duration-300 group-hover:text-white/90 w-fit`}
+        <button
+          className={`mt-auto inline-flex w-fit items-center gap-2 rounded-full ${u.accentBg} border ${u.border} px-4 py-2 text-xs font-bold text-white/60 transition-all duration-300 hover:translate-x-[3px] group-hover:text-white/90`}
           aria-label={`${u.cta} — ${u.title}`}
         >
           {u.cta}
           <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-        </motion.button>
+        </button>
 
         {/* Watermark icon */}
         <div
@@ -177,21 +187,19 @@ function UseCaseCard({ u, i }: { u: UseCase; i: number }) {
         >
           <Icon className="h-24 w-24 text-white" />
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
-/* ─── Main Export ────────────────────────────────────────────── */
 export default function UseCases() {
-  const headerRef = useRef<HTMLDivElement>(null);
-  const headerInView = useInView(headerRef, { once: true });
-
   return (
     <section
       aria-label="Who is Codelura for — Use Cases"
       className="relative overflow-hidden bg-[#07060f] py-10 md:py-14 text-white"
     >
+      <UseCaseStyles />
+
       {/* SEO */}
       <script
         type="application/ld+json"
@@ -212,32 +220,23 @@ export default function UseCases() {
         }}
       />
 
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-violet-700/10 blur-[160px]" />
-        <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-fuchsia-700/8 blur-[140px]" />
-        <div className="absolute left-0 top-1/2 h-[300px] w-[300px] rounded-full bg-cyan-700/6 blur-[120px]" />
-        {/* Dot grid */}
+      {/* Ambient glow — hidden on mobile */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden hidden sm:block">
+        <div className="absolute left-1/2 top-0 h-[400px] w-[560px] -translate-x-1/2 rounded-full bg-violet-700/10 blur-[120px]" />
+        <div className="absolute right-0 bottom-0 h-[320px] w-[320px] rounded-full bg-fuchsia-700/8 blur-[110px]" />
+        <div className="absolute left-0 top-1/2 h-[240px] w-[240px] rounded-full bg-cyan-700/6 blur-[100px]" />
         <div
           className="absolute inset-0 opacity-[0.022]"
           style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px)",
             backgroundSize: "42px 42px",
           }}
         />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-6">
-
-        {/* ── Header ── */}
-        <motion.div
-          ref={headerRef}
-          initial={{ opacity: 0, y: 28 }}
-          animate={headerInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="mb-16 text-center"
-        >
+        {/* Header */}
+        <div className="uc-card mb-16 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-500/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-violet-400">
             <Sparkles className="h-3 w-3" />
             Built for Everyone
@@ -255,39 +254,27 @@ export default function UseCases() {
             From fresh graduates to startup founders — Codelura is built for
             every developer who believes in real skills, real projects and real outcomes.
           </p>
-        </motion.div>
+        </div>
 
-        {/* ── Cards Grid ── */}
-        <div
-          className="grid gap-5 sm:grid-cols-2 md:grid-cols-3"
-          aria-label="Use case categories"
-        >
+        {/* Cards Grid */}
+        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3" aria-label="Use case categories">
           {USE_CASES.map((u, i) => (
             <UseCaseCard key={u.title} u={u} i={i} />
           ))}
         </div>
 
-        {/* ── Bottom Tagline ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="mt-20 flex flex-col items-center gap-5 text-center"
-        >
+        {/* Bottom Tagline */}
+        <div className="uc-card mt-20 flex flex-col items-center gap-5 text-center" style={{ animationDelay: "0.4s" }}>
           {/* Pill row */}
           <div className="flex flex-wrap justify-center gap-3">
             {["Learn", "Build", "Get Hired"].map((label, i) => (
-              <motion.span
+              <span
                 key={label}
-                initial={{ opacity: 0, scale: 0.85 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-                className="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-bold text-white/60 backdrop-blur"
+                className="uc-pill rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-bold text-white/60 backdrop-blur"
+                style={{ animationDelay: `${0.5 + i * 0.1}s` }}
               >
                 {label}
-              </motion.span>
+              </span>
             ))}
           </div>
 
@@ -299,17 +286,15 @@ export default function UseCases() {
             way.
           </p>
 
-          <motion.a
-            href="/pricing"
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-700/30 transition-all duration-300 hover:shadow-violet-700/50"
+          <a
+            href="/auth/login"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-700/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-violet-700/50 active:scale-[0.97]"
             aria-label="Join Codelura platform"
           >
             Join the Platform
             <ArrowRight className="h-4 w-4" />
-          </motion.a>
-        </motion.div>
+          </a>
+        </div>
       </div>
     </section>
   );

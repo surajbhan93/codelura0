@@ -1,7 +1,6 @@
-"use client";
-
-import React, { useState } from "react";
-import { motion,Variants } from "framer-motion";
+import React from "react";
+import { Metadata } from "next";
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronUp,
@@ -15,10 +14,23 @@ import {
   XCircle,
 } from "lucide-react";
 
-interface ExpandedSections {
-  [key: number]: boolean;
-}
+// Metadata for SEO
+export const metadata: Metadata = {
+  title: "Terms & Conditions | Codelura Legal Agreement",
+  description: "Read Codelura's comprehensive Terms & Conditions governing the use of our learning platform, AI tools, hackathons, and community services.",
+  keywords: "terms and conditions, legal agreement, Codelura terms, user agreement, platform terms",
+  openGraph: {
+    title: "Terms & Conditions | Codelura",
+    description: "Legal terms governing the use of Codelura platform",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
+// Types
 interface SectionContent {
   id: number;
   title: string;
@@ -26,45 +38,8 @@ interface SectionContent {
   content: React.ReactNode;
 }
 
-const fadeInUp: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 40,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut", // ✅ now valid
-    },
-  },
-};
-
-const fadeInDown: Variants = {
-  hidden: {
-    opacity: 0,
-    y: -40,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.7,
-      ease: "easeOut",
-    },
-  },
-};
-export default function TermsPage(): React.ReactElement {
-  const [expandedSections, setExpandedSections] = useState<ExpandedSections>({});
-
-  const toggleSection = (sectionId: number): void => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [sectionId]: !prev[sectionId],
-    }));
-  };
-
+// Server Component - No 'use client' needed
+export default function TermsPage() {
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -73,18 +48,19 @@ export default function TermsPage(): React.ReactElement {
 
   const currentYear = new Date().getFullYear();
 
+  // Static sections data - moved outside component to prevent recreation
   const sections: SectionContent[] = [
     {
       id: 1,
-      title: "1. Acceptance of Terms &amp; Legal Agreement",
-      icon: <FileText className="w-5 h-5 text-blue-400" />,
+      title: "1. Acceptance of Terms & Legal Agreement",
+      icon: <FileText className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
             By accessing, browsing, registering, or using the Codelura platform
             (including but not limited to our website, mobile applications, APIs,
             and all related services), you acknowledge that you have read, understood,
-            and agree to be bound by these Terms &amp; Conditions.
+            and agree to be bound by these Terms & Conditions.
           </p>
           <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
             <h4 className="text-white font-semibold mb-2">Scope of Agreement</h4>
@@ -101,8 +77,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 2,
-      title: "2. User Eligibility &amp; Age Requirements",
-      icon: <Shield className="w-5 h-5 text-green-400" />,
+      title: "2. User Eligibility & Age Requirements",
+      icon: <Shield className="w-5 h-5 text-green-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>You must meet the following eligibility requirements:</p>
@@ -110,15 +86,15 @@ export default function TermsPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">Eligibility Criteria</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>You must be at least 13 years of age</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>You must be capable of entering into legally binding agreements</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>You are not located in a country under embargo</span>
               </li>
             </ul>
@@ -128,15 +104,15 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 3,
-      title: "3. User Accounts &amp; Registration",
-      icon: <Shield className="w-5 h-5 text-purple-400" />,
+      title: "3. User Accounts & Registration",
+      icon: <Shield className="w-5 h-5 text-purple-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>When you create an account on Codelura, you agree to:</p>
           <div className="space-y-3">
             <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-blue-400" />
+                <FileText className="w-4 h-4 text-blue-400" aria-hidden="true" />
                 Account Information
               </h4>
               <ul className="list-disc ml-6 space-y-1 text-sm">
@@ -147,7 +123,7 @@ export default function TermsPage(): React.ReactElement {
             </div>
             <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-purple-400" />
+                <Shield className="w-4 h-4 text-purple-400" aria-hidden="true" />
                 Account Security
               </h4>
               <ul className="list-disc ml-6 space-y-1 text-sm">
@@ -162,19 +138,19 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 4,
-      title: "4. User Content &amp; Intellectual Property Rights",
-      icon: <Scale className="w-5 h-5 text-blue-400" />,
+      title: "4. User Content & Intellectual Property Rights",
+      icon: <Scale className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
             <h4 className="text-white font-semibold mb-3">Content Ownership</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>You retain full ownership of all your projects and content</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Codelura does not claim ownership of your IP</span>
               </li>
             </ul>
@@ -192,7 +168,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 5,
-      title: "5. AI Tools &amp; Automated Features",
+      title: "5. AI Tools & Automated Features",
+      icon: <AlertCircle className="w-5 h-5 text-yellow-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>Codelura uses AI algorithms for recommendations and discovery:</p>
@@ -200,13 +177,13 @@ export default function TermsPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">AI Limitations</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-yellow-300">Informational Only:</span> AI outputs are informational
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-yellow-300">No Guarantees:</span> We don&apos;t guarantee accuracy
                 </span>
@@ -218,7 +195,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 6,
-      title: "6. Hackathons &amp; Competitive Events",
+      title: "6. Hackathons & Competitive Events",
+      icon: <Clock className="w-5 h-5 text-orange-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>Participation in hackathons is governed by specific rules:</p>
@@ -239,7 +217,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 7,
-      title: "7. Courses &amp; Learning Materials",
+      title: "7. Courses & Learning Materials",
+      icon: <FileText className="w-5 h-5 text-green-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>Our courses and learning materials are provided under these terms:</p>
@@ -253,7 +232,7 @@ export default function TermsPage(): React.ReactElement {
           </div>
           <div className="bg-blue-950/20 border border-blue-900 rounded-lg p-4">
             <h4 className="text-blue-300 font-semibold mb-2 flex items-center gap-2">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4" aria-hidden="true" />
               Refund Policy
             </h4>
             <ul className="list-disc ml-6 space-y-1 text-sm text-blue-200">
@@ -267,12 +246,13 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 8,
-      title: "8. Premium Services &amp; Payment Terms",
+      title: "8. Premium Services & Payment Terms",
+      icon: <Shield className="w-5 h-5 text-yellow-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>Premium services are provided under these payment terms:</p>
           <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <h4 className="text-white font-semibold mb-3">Payment &amp; Billing</h4>
+            <h4 className="text-white font-semibold mb-3">Payment & Billing</h4>
             <ul className="list-disc ml-6 space-y-1 text-sm">
               <li>All prices in currency specified at checkout</li>
               <li>Recurring subscriptions auto-renew unless cancelled</li>
@@ -285,8 +265,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 9,
-      title: "9. Community Standards &amp; Prohibited Activities",
-      icon: <AlertCircle className="w-5 h-5 text-red-400" />,
+      title: "9. Community Standards & Prohibited Activities",
+      icon: <AlertCircle className="w-5 h-5 text-red-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>To maintain a safe community, these activities are prohibited:</p>
@@ -295,37 +275,37 @@ export default function TermsPage(): React.ReactElement {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <ul className="space-y-2 text-sm text-red-200">
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Uploading malware or malicious code</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Attempting unauthorized access</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Harassment or abusive behavior</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Hate speech or discrimination</span>
                 </li>
               </ul>
               <ul className="space-y-2 text-sm text-red-200">
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Using bots for artificial engagement</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Plagiarism or copyright infringement</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Phishing or social engineering</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Scraping or bulk downloading</span>
                 </li>
               </ul>
@@ -336,7 +316,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 10,
-      title: "10. Content Moderation &amp; Removal",
+      title: "10. Content Moderation & Removal",
+      icon: <Shield className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
@@ -362,8 +343,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 11,
-      title: "11. Limitation of Liability &amp; Disclaimers",
-      icon: <Scale className="w-5 h-5 text-orange-400" />,
+      title: "11. Limitation of Liability & Disclaimers",
+      icon: <Scale className="w-5 h-5 text-orange-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <div className="bg-orange-950/20 border border-orange-900 rounded-lg p-4">
@@ -387,6 +368,7 @@ export default function TermsPage(): React.ReactElement {
     {
       id: 12,
       title: "12. Indemnification",
+      icon: <Shield className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -405,8 +387,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 13,
-      title: "13. Termination &amp; Account Suspension",
-      icon: <AlertCircle className="w-5 h-5 text-red-400" />,
+      title: "13. Termination & Account Suspension",
+      icon: <AlertCircle className="w-5 h-5 text-red-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
@@ -424,7 +406,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 14,
-      title: "14. Dispute Resolution &amp; Governing Law",
+      title: "14. Dispute Resolution & Governing Law",
+      icon: <Scale className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
@@ -438,7 +421,8 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 15,
-      title: "15. Changes to Terms &amp; Updates",
+      title: "15. Changes to Terms & Updates",
+      icon: <Clock className="w-5 h-5 text-yellow-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
@@ -455,66 +439,72 @@ export default function TermsPage(): React.ReactElement {
     },
     {
       id: 16,
-      title: "16. Contact &amp; Legal Inquiries",
-      icon: <Mail className="w-5 h-5 text-blue-400" />,
+      title: "16. Contact & Legal Inquiries",
+      icon: <Mail className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
-          <p>Contact us for questions about these Terms &amp; Conditions:</p>
+          <p>Contact us for questions about these Terms & Conditions:</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <motion.div
-              variants={fadeInUp}
-              className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-blue-600 transition-colors"
-            >
+            <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-blue-600 transition-colors">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <Mail className="w-4 h-4 text-blue-400" />
+                <Mail className="w-4 h-4 text-blue-400" aria-hidden="true" />
                 Legal Email
               </h4>
               <p className="text-blue-400 font-medium hover:text-blue-300 transition-colors">
                 <a href="mailto:legal@codelura.com">legal@codelura.com</a>
               </p>
-              <p className="text-xs text-gray-500 mt-2">Legal inquiries &amp; disputes</p>
-            </motion.div>
-            <motion.div
-              variants={fadeInUp}
-              className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-green-600 transition-colors"
-            >
+              <p className="text-xs text-gray-500 mt-2">Legal inquiries & disputes</p>
+            </div>
+            <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-green-600 transition-colors">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <Mail className="w-4 h-4 text-green-400" />
+                <Mail className="w-4 h-4 text-green-400" aria-hidden="true" />
                 Support Email
               </h4>
               <p className="text-blue-400 font-medium hover:text-blue-300 transition-colors">
                 <a href="mailto:support@codelura.com">support@codelura.com</a>
               </p>
-              <p className="text-xs text-gray-500 mt-2">General support &amp; inquiries</p>
-            </motion.div>
+              <p className="text-xs text-gray-500 mt-2">General support & inquiries</p>
+            </div>
           </div>
         </div>
       ),
     },
   ];
 
+  // Accordion component for client-side interactivity
+const AccordionSection = ({ section }: { section: SectionContent }) => (
+  <details className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg overflow-hidden group">
+    <summary className="list-none cursor-pointer px-6 py-5 flex items-center justify-between hover:bg-gray-800/50">
+      <div className="flex items-center gap-3">
+        {section.icon}
+        <h2 className="text-lg font-semibold text-white">
+          {section.title}
+        </h2>
+      </div>
+
+      <ChevronDown className="w-5 h-5 text-blue-400 transition-transform group-open:rotate-180" />
+    </summary>
+
+    <div className="px-6 py-4 border-t border-gray-700 bg-black/30">
+      {section.content}
+    </div>
+  </details>
+);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-gray-900 text-gray-300 px-6 md:px-16 py-20">
-      {/* HEADER */}
-      <motion.section
-        variants={fadeInDown}
-        initial="hidden"
-        animate="show"
-        className="max-w-7xl mx-auto text-center mb-20"
-      >
-        <motion.div
-          variants={fadeInUp}
-          className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-red-950/40 to-red-900/40 border border-red-900 rounded-full"
-        >
-          <p className="text-red-300 text-sm font-semibold">LEGAL TERMS &amp; CONDITIONS</p>
-        </motion.div>
+      {/* Header */}
+      <header className="max-w-7xl mx-auto text-center mb-20">
+        <div className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-red-950/40 to-red-900/40 border border-red-900 rounded-full">
+          <p className="text-red-300 text-sm font-semibold">LEGAL TERMS & CONDITIONS</p>
+        </div>
 
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-          Terms &amp; Conditions
+          Terms & Conditions
         </h1>
 
         <p className="text-gray-400 text-lg leading-relaxed max-w-3xl mx-auto">
-          These comprehensive Terms &amp; Conditions govern your use of the Codelura platform,
+          These comprehensive Terms & Conditions govern your use of the Codelura platform,
           including all websites, applications, and digital services.
         </p>
 
@@ -531,89 +521,40 @@ export default function TermsPage(): React.ReactElement {
             </p>
           </div>
         </div>
-      </motion.section>
+      </header>
 
-      {/* TABLE OF CONTENTS */}
-      <motion.section
-        variants={fadeInUp}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="max-w-5xl mx-auto mb-16"
-      >
+      {/* Table of Contents */}
+      <section className="max-w-5xl mx-auto mb-16">
         <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg p-6">
           <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-400" />
+            <FileText className="w-5 h-5 text-blue-400" aria-hidden="true" />
             Quick Navigation
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {sections.map((section: SectionContent) => (
-              <button
+            {sections.map((section) => (
+              <Link
                 key={section.id}
-                onClick={() => toggleSection(section.id)}
-                className="text-left text-blue-400 hover:text-blue-300 text-sm transition-colors hover:translate-x-1"
+                href={`#section-${section.id}`}
+                className="text-blue-400 hover:text-blue-300 text-sm transition-colors hover:translate-x-1"
               >
                 → {section.title}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* CONTENT SECTIONS */}
+      {/* Content Sections */}
       <div className="max-w-7xl mx-auto space-y-4 mb-16">
-        {sections.map((section: SectionContent) => (
-          <motion.section
-            key={section.id}
-            variants={fadeInUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-gray-600"
-          >
-            <button
-              onClick={() => toggleSection(section.id)}
-              className="w-full px-6 py-5 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
-            >
-              <div className="flex items-center gap-3 text-left">
-                {section.icon}
-                <h2 className="text-lg font-semibold text-white">{section.title}</h2>
-              </div>
-              <motion.div
-                animate={{ rotate: expandedSections[section.id] ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {expandedSections[section.id] ? (
-                  <ChevronUp className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                )}
-              </motion.div>
-            </button>
-
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{
-                height: expandedSections[section.id] ? "auto" : 0,
-                opacity: expandedSections[section.id] ? 1 : 0,
-              }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="px-6 py-4 border-t border-gray-700 bg-black/30">{section.content}</div>
-            </motion.div>
-          </motion.section>
+        {sections.map((section) => (
+          <div key={section.id} id={`section-${section.id}`}>
+            <AccordionSection section={section} />
+          </div>
         ))}
       </div>
 
-      {/* FOOTER */}
-      <motion.footer
-        variants={fadeInUp}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="max-w-7xl mx-auto border-t border-gray-800 pt-12"
-      >
+      {/* Footer */}
+      <footer className="max-w-7xl mx-auto border-t border-gray-800 pt-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div>
             <h3 className="text-white font-semibold mb-3">About Codelura</h3>
@@ -626,39 +567,39 @@ export default function TermsPage(): React.ReactElement {
             <h3 className="text-white font-semibold mb-3">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/cookies" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/cookies" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Cookie Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Community Guidelines
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h3 className="text-white font-semibold mb-3">Legal &amp; Compliance</h3>
+            <h3 className="text-white font-semibold mb-3">Legal & Compliance</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
                   GDPR Compliance
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Data Protection
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Accessibility
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -669,10 +610,10 @@ export default function TermsPage(): React.ReactElement {
             &copy; {currentYear} Codelura Inc. All rights reserved.
           </p>
           <p className="text-gray-600 text-xs mt-2">
-            Terms &amp; Conditions for Codelura Platform | Last Updated: {currentDate} | Version 2.0
+            Terms & Conditions for Codelura Platform | Last Updated: {currentDate} | Version 2.0
           </p>
         </div>
-      </motion.footer>
+      </footer>
     </div>
   );
 }

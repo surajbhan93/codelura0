@@ -18,29 +18,50 @@ import {
   HiOutlineChartBar,
   HiOutlineCollection,
   HiOutlineQuestionMarkCircle,
+  HiOutlineUsers,
+  HiOutlineShoppingBag,
 } from "react-icons/hi";
 import { useState } from "react";
 
 const menu = [
   { name: "Dashboard",          href: "/admin",                 icon: HiOutlineViewGrid,          group: "main" },
+
+  // Learning & Tracks
+  { name: "Enrollments",        href: "/admin/enrollments",     icon: HiOutlineShoppingBag,       group: "learning" },
+  { name: "Career Tracks",      href: "/admin/career-tracks",   icon: HiOutlineTrendingUp,        group: "learning" },
+  { name: "Programs",           href: "/admin/programs",        icon: HiOutlineAcademicCap,       group: "learning" },
+  { name: "Courses",            href: "/admin/courses",         icon: HiOutlineCollection,        group: "learning" },
+  { name: "Hackathons",         href: "/admin/hackathons",      icon: HiOutlineBriefcase,         group: "learning" },
+
+  // Content & Jobs
   { name: "All Blogs",          href: "/admin/blogs",           icon: HiOutlineDocumentText,      group: "content" },
   { name: "Create Blog",        href: "/admin/blogs/create",    icon: HiOutlinePlusCircle,        group: "content" },
   { name: "Comments",           href: "/admin/blogs/comments",  icon: HiOutlineChatAlt2,          group: "content" },
+  { name: "Jobs",               href: "/admin/jobs",            icon: HiOutlineBriefcase,         group: "content" },
   { name: "Analytics",          href: "/admin/analytics",       icon: HiOutlineChartBar,          group: "content" },
-  { name: "Courses",            href: "/admin/courses",         icon: HiOutlineAcademicCap,       group: "manage" },
+
+  // Services & Business
   { name: "Services",           href: "/admin/services",        icon: HiOutlineBriefcase,         group: "manage" },
-   { name: "Membership",           href: "/admin/premium",        icon: HiOutlineBriefcase,         group: "manage" },
-    { name: "hackathons",    href: "/admin/hackathons",        icon: HiOutlineBriefcase,         group: "manage" },
-        // { name: "Create hackathons",    href: "/admin/hackathons/create-hackathon",        icon: HiOutlineBriefcase,         group: "manage" },
-  { name: "Services-enquiries", href: "/admin/enquiries",       icon: HiOutlineQuestionMarkCircle, group: "manage" },
+  { name: "Membership",         href: "/admin/premium",         icon: HiOutlineStar,              group: "manage" },
+  { name: "Enquiries",          href: "/admin/enquiries",       icon: HiOutlineQuestionMarkCircle, group: "manage" },
   { name: "Your Work",          href: "/admin/work",            icon: HiOutlineCollection,        group: "manage" },
-  { name: "Our Courses",        href: "/admin/programs",        icon: HiOutlineTrendingUp,        group: "manage" },
+
+  // Community
+  { name: "Users",              href: "/admin/users",           icon: HiOutlineUsers,             group: "community" },
+  { name: "Team",               href: "/admin/team",            icon: HiOutlineUsers,            group: "community" },
+
+  // Other
+  { name: "Testimonials",       href: "/admin/testimonials",    icon: HiOutlineStar,              group: "other" },
   { name: "Contact Us",         href: "/admin/contact",         icon: HiOutlinePhone,             group: "other" },
-  { name: "testimonials",       href: "/admin/testimonials",    icon: HiOutlineStar,              group: "other" },
 ];
 
 const groups: Record<string, string> = {
-  main: "", content: "Content", manage: "Manage", other: "Other",
+  main: "",
+  learning: "Learning & Tracks",
+  content: "Content & Jobs",
+  manage: "Services & Sales",
+  community: "Community",
+  other: "Other",
 };
 
 const CSS = `

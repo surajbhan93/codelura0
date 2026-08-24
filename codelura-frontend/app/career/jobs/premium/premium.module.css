@@ -1,0 +1,485 @@
+/* app/premium/premium.module.css */
+
+/* ===== PAGE STYLES ===== */
+.premiumPage {
+  min-height: 100vh;
+  background: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+:global(.dark) .premiumPage {
+  background: #0f172a;
+}
+
+/* ===== HERO SECTION ===== */
+.heroSection {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 80px 20px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroSection::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 60%);
+  animation: rotate 30s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.heroContent {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.heroBadge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
+}
+
+.heroTitle {
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 16px;
+  line-height: 1.1;
+}
+
+.gradientText {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroDescription {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ===== PLANS SECTION ===== */
+.plansSection {
+  max-width: 1200px;
+  margin: -40px auto 0;
+  padding: 0 20px 80px;
+  position: relative;
+  z-index: 2;
+}
+
+.plansGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  align-items: stretch;
+}
+
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  color: #6b7280;
+}
+
+:global(.dark) .emptyState {
+  background: #1f2937;
+  color: #9ca3af;
+}
+
+/* ===== PREMIUM CARD ===== */
+.premiumCard {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.premiumCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Card Banner */
+.cardBanner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bannerImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.premiumCard:hover .bannerImage {
+  transform: scale(1.05);
+}
+
+.bannerPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.placeholderIcon {
+  font-size: 48px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Georgia', serif;
+}
+
+/* Badges */
+.badgeContainer {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.durationBadge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.discountBadge {
+  background: #10b981;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Card Content */
+.cardContent {
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1.2;
+  font-family: 'Georgia', serif;
+}
+
+.cardDescription {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+}
+
+/* Price */
+.priceSection {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.priceMain {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.currency {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-family: 'Georgia', serif;
+}
+
+.priceOriginal {
+  font-size: 16px;
+  color: #9ca3af;
+  text-decoration: line-through;
+  text-decoration-color: #ef4444;
+}
+
+.savingsBadge {
+  display: inline-block;
+  background: #ecfdf5;
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #d1fae5;
+  width: fit-content;
+}
+
+/* Features */
+.featuresList {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.checkIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #10b981;
+}
+
+/* CTA Button */
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  margin-top: auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+}
+
+.ctaButton:hover::before {
+  opacity: 1;
+}
+
+.ctaButton .arrowIcon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.ctaButton:hover .arrowIcon {
+  transform: translateX(4px);
+}
+
+.ctaButton span {
+  position: relative;
+  z-index: 1;
+}
+
+:global(.dark) .premiumCard {
+  background: linear-gradient(145deg, #1f2937 0%, #111827 100%);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+:global(.dark) .cardTitle {
+  color: #f9fafb;
+}
+
+:global(.dark) .cardDescription {
+  color: #9ca3af;
+}
+
+:global(.dark) .currency,
+:global(.dark) .amount {
+  color: #f9fafb;
+}
+
+:global(.dark) .featureItem {
+  color: #d1d5db;
+}
+
+:global(.dark) .priceOriginal {
+  color: #6b7280;
+}
+
+/* ===== SKELETON ===== */
+.plansSkeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.skeletonCard {
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px;
+  height: 400px;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+:global(.dark) .skeletonCard {
+  background: #1f2937;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeletonBanner {
+  height: 140px;
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+:global(.dark) .skeletonBanner {
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+}
+
+.skeletonLine {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+:global(.dark) .skeletonLine {
+  background: #374151;
+}
+
+.skeletonLine.short {
+  width: 60%;
+}
+
+.skeletonLine.medium {
+  width: 80%;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .heroSection {
+    padding: 60px 16px 40px;
+  }
+
+  .heroTitle {
+    font-size: 32px;
+  }
+
+  .heroDescription {
+    font-size: 16px;
+  }
+
+  .plansSection {
+    margin-top: -20px;
+    padding: 0 16px 60px;
+  }
+
+  .plansGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .cardContent {
+    padding: 20px;
+  }
+
+  .cardTitle {
+    font-size: 20px;
+  }
+
+  .amount {
+    font-size: 28px;
+  }
+
+  .ctaButton {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .plansGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

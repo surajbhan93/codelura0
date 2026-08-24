@@ -1,28 +1,42 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
+import { Metadata } from "next";
+import Link from "next/link";
 import { ChevronDown, ChevronUp, Mail, MapPin, Phone } from "lucide-react";
 
-interface ExpandedSections {
-  [key: number]: boolean;
-}
+// Metadata for SEO
+export const metadata: Metadata = {
+  title: "Privacy Policy | Codelura - Your Data Protection & Security",
+  description: "Codelura's comprehensive Privacy Policy. Learn how we collect, use, and protect your personal information. GDPR and CCPA compliant platform.",
+  keywords: "privacy policy, data protection, GDPR compliance, CCPA compliance, data security, user privacy, Codelura privacy",
+  openGraph: {
+    title: "Privacy Policy | Codelura",
+    description: "Your privacy matters. Learn about Codelura's commitment to protecting your personal information.",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
+// Types
 interface Section {
   id: number;
   title: string;
   content: React.ReactNode;
 }
 
-export default function PrivacyPage(): React.ReactElement {
-  const [expandedSections, setExpandedSections] = useState<ExpandedSections>({});
+// Server Component
+export default function PrivacyPage() {
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
-  const toggleSection = (sectionId: number): void => {
-    setExpandedSections((prev: ExpandedSections) => ({
-      ...prev,
-      [sectionId]: !prev[sectionId],
-    }));
-  };
+  const currentYear = new Date().getFullYear();
 
+  // Static sections data
   const sections: Section[] = [
     {
       id: 1,
@@ -135,7 +149,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 3,
-      title: "3. Projects &amp; User Content",
+      title: "3. Projects & User Content",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -198,7 +212,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 4,
-      title: "4. AI &amp; Smart Discovery System",
+      title: "4. AI & Smart Discovery System",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -242,7 +256,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 5,
-      title: "5. Data Sharing &amp; Third-Party Services",
+      title: "5. Data Sharing & Third-Party Services",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <div className="bg-red-950/20 border border-red-900 rounded-lg p-4 mb-4">
@@ -362,7 +376,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 7,
-      title: "7. Cookies &amp; Tracking Technologies",
+      title: "7. Cookies & Tracking Technologies",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -415,7 +429,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 8,
-      title: "8. Premium Services &amp; Payments",
+      title: "8. Premium Services & Payments",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -461,7 +475,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 9,
-      title: "9. Children &amp; Minors Policy",
+      title: "9. Children & Minors Policy",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <div className="bg-orange-950/20 border border-orange-900 rounded-lg p-4">
@@ -505,7 +519,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 10,
-      title: "10. Your Data Rights &amp; Control",
+      title: "10. Your Data Rights & Control",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -629,7 +643,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 12,
-      title: "12. Data Retention &amp; Deletion",
+      title: "12. Data Retention & Deletion",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -707,7 +721,7 @@ export default function PrivacyPage(): React.ReactElement {
     },
     {
       id: 14,
-      title: "14. Contact &amp; Privacy Inquiries",
+      title: "14. Contact & Privacy Inquiries",
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -717,7 +731,7 @@ export default function PrivacyPage(): React.ReactElement {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
               <div className="flex items-center gap-2 mb-3">
-                <Mail className="text-blue-400 w-5 h-5" />
+                <Mail className="text-blue-400 w-5 h-5" aria-hidden="true" />
                 <h4 className="text-white font-semibold">Email</h4>
               </div>
               <p className="text-sm">
@@ -732,7 +746,7 @@ export default function PrivacyPage(): React.ReactElement {
 
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
               <div className="flex items-center gap-2 mb-3">
-                <Mail className="text-blue-400 w-5 h-5" />
+                <Mail className="text-blue-400 w-5 h-5" aria-hidden="true" />
                 <h4 className="text-white font-semibold">Support</h4>
               </div>
               <p className="text-sm">
@@ -747,7 +761,7 @@ export default function PrivacyPage(): React.ReactElement {
 
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
               <div className="flex items-center gap-2 mb-3">
-                <MapPin className="text-blue-400 w-5 h-5" />
+                <MapPin className="text-blue-400 w-5 h-5" aria-hidden="true" />
                 <h4 className="text-white font-semibold">Mailing Address</h4>
               </div>
               <p className="text-sm">
@@ -759,7 +773,7 @@ export default function PrivacyPage(): React.ReactElement {
 
             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
               <div className="flex items-center gap-2 mb-3">
-                <Phone className="text-blue-400 w-5 h-5" />
+                <Phone className="text-blue-400 w-5 h-5" aria-hidden="true" />
                 <h4 className="text-white font-semibold">Phone</h4>
               </div>
               <p className="text-sm">
@@ -788,18 +802,31 @@ export default function PrivacyPage(): React.ReactElement {
     },
   ];
 
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const AccordionSection = ({ section }: { section: Section }) => {
+  return (
+    <details className="group bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden transition-all duration-300 hover:border-gray-700">
+      <summary className="list-none cursor-pointer w-full px-6 py-5 flex items-center justify-between hover:bg-gray-800/50 transition-colors">
+        <h2 className="text-lg font-semibold text-white text-left">
+          {section.title}
+        </h2>
 
-  const currentYear = new Date().getFullYear();
+        <ChevronDown
+          className="w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300 group-open:rotate-180"
+          aria-hidden="true"
+        />
+      </summary>
+
+      <div className="px-6 py-4 border-t border-gray-800 bg-black/30">
+        {section.content}
+      </div>
+    </details>
+  );
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-gray-900 text-gray-300 px-6 md:px-16 py-16">
-      {/* HEADER SECTION */}
-      <section className="max-w-5xl mx-auto text-center mb-16">
+      {/* Header */}
+      <header className="max-w-5xl mx-auto text-center mb-16">
         <div className="inline-block mb-4 px-4 py-2 bg-blue-950/40 border border-blue-900 rounded-full">
           <p className="text-blue-300 text-sm font-semibold">PRIVACY &amp; SECURITY</p>
         </div>
@@ -815,74 +842,53 @@ export default function PrivacyPage(): React.ReactElement {
         </p>
 
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4 text-sm">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg px-4 py-2">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg px-4 py-2 hover:border-gray-700 transition-colors">
             <p className="text-gray-500">
               Last Updated:{" "}
               <span className="text-white font-semibold">{currentDate}</span>
             </p>
           </div>
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg px-4 py-2">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg px-4 py-2 hover:border-gray-700 transition-colors">
             <p className="text-gray-500">
               Version: <span className="text-white font-semibold">2.0</span>
             </p>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* TABLE OF CONTENTS */}
+      {/* Table of Contents */}
       <section className="max-w-7xl mx-auto mb-16">
         <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
           <h2 className="text-white font-semibold mb-4">Quick Navigation</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {sections.map((section: Section) => (
-              <button
+            {sections.map((section) => (
+              <Link
                 key={section.id}
-                onClick={() => toggleSection(section.id)}
-                className="text-left text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                href={`#section-${section.id}`}
+                className="text-blue-400 hover:text-blue-300 text-sm transition-colors hover:translate-x-1"
               >
                 → {section.title}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CONTENT SECTIONS */}
+      {/* Content Sections */}
       <div className="max-w-7xl mx-auto space-y-4 mb-16">
-        {sections.map((section: Section) => (
-          <section
-            key={section.id}
-            className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden transition-all duration-300"
-          >
-            <button
-              onClick={() => toggleSection(section.id)}
-              className="w-full px-6 py-5 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
-            >
-              <h2 className="text-lg font-semibold text-white text-left">
-                {section.title}
-              </h2>
-              {expandedSections[section.id] ? (
-                <ChevronUp className="w-5 h-5 text-blue-400 flex-shrink-0" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
-              )}
-            </button>
-
-            {expandedSections[section.id] && (
-              <div className="px-6 py-4 border-t border-gray-800 bg-black/30">
-                {section.content}
-              </div>
-            )}
-          </section>
+        {sections.map((section) => (
+          <div key={section.id} id={`section-${section.id}`}>
+            <AccordionSection section={section} />
+          </div>
         ))}
       </div>
 
-      {/* FOOTER */}
+      {/* Footer */}
       <footer className="max-w-5xl mx-auto border-t border-gray-800 pt-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div>
             <h3 className="text-white font-semibold mb-3">About Codelura</h3>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm leading-relaxed">
               A comprehensive platform for learning, building, and showcasing projects with
               AI-powered discovery.
             </p>
@@ -891,19 +897,19 @@ export default function PrivacyPage(): React.ReactElement {
             <h3 className="text-white font-semibold mb-3">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/cookies" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/cookies" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Cookie Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="protection" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/data-protection" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Data Processing Agreement
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -911,19 +917,19 @@ export default function PrivacyPage(): React.ReactElement {
             <h3 className="text-white font-semibold mb-3">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
                   GDPR Compliance
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
                   CCPA Rights
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Accessibility
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

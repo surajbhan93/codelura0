@@ -1,9 +1,10 @@
-
+import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import premiumRoutes from "./routes/premium.routes.js";
 import blogRoutes from "./routes/blog.routes.js";
+import jobsRoutes from "./routes/Job.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
 import adminBlogRoutes from "./routes/admin.blog.routes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -25,8 +26,16 @@ import autogbpRoutes from "./routes/web/autogbp.routes.js";
 import googleRoutes from "./routes/google.route.js";
 import hackathonRoutes from "./routes/hackathon.routes.js";
 import hackathonAdminRoute from "./routes/admin/hackthon.admin.routes.js";
+import uploadRoutes  from "./routes/upload.routes.js";
+import teamRoutes  from "./routes/team.routes.js";
+import careerTrackAdminRoutes from "./routes/admin/careerTrack.routes.js";
+import careerTrackWebRoutes from "./routes/web/careerTrack.routes.js";
+import atsRoutes from "./routes/ats.routes.js";
+import programRoutes from "./routes/programRoutes.js";
+import enrollmentRoutes from "./routes/enrollment.routes.js";
 import bodyParser from "body-parser";
 import path from "path";
+import session from "express-session";
 const app = express();
 
 app.use(
@@ -41,6 +50,18 @@ app.use(
 
 app.use(cookieParser());
 
+
+// login by github 
+import passport from "./config/passport.js";
+
+app.use(session({
+  secret: "secret",
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 // ❌ GLOBAL body parsers hata do
 // app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
@@ -48,6 +69,7 @@ app.use(cookieParser());
 // ✅ JSON only for non-file APIs
 app.use("/api/auth", express.json(), authRoutes);
 app.use("/api/blogs", express.json(), blogRoutes);
+app.use("/api/jobs", express.json(), jobsRoutes);
 app.use("/api", express.json(), commentRoutes);
 app.use(
   "/api/admin/blogs",
@@ -97,8 +119,20 @@ app.use("/api/google", googleRoutes);
 // hackathonRoutes
 app.use("/api/hackathons", express.json(), hackathonRoutes);
 app.use("/api/participation", express.json(), hackathonRoutes); // Reusing the same router which has /join
-
+app.use("/api/ats", atsRoutes);
 
 //admin
 app.use("/api/admin", express.json(), hackathonAdminRoute); // 
+
+// ===========================
+// Career Track Routes Mounting
+// ===========================
+app.use("/api/admin/career-tracks", careerTrackAdminRoutes); // Admin (protected)
+app.use("/api/career-tracks", careerTrackWebRoutes); // Public (web)
+
+app.use("/api", uploadRoutes);
+app.use("/api/team", express.json(), teamRoutes);
+
+app.use("/api/programs", programRoutes);
+app.use("/api/enrollments", express.json(), enrollmentRoutes);
 export default app;

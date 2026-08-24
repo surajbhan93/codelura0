@@ -32,9 +32,15 @@ const userSchema = new mongoose.Schema(
 
 
     
-    referralCode: {
+//     referralCode: {
+//   type: String,
+//   unique: true,
+// },
+
+referralCode: {
   type: String,
   unique: true,
+  sparse: true,  // 👈 yahi add karo
 },
 
 referredBy: {
@@ -56,7 +62,22 @@ walletBalance: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Course"
       }
-    ]
+    ],
+    enrolledPrograms: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Program"
+      }
+    ],
+    enrolledCareerTracks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "CareerTrack"
+      }
+    ],
+    savedCourses: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Course" }
+    ],
   },
   { timestamps: true }
 );

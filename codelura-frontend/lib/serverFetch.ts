@@ -1,7 +1,13 @@
 export async function serverFetch(path: string) {
-  const url = `${process.env.NEXT_PUBLIC_API_URL}${path}`;
 
-  console.log("FETCHING:", url); // 🔥 DEBUG
+  const base =
+    process.env.NEXT_PUBLIC_API_URL?.startsWith("http")
+      ? process.env.NEXT_PUBLIC_API_URL
+      : `http://localhost:3002`;
+
+  const url = `${base}${path}`;
+
+  console.log("FETCHING:", url);
 
   const res = await fetch(url, {
     cache: "no-store",

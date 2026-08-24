@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -12,13 +12,15 @@ import { Button } from "flowbite-react";
 export default function VerifyEmail() {
   const { token } = useParams();
   const { theme, setTheme } = useTheme();
-
+  const hasCalled = useRef(false); // 👈 add karo
   const [status, setStatus] = useState<
     "loading" | "success" | "error"
   >("loading");
 
-  useEffect(() => {
+   useEffect(() => {
     if (!token) return;
+    if (hasCalled.current) return; // 👈 double call roko
+    hasCalled.current = true;     // 👈 mark as called
 
     api
       .get(`/auth/verify-email/${token}`)

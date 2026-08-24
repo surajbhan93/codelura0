@@ -29,40 +29,60 @@
 //   }
 // });
 
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+// import multer from "multer";
+// import path from "path";
+// import fs from "fs";
 
-const uploadDir = path.join(process.cwd(), "uploads");
+// const uploadDir = path.join(process.cwd(), "uploads");
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let folder = "others";
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     let folder = "others";
 
-    if (file.fieldname === "pdf") folder = "pdfs";
-    if (file.fieldname === "banner") folder = "banners";
-    if (file.fieldname === "attachments") folder = "attachments";
+//     if (file.fieldname === "pdf") folder = "pdfs";
+//     if (file.fieldname === "banner") folder = "banners";
+//     if (file.fieldname === "attachments") folder = "attachments";
 
-    const finalPath = path.join(uploadDir, folder);
-    if (!fs.existsSync(finalPath)) {
-      fs.mkdirSync(finalPath, { recursive: true });
-    }
+//     const finalPath = path.join(uploadDir, folder);
+//     if (!fs.existsSync(finalPath)) {
+//       fs.mkdirSync(finalPath, { recursive: true });
+//     }
 
-    cb(null, finalPath);
-  },
+//     cb(null, finalPath);
+//   },
 
-  filename: (req, file, cb) => {
-    const unique =
-      Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  }
-});
+//   filename: (req, file, cb) => {
+//     const unique =
+//       Date.now() + "-" + Math.round(Math.random() * 1e9);
+//     cb(null, unique + path.extname(file.originalname));
+//   }
+// });
 
-export const upload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
-});
+// export const upload = multer({
+//   storage,
+//   limits: { fileSize: 50 * 1024 * 1024 } // 50MB
+// });
+
+
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import r2 from "./r2Client.js";
+
+export const uploadPdfToR2 = async (file) => {
+
+  const fileName = `${Date.now()}-${file.originalname}`;
+
+  const command = new PutObjectCommand({
+    Bucket: process.env.R2_BUCKET,
+    Key: fileName,
+    Body: file.buffer,
+    ContentType: "application/pdf",
+  });
+
+  await r2.send(command);
+
+  return `${process.env.R2_PUBLIC_URL}/${fileName}`;
+};

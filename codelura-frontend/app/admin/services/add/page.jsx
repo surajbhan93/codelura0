@@ -1,11 +1,9 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
-
 export default function AddServicePage() {
-  const router = useRouter();
+const router = useRouter();
  const [form, setForm] = useState({
   title: "",
   shortDescription: "",
@@ -14,14 +12,11 @@ export default function AddServicePage() {
   icon: "",
   image: "",
   startingPrice: "",
-
   features: [""],
   process: [""],
-
   // ✅ ADD THESE
   techStack: [""],
   idealFor: [""],
-
   pricing: [
     {
       name: "",
@@ -29,25 +24,20 @@ export default function AddServicePage() {
       features: [""],
     },
   ],
-
   faqs: [
     {
       question: "",
       answer: "",
     },
   ],
-
   seo: {
     metaTitle: "",
     metaDescription: "",
     keywords: "",
   },
-
   isFeatured: false,
   isActive: true,
 });
-
-
   const submit = async (e) => {
     e.preventDefault();
     await api.post("/admin/services", form);
@@ -190,16 +180,20 @@ export default function AddServicePage() {
           </div>
 
           {/* PRICING PLANS */}
+{/* PRICING PLANS */}
 <div>
   <label className="block font-medium mb-2">
     Pricing Plans
   </label>
 
   {form.pricing.map((plan, i) => (
-    <div key={i} className="border p-4 rounded mb-4 space-y-2">
+    <div
+      key={i}
+      className="border p-4 rounded mb-4 bg-gray-50"
+    >
       <input
-        className="w-full border px-3 py-2 rounded"
-        placeholder="Plan name (Basic / Pro)"
+        className="w-full border px-3 py-2 rounded mb-2"
+        placeholder="Plan Name"
         value={plan.name}
         onChange={(e) => {
           const updated = [...form.pricing];
@@ -210,7 +204,7 @@ export default function AddServicePage() {
 
       <input
         type="number"
-        className="w-full border px-3 py-2 rounded"
+        className="w-full border px-3 py-2 rounded mb-3"
         placeholder="Price"
         value={plan.price}
         onChange={(e) => {
@@ -219,21 +213,87 @@ export default function AddServicePage() {
           setForm({ ...form, pricing: updated });
         }}
       />
+
+      <label className="text-sm font-medium">
+        Features
+      </label>
+
+      {plan.features.map((feature, featureIndex) => (
+        <div
+          key={featureIndex}
+          className="flex gap-2 mt-2"
+        >
+          <input
+            className="flex-1 border px-3 py-2 rounded"
+            placeholder={`Feature ${featureIndex + 1}`}
+            value={feature}
+            onChange={(e) => {
+              const updated = [...form.pricing];
+              updated[i].features[featureIndex] =
+                e.target.value;
+              setForm({
+                ...form,
+                pricing: updated,
+              });
+            }}
+          />
+
+          <button
+            type="button"
+            className="px-3 bg-red-500 text-white rounded"
+            onClick={() => {
+              const updated = [...form.pricing];
+              updated[i].features =
+                updated[i].features.filter(
+                  (_, idx) =>
+                    idx !== featureIndex
+                );
+
+              setForm({
+                ...form,
+                pricing: updated,
+              });
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        className="text-blue-600 text-sm mt-2"
+        onClick={() => {
+          const updated = [...form.pricing];
+          updated[i].features.push("");
+
+          setForm({
+            ...form,
+            pricing: updated,
+          });
+        }}
+      >
+        + Add Feature
+      </button>
     </div>
   ))}
 
   <button
     type="button"
+    className="px-4 py-2 bg-blue-600 text-white rounded"
     onClick={() =>
       setForm({
         ...form,
         pricing: [
           ...form.pricing,
-          { name: "", price: "", features: [""] },
+          {
+            name: "",
+            price: "",
+            features: [""],
+          },
         ],
       })
     }
-    className="text-sm text-blue-600"
   >
     + Add Pricing Plan
   </button>

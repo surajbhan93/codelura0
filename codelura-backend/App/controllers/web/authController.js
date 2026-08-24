@@ -149,6 +149,7 @@ await sendEmail({
   } catch (error) {
     console.error("SIGNUP ERROR 👉", error);
     return res.status(500).json({
+      
       message: "Signup failed"
     });
   }
@@ -315,16 +316,17 @@ export const login = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",   // ✅ ADD THIS LINE
     });
-
     return res.json({
-      message: "Login successful",
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-    });
+  message: "Login successful",
+  token, // ✅ ADD THIS
+  user: {
+    id: user._id,
+    email: user.email,
+    role: user.role,
+  },
+});
   } catch (error) {
     return res.status(500).json({ message: "Login failed" });
   }
@@ -521,19 +523,158 @@ export const me = async (req, res) => {
   }
 };
 
-
 export const logout = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  });
+  const isProd = process.env.NODE_ENV === "production";
 
-  res.clearCookie("auth_token", {
+  const options = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
     path: "/",
-  });
+  };
+
+  res.clearCookie("token", options);
+  res.clearCookie("auth_token", options);
 
   return res.json({ message: "Logout successful" });
+};
+
+
+// admin 
+// import User from "../../models/User.js";
+
+/* ─────────────────────────────────────────────────
+   ✅ GET ALL USERS (Admin)
+   Query: q, role, verified, page, limit
+───────────────────────────────────────────────── */
+export const getAllUsers = async (req, res) => {
+  try {
+    const page  = Number(req.query.page)  || 1;
+    const limit = Number(req.query.limit) || 20;
+    const { q, role, verified } = req.query;
+
+    const query = {};
+
+    if (role && role !== "all") query.role = role;
+
+    if (verified === "true")  query.isEmailVerified = true;
+    if (verified === "false") query.isEmailVerified = false;
+
+    if (q) {
+      const regex = new RegExp(q, "i");
+      query.$or = [
+        { name:  regex },
+        { email: regex },
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .select("-password -emailVerifyToken -resetPasswordToken -resetPasswordExpire")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(query),
+    ]);
+
+    res.json({
+      users,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("GET USERS ERROR 👉", error);
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+};
+
+/* ─────────────────────────────────────────────────
+   ✅ GET SINGLE USER (Admin)
+───────────────────────────────────────────────── */
+export const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select("-password -emailVerifyToken -resetPasswordToken -resetPasswordExpire");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (error) {
+    console.error("GET USER ERROR 👉", error);
+    res.status(500).json({ message: "Failed to fetch user" });
+  }
+};
+
+/* ─────────────────────────────────────────────────
+   ✅ UPDATE USER ROLE (Admin)
+───────────────────────────────────────────────── */
+export const updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    if (!["user", "admin"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: { role } },
+      { new: true }
+    ).select("-password");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "Role updated", user });
+  } catch (error) {
+    console.error("UPDATE ROLE ERROR 👉", error);
+    res.status(500).json({ message: "Failed to update role" });
+  }
+};
+
+/* ─────────────────────────────────────────────────
+   ✅ DELETE USER (Admin)
+───────────────────────────────────────────────── */
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("DELETE USER ERROR 👉", error);
+    res.status(500).json({ message: "Failed to delete user" });
+  }
+};
+
+/* ─────────────────────────────────────────────────
+   ✅ GET USER STATS (Admin Dashboard)
+───────────────────────────────────────────────── */
+export const getUserStats = async (req, res) => {
+  try {
+    const [total, verified, admins, thisMonth] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ isEmailVerified: true }),
+      User.countDocuments({ role: "admin" }),
+      User.countDocuments({
+        createdAt: {
+          $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+        },
+      }),
+    ]);
+
+    res.json({
+      total,
+      verified,
+      unverified: total - verified,
+      admins,
+      thisMonth,
+    });
+  } catch (error) {
+    console.error("USER STATS ERROR 👉", error);
+    res.status(500).json({ message: "Failed to fetch stats" });
+  }
 };

@@ -8,7 +8,7 @@ type Course = {
   _id: string; title: string; price: number; isPaid: boolean;
   category: string; level?: string; language?: string;
   createdAt: string; tags?: string[];
-  bannerImage?: { filePath: string };
+  bannerImage?: string;
 };
 type Testimonial = {
   _id: string; name: string; message: string; rating: number;
@@ -169,8 +169,8 @@ export default function CoursesPage() {
       .catch((err) => console.error("Testimonial fetch error:", err));
   }, []);
 
-  const normalizePath = (p: string) =>
-    p.includes("uploads") ? "/uploads/" + p.split("uploads")[1].replace(/\\/g, "/") : p;
+  // const normalizePath = (p: string) =>
+  //   p.includes("uploads") ? "/uploads/" + p.split("uploads")[1].replace(/\\/g, "/") : p;
 
   const filteredCourses  = courses.filter((c) => filter === "free" ? !c.isPaid : filter === "paid" ? c.isPaid : true);
   const totalPages       = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE);
@@ -266,9 +266,12 @@ export default function CoursesPage() {
                   return (
                     <motion.div key={c._id} whileHover={{ y: -8 }} transition={{ duration:0.3, ease:[0.22,0.68,0,1.2] }} className="pcard">
                       <div className="pcard-img-wrap">
-                        {c.bannerImage?.filePath
-                          ? <><img src={`http://localhost:3002${normalizePath(c.bannerImage.filePath)}`} alt={c.title} loading="lazy" /><div className="pcard-img-overlay" /><div className="pcard-img-top" /></>
-                          : <><div className="pcard-fallback">📚</div><div className="pcard-img-overlay" /></>
+                        {c.bannerImage
+                          ? <><img src={c.bannerImage} alt={c.title} loading="lazy" />
+                          <div className="pcard-img-overlay" />
+                          <div className="pcard-img-top" /></>
+                          : <><div className="pcard-fallback">📚</div><div className="pcard-img-overlay" />
+                          </>
                         }
                         <span className="pcard-category">
                           <span style={{ width:5, height:5, borderRadius:"50%", background:"rgba(255,255,255,0.5)", display:"inline-block" }} />
@@ -301,7 +304,7 @@ export default function CoursesPage() {
                         )}
                         <div style={{ height:1, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent)", margin:"2px 0" }} />
                         <Link href={`/courses/${c._id}`} className={`pcard-cta ${c.isPaid ? "pcard-cta-paid" : "pcard-cta-free"}`}>
-                          {c.isPaid ? `Enroll for ₹${c.price}` : "Access for Free"}
+                         Login to Unlock Free Course
                           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M8 4l3.5 3.5L8 11" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </Link>
                       </div>

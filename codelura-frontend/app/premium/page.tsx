@@ -1,645 +1,684 @@
+// app/career/jobs/premium/page.tsx
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import api from "@/lib/api";
-import PremiumCard from "@/components/premium/PremiumCard";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-/* ===============================
-   PLAN TYPE
-================================ */
-type PremiumPlan = {
+import {
+  Check,
+  ArrowRight,
+  Star,
+  Clock,
+  Shield,
+  Zap,
+  Crown,
+  Sparkles,
+  Rocket,
+  MessageCircle,
+  Mail,
+  Phone,
+  Building2,
+  BadgeCheck,
+  Lightbulb,
+  HeartHandshake,
+  Briefcase,
+  Users,
+  Target,
+  Award,
+  LayoutGrid,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+interface PremiumPlan {
   _id: string;
   title: string;
-  description: string;
-  price: number;
   slug: string;
-  features: string[];
-};
-
-type Testimonial = {
-  _id: string;
-  name: string;
-  message: string;
-  rating: number;
-  profileImage?: string;
   category: string;
-  createdAt: string;
-};
-
-/* ===============================
-   SKELETON CARD
-================================ */
-function SkeletonCard() {
-  return (
-    <div className="premium-skeleton">
-      <div className="skeleton-shimmer" />
-    </div>
-  );
+  price: number;
+  discountedPrice?: number;
+  durationInMonths?: number;
+  shortDescription?: string;
+  features?: string[];
+  bannerImage?: string;
+  badge?: string;
+  isRecommended?: boolean;
 }
 
-/* ===============================
-   MAIN PAGE
-================================ */
-export default function PremiumPage() {
-  const [plans, setPlans] = useState<PremiumPlan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [visible, setVisible] = useState(false);
-  const gridRef = useRef<HTMLDivElement>(null);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-
-  useEffect(() => {
-    const fetchPlans = async () => {
-      const res = await api.get("/premium/plans");
-      setPlans(res.data.plans || []);
-      setLoading(false);
-      // Slight delay so cards animate after skeleton fades
-      setTimeout(() => setVisible(true), 80);
-    };
-
-    fetchPlans();
-
-    // Trigger header animations immediately
-    const header = document.querySelector(".premium-header");
-    if (header) header.classList.add("animate-in");
-  }, []);
-
-
-  useEffect(() => {
-  api.get("/testimonial/membership")
-    .then((res) => {
-      setTestimonials(res.data.data);
-    })
-    .catch((err) => {
-      console.error("Testimonial fetch error:", err);
+// ============================================
+// DATA FETCHING
+// ============================================
+async function getAllPremiumPlans() {
+  try {
+    
+const res = await fetch("https://career.codelura.com/api/premium/plans", {
+      cache: "no-store",
     });
-}, []);
+    
+    if (!res.ok) {
+      console.error(`API error: ${res.status} ${res.statusText}`);
+      return [];
+    }
+    
+    const data = await res.json();
+    return data.plans || [];
+  } catch (error) {
+    console.error("Error fetching premium plans:", error);
+    return [];
+  }
+}
+
+// ============================================
+// COMPONENTS
+// ============================================
+
+// ─── Premium Plan Card ───
+const PremiumPlanCard = ({ plan }: { plan: PremiumPlan }) => {
+  const hasDiscount = plan.discountedPrice != null && plan.discountedPrice < plan.price;
+  const actualPrice = hasDiscount ? plan.discountedPrice : plan.price;
+  const discountPercent = hasDiscount
+    ? Math.round(((plan.price - (plan.discountedPrice as number)) / plan.price) * 100)
+    : 0;
+
+  const getColorScheme = (plan: PremiumPlan) => {
+    const category = plan.category?.toLowerCase() || "";
+    
+    if (category === "linkedin") {
+      return {
+        border: "border-blue-200",
+        bg: "bg-blue-50/60",
+        btn: "bg-blue-600 hover:bg-blue-500",
+        badge: "bg-blue-100 text-blue-700",
+        iconBg: "bg-blue-100 text-blue-600",
+        gradient: "from-blue-600 to-indigo-600",
+        shadow: "shadow-blue-600/30",
+        text: "text-blue-600",
+        categoryLabel: "LinkedIn",
+      };
+    }
+    if (category === "referral") {
+      return {
+        border: "border-purple-200",
+        bg: "bg-purple-50/60",
+        btn: "bg-purple-600 hover:bg-purple-500",
+        badge: "bg-purple-100 text-purple-700",
+        iconBg: "bg-purple-100 text-purple-600",
+        gradient: "from-purple-600 to-indigo-600",
+        shadow: "shadow-purple-600/30",
+        text: "text-purple-600",
+        categoryLabel: "Referral",
+      };
+    }
+    if (category === "resume" || category === "cv") {
+      return {
+        border: "border-emerald-200",
+        bg: "bg-emerald-50/60",
+        btn: "bg-emerald-600 hover:bg-emerald-500",
+        badge: "bg-emerald-100 text-emerald-700",
+        iconBg: "bg-emerald-100 text-emerald-600",
+        gradient: "from-emerald-600 to-teal-600",
+        shadow: "shadow-emerald-600/30",
+        text: "text-emerald-600",
+        categoryLabel: "Resume",
+      };
+    }
+    if (category === "other") {
+      return {
+        border: "border-amber-200",
+        bg: "bg-amber-50/60",
+        btn: "bg-amber-600 hover:bg-amber-500",
+        badge: "bg-amber-100 text-amber-700",
+        iconBg: "bg-amber-100 text-amber-600",
+        gradient: "from-amber-600 to-orange-600",
+        shadow: "shadow-amber-600/30",
+        text: "text-amber-600",
+        categoryLabel: "Other",
+      };
+    }
+    return {
+      border: "border-slate-200",
+      bg: "bg-slate-50/60",
+      btn: "bg-slate-600 hover:bg-slate-500",
+      badge: "bg-slate-100 text-slate-700",
+      iconBg: "bg-slate-100 text-slate-600",
+      gradient: "from-slate-600 to-slate-700",
+      shadow: "shadow-slate-600/30",
+      text: "text-slate-600",
+      categoryLabel: "Premium",
+    };
+  };
+
+  const colors = getColorScheme(plan);
+
+  const getIcon = (plan: PremiumPlan): LucideIcon => {
+    const category = plan.category?.toLowerCase() || "";
+    if (category === "linkedin") return Users;
+    if (category === "referral") return Briefcase;
+    if (category === "resume" || category === "cv") return Award;
+    if (category === "other") return Zap;
+    return Crown;
+  };
+
+  const IconComponent = getIcon(plan);
+
+  const getCategoryEmoji = (category: string) => {
+    const cat = category?.toLowerCase() || "";
+    if (cat === "linkedin") return "💼";
+    if (cat === "referral") return "🎯";
+    if (cat === "resume" || cat === "cv") return "📄";
+    if (cat === "other") return "⚡";
+    return "⭐";
+  };
+
+  const isRecommended =
+    plan.isRecommended || plan.badge === "Popular" || plan.badge === "Recommended";
 
   return (
-    <>
-      {/* ── Global Styles ─────────────────────────────────── */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500&display=swap');
-
-        :root {
-          --gold:    #c9a84c;
-          --gold-lt: #e8cc80;
-          --ink:     #0b0c10;
-          --ink-2:   #13151c;
-          --ink-3:   #1c1f2a;
-          --border:  rgba(201,168,76,0.18);
-          --text:    #e8e6e0;
-          --muted:   #7a7870;
-        }
-
-        .premium-page {
-          min-height: 100vh;
-          background: var(--ink);
-          font-family: 'DM Sans', sans-serif;
-          color: var(--text);
-          overflow-x: hidden;
-          position: relative;
-        }
-
-        /* ── Noise grain overlay ── */
-        .premium-page::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-          pointer-events: none;
-          z-index: 0;
-        }
-
-        /* ── Radial glow behind content ── */
-        .bg-glow {
-          position: fixed;
-          top: -30%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 900px;
-          height: 600px;
-          background: radial-gradient(ellipse, rgba(201,168,76,0.07) 0%, transparent 70%);
-          pointer-events: none;
-          z-index: 0;
-        }
-
-        /* ── Inner container ── */
-        .premium-inner {
-          position: relative;
-          z-index: 1;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 80px 32px 100px;
-        }
-
-        /* ── Header ── */
-        .premium-header {
-          text-align: center;
-          margin-bottom: 72px;
-          opacity: 0;
-          transform: translateY(28px);
-          transition: opacity 0.7s ease, transform 0.7s ease;
-        }
-        .premium-header.animate-in {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        .eyebrow {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: var(--gold);
-          margin-bottom: 20px;
-        }
-        .eyebrow::before,
-        .eyebrow::after {
-          content: '';
-          display: block;
-          width: 36px;
-          height: 1px;
-          background: var(--gold);
-          opacity: 0.5;
-        }
-
-        .premium-title {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: clamp(42px, 6vw, 72px);
-          font-weight: 300;
-          line-height: 1.08;
-          letter-spacing: -0.01em;
-          color: #fff;
-          margin: 0 0 20px;
-        }
-        .premium-title em {
-          font-style: italic;
-          color: var(--gold-lt);
-        }
-
-        .premium-subtitle {
-          font-size: 15px;
-          font-weight: 300;
-          color: var(--muted);
-          max-width: 440px;
-          margin: 0 auto;
-          line-height: 1.65;
-        }
-
-        /* ── Gold rule ── */
-        .gold-rule {
-          width: 48px;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, var(--gold), transparent);
-          margin: 28px auto 0;
-        }
-
-        /* ── Grid ── */
-        .plans-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 24px;
-        }
-
-        /* ── Card reveal animation ── */
-        .card-wrapper {
-          opacity: 0;
-          transform: translateY(36px) scale(0.97);
-          transition: opacity 0.55s ease, transform 0.55s ease;
-        }
-        .card-wrapper.visible {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
-        .card-wrapper:nth-child(1) { transition-delay: 0.05s; }
-        .card-wrapper:nth-child(2) { transition-delay: 0.15s; }
-        .card-wrapper:nth-child(3) { transition-delay: 0.25s; }
-        .card-wrapper:nth-child(4) { transition-delay: 0.35s; }
-        .card-wrapper:nth-child(5) { transition-delay: 0.45s; }
-        .card-wrapper:nth-child(6) { transition-delay: 0.55s; }
-
-        /* ── Skeleton ── */
-        .premium-skeleton {
-          height: 380px;
-          border-radius: 16px;
-          background: var(--ink-3);
-          border: 1px solid var(--border);
-          overflow: hidden;
-          position: relative;
-        }
-        .skeleton-shimmer {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            105deg,
-            transparent 40%,
-            rgba(201,168,76,0.06) 50%,
-            transparent 60%
-          );
-          background-size: 200% 100%;
-          animation: shimmer 1.6s infinite;
-        }
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-
-        /* ── Decorative corner marks ── */
-        .corner-mark {
-          position: absolute;
-          width: 16px;
-          height: 16px;
-          opacity: 0.3;
-        }
-        .corner-mark.tl { top: 40px; left: 40px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
-        .corner-mark.tr { top: 40px; right: 40px; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); }
-        .corner-mark.bl { bottom: 40px; left: 40px; border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold); }
-        .corner-mark.br { bottom: 40px; right: 40px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
-
-        /* ── Empty state ── */
-        .empty-state {
-          text-align: center;
-          padding: 80px 20px;
-          color: var(--muted);
-          font-size: 14px;
-          opacity: 0;
-          animation: fadeIn 0.5s 0.2s forwards;
-        }
-        @keyframes fadeIn {
-          to { opacity: 1; }
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 640px) {
-          .premium-inner { padding: 60px 20px 80px; }
-          .corner-mark { display: none; }
-        }
-      `}</style>
-
-      {/* ── Page ──────────────────────────────────────────── */}
-      <div className="premium-page">
-        <div className="bg-glow" />
-
-        {/* Decorative corners */}
-        <div className="corner-mark tl" />
-        <div className="corner-mark tr" />
-        <div className="corner-mark bl" />
-        <div className="corner-mark br" />
-
-        <div className="premium-inner">
-
-          {/* ── Header ── */}
-          <header className="premium-header animate-in">
-            <p className="eyebrow">Membership</p>
-            <h1 className="premium-title">
-              Choose Your <em>Plan</em>
-            </h1>
-            <p className="premium-subtitle">
-              Unlock the full experience. Every plan is crafted to give you exactly what you need — nothing more, nothing less.
-            </p>
-            <div className="gold-rule" />
-          </header>
-
-          {/* ── Plans Grid ── */}
-          <div className="plans-grid" ref={gridRef}>
-            {loading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))
-              : plans.length === 0
-              ? (
-                  <div className="empty-state" style={{ gridColumn: "1 / -1" }}>
-                    No plans available at the moment. Please check back soon.
-                  </div>
-                )
-              : plans.map((plan, i) => (
-                  <div
-                    key={plan._id}
-                    className={`card-wrapper ${visible ? "visible" : ""}`}
-                  >
-                    <PremiumCard plan={plan} />
-                  </div>
-                ))
-            }
-          </div>
-
-        </div>
-
-
-
-        {/* ══ PREMIUM TESTIMONIALS ══ */}
-{testimonials.length > 0 && (
-  <section style={{ marginTop: "96px", position: "relative", padding: "0 0 48px" }}>
-
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,600&family=DM+Sans:wght@400;500;600&display=swap');
-
-      .testi-section { font-family: 'DM Sans', sans-serif; }
-
-      /* ── ambient orbs ── */
-      .testi-orb {
-        position: absolute; border-radius: 50%;
-        pointer-events: none; filter: blur(80px); z-index: 0;
-      }
-
-      /* ── pill badge ── */
-      .testi-pill {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: linear-gradient(135deg, rgba(251,146,60,0.12), rgba(251,191,36,0.08));
-        border: 1px solid rgba(251,146,60,0.25);
-        color: #f97316; border-radius: 100px;
-        padding: 6px 18px; font-size: 10.5px; font-weight: 700;
-        letter-spacing: .1em; text-transform: uppercase;
-        font-family: 'DM Sans', sans-serif;
-      }
-      .testi-pill-dot {
-        width: 6px; height: 6px; border-radius: 50%;
-        background: #f97316;
-        box-shadow: 0 0 8px rgba(249,115,22,0.8);
-        animation: tpulse 2s ease-in-out infinite;
-      }
-      @keyframes tpulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(0.75); }
-      }
-
-      /* ── card ── */
-      .testi-card {
-        position: relative;
-        background: #ffffff;
-        border-radius: 20px;
-        border: 1px solid rgba(0,0,0,0.06);
-        padding: 28px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.05), 0 0 0 0 rgba(249,115,22,0);
-        transition: transform 0.35s cubic-bezier(.22,.68,0,1.2),
-                    box-shadow 0.35s ease,
-                    border-color 0.3s ease;
-        overflow: hidden;
-        display: flex; flex-direction: column; gap: 18px;
-        cursor: default;
-      }
-      .testi-card::before {
-        content: '';
-        position: absolute; top: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, #f97316, #fbbf24, #f97316);
-        background-size: 200% auto;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        animation: shimmer 2.5s linear infinite paused;
-      }
-      .testi-card:hover::before { opacity: 1; animation-play-state: running; }
-      @keyframes shimmer { to { background-position: 200% center; } }
-
-      .testi-card:hover {
-        transform: translateY(-6px) scale(1.01);
-        box-shadow: 0 20px 50px rgba(249,115,22,0.12), 0 8px 20px rgba(0,0,0,0.08);
-        border-color: rgba(249,115,22,0.2);
-      }
-
-      /* ── giant decorative quote ── */
-      .testi-quote-bg {
-        position: absolute; top: 12px; right: 16px;
-        font-size: 100px; line-height: 1;
-        font-family: 'Playfair Display', Georgia, serif;
-        color: rgba(249,115,22,0.07);
-        pointer-events: none; user-select: none;
-        font-weight: 700; transition: color 0.3s ease;
-      }
-      .testi-card:hover .testi-quote-bg { color: rgba(249,115,22,0.13); }
-
-      /* ── avatar ── */
-      .testi-avatar {
-        width: 46px; height: 46px; border-radius: 50%;
-        border: 2px solid rgba(249,115,22,0.2);
-        object-fit: cover; flex-shrink: 0;
-        transition: border-color 0.3s ease, transform 0.3s ease;
-      }
-      .testi-card:hover .testi-avatar { border-color: rgba(249,115,22,0.5); transform: scale(1.05); }
-
-      .testi-avatar-fallback {
-        width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
-        background: linear-gradient(135deg, #f97316, #fbbf24);
-        display: flex; align-items: center; justify-content: center;
-        color: #fff; font-weight: 700; font-size: 17px;
-        font-family: 'DM Sans', sans-serif;
-        box-shadow: 0 4px 12px rgba(249,115,22,0.3);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-      }
-      .testi-card:hover .testi-avatar-fallback {
-        transform: scale(1.05);
-        box-shadow: 0 6px 18px rgba(249,115,22,0.4);
-      }
-
-      /* ── stars ── */
-      .testi-star { font-size: 13px; transition: transform 0.2s ease; }
-      .testi-star.filled { color: #fbbf24; }
-      .testi-star.empty  { color: #e5e7eb; }
-      .testi-card:hover .testi-star.filled { transform: scale(1.15); }
-
-      /* ── verified chip ── */
-      .testi-verified {
-        display: inline-flex; align-items: center; gap: 4px;
-        background: rgba(249,115,22,0.07);
-        border: 1px solid rgba(249,115,22,0.18);
-        color: #f97316; border-radius: 100px;
-        padding: 3px 10px; font-size: 10px; font-weight: 600;
-        letter-spacing: .04em; text-transform: uppercase;
-        font-family: 'DM Sans', sans-serif;
-      }
-
-      /* ── divider ── */
-      .testi-divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(0,0,0,0.07), transparent);
-      }
-
-      /* ── view all button ── */
-      .testi-btn {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: linear-gradient(135deg, #f97316, #fbbf24);
-        color: #fff; border: none; border-radius: 100px;
-        padding: 13px 32px; font-size: 14px; font-weight: 600;
-        text-decoration: none; font-family: 'DM Sans', sans-serif;
-        box-shadow: 0 4px 20px rgba(249,115,22,0.35);
-        transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.2s;
-        white-space: nowrap;
-      }
-      .testi-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(249,115,22,0.45);
-        opacity: 0.93;
-      }
-      .testi-btn svg { transition: transform 0.25s ease; }
-      .testi-btn:hover svg { transform: translateX(3px); }
-
-      /* ── stagger animation ── */
-      @keyframes fadeSlideUp {
-        from { opacity: 0; transform: translateY(28px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-      .testi-card-anim {
-        opacity: 0;
-        animation: fadeSlideUp 0.55s cubic-bezier(.22,.68,0,1.1) forwards;
-      }
-      .testi-card-anim:nth-child(1) { animation-delay: 0.05s; }
-      .testi-card-anim:nth-child(2) { animation-delay: 0.15s; }
-      .testi-card-anim:nth-child(3) { animation-delay: 0.25s; }
-
-      @media (max-width: 768px) {
-        .testi-grid { grid-template-columns: 1fr !important; }
-      }
-      @media (min-width: 769px) and (max-width: 1024px) {
-        .testi-grid { grid-template-columns: 1fr 1fr !important; }
-      }
-    `}</style>
-
-    <div className="testi-section" style={{ position: "relative" }}>
-
-      {/* ambient orbs */}
-      <div className="testi-orb" style={{ width: 500, height: 250, background: "rgba(251,146,60,0.08)", top: "-60px", left: "50%", transform: "translateX(-50%)" }} />
-      <div className="testi-orb" style={{ width: 200, height: 200, background: "rgba(251,191,36,0.06)", top: "20%", right: "-5%" }} />
-      <div className="testi-orb" style={{ width: 160, height: 160, background: "rgba(249,115,22,0.05)", bottom: "10%", left: "-3%" }} />
-
-      {/* ── heading ── */}
-      <div style={{ position: "relative", textAlign: "center", marginBottom: "56px", zIndex: 1 }}>
-
-        <span className="testi-pill">
-          <span className="testi-pill-dot" />
-          Student Reviews
-        </span>
-
-        <h2 style={{
-          fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: "clamp(30px, 4vw, 46px)",
-          fontWeight: 700,
-          color: "#111827",
-          lineHeight: 1.15,
-          letterSpacing: "-0.01em",
-          margin: "16px 0 10px",
-        }}>
-          What Students{" "}
-          <em style={{ color: "#f97316", fontStyle: "italic" }}>Say</em>{" "}
-          <span style={{ fontSize: "0.85em" }}>💬</span>
-        </h2>
-
-        <p style={{
-          color: "#9ca3af",
-          fontSize: "14px",
-          maxWidth: "380px",
-          margin: "0 auto",
-          lineHeight: 1.7,
-          fontFamily: "'DM Sans', sans-serif",
-        }}>
-          Honest experiences from real students who used our materials.
-        </p>
-
-        {/* subtle underline accent */}
-        <div style={{
-          width: 48, height: 3,
-          background: "linear-gradient(90deg, #f97316, #fbbf24)",
-          borderRadius: 100,
-          margin: "16px auto 0",
-        }} />
-      </div>
-
-      {/* ── cards grid ── */}
-      <div
-        className="testi-grid"
-        style={{
-          position: "relative", zIndex: 1,
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "20px",
-        }}
-      >
-        {testimonials.slice(0, 3).map((t, idx) => (
-          <div key={t._id} className="testi-card testi-card-anim">
-
-            {/* shimmer bar (shown on hover via CSS) */}
-            {/* decorative bg quote */}
-            <span className="testi-quote-bg">&ldquo;</span>
-
-            {/* ── author row ── */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", position: "relative" }}>
-
-              {t.profileImage ? (
-                <img src={t.profileImage} alt={t.name} className="testi-avatar" />
-              ) : (
-                <div className="testi-avatar-fallback">
-                  {t.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h3 style={{
-                  fontWeight: 600, fontSize: "14px", color: "#111827",
-                  margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}>
-                  {t.name}
-                </h3>
-
-                {/* stars */}
-                <div style={{ display: "flex", alignItems: "center", gap: "3px", marginTop: "4px" }}>
-                  {[1,2,3,4,5].map((s) => (
-                    <span key={s} className={`testi-star ${s <= t.rating ? "filled" : "empty"}`}>★</span>
-                  ))}
-                  <span style={{ fontSize: "11px", color: "#f59e0b", fontWeight: 700, marginLeft: "4px" }}>
-                    {t.rating}.0
-                  </span>
-                </div>
-              </div>
-
-              <span className="testi-verified" style={{ flexShrink: 0 }}>
-                ✦ Verified
-              </span>
+    <div
+      className={`group relative flex flex-col rounded-2xl border-2 p-7 transition-all duration-300 hover:-translate-y-2 ${colors.border} ${colors.bg} hover:shadow-xl ${
+        isRecommended ? "shadow-lg" : ""
+      }`}
+    >
+      {isRecommended && (
+        <>
+          <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r ${colors.gradient} px-4 py-1 text-xs font-bold text-white shadow-lg ${colors.shadow} whitespace-nowrap`}>
+            ⭐ Most Popular
+          </span>
+          <div className="absolute -right-1 -top-1">
+            <div className="h-16 w-16 overflow-hidden">
+              <div className={`absolute -right-8 -top-8 h-20 w-20 rotate-45 bg-gradient-to-r ${colors.gradient} opacity-20`} />
             </div>
-
-            {/* divider */}
-            <div className="testi-divider" />
-
-            {/* message */}
-            <p style={{
-              color: "#6b7280",
-              fontSize: "13.5px",
-              lineHeight: 1.78,
-              fontStyle: "italic",
-              flex: 1,
-              position: "relative",
-              fontFamily: "'DM Sans', sans-serif",
-              margin: 0,
-            }}>
-              {t.message}
-            </p>
-
           </div>
-        ))}
+        </>
+      )}
+
+      <div className="absolute right-4 top-4">
+        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${colors.badge}`}>
+          {getCategoryEmoji(plan.category || "")} {colors.categoryLabel}
+        </span>
       </div>
 
-      {/* ── view all ── */}
-      {testimonials.length > 3 && (
-        <div style={{ textAlign: "center", marginTop: "48px", position: "relative", zIndex: 1 }}>
-          <Link href="/testimonial/membership" className="testi-btn">
-            View All Reviews
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </Link>
+      <div className="mb-4 flex items-center justify-between">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${colors.iconBg}`}>
+          <IconComponent className="h-6 w-6" />
+        </div>
+        <span
+          className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${colors.badge}`}
+        >
+          {plan.durationInMonths 
+            ? `${plan.durationInMonths} Month${plan.durationInMonths > 1 ? 's' : ''}`
+            : 'One-Time'
+          }
+        </span>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900">{plan.title}</h2>
+      {plan.shortDescription && (
+        <p className="mb-4 text-sm text-slate-500">{plan.shortDescription}</p>
+      )}
+
+      <div className="mb-6 flex items-baseline gap-1.5">
+        <span className={`text-4xl font-black ${colors.text}`}>₹{actualPrice}</span>
+        {plan.durationInMonths ? (
+          <span className="text-sm text-slate-400">
+            / {plan.durationInMonths} month{plan.durationInMonths > 1 ? "s" : ""}
+          </span>
+        ) : (
+          <span className="text-sm text-slate-400">/ one-time</span>
+        )}
+      </div>
+
+      {hasDiscount && (
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+          Save {discountPercent}% • ₹{plan.price - (plan.discountedPrice as number)} off
         </div>
       )}
 
+      {(plan.features?.length ?? 0) > 0 && (
+        <ul className="mb-8 flex-1 space-y-3">
+          {plan.features!.slice(0, 6).map((feature) => (
+            <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-600">
+              <Check className={`mt-0.5 h-4 w-4 flex-shrink-0 ${colors.text}`} />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* ✅ Redirect to /premium/[slug] */}
+      <Link
+        href={`/premium/${plan.slug}`}
+        className={`block w-full rounded-xl px-4 py-3.5 text-center text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${colors.btn}`}
+      >
+        View Details
+        <ArrowRight className="ml-2 inline-block h-4 w-4" />
+      </Link>
+    </div>
+  );
+};
+
+// ─── Skeleton Loader ───
+const PlansSkeleton = () => (
+  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {[1, 2, 3, 4, 5, 6].map((i) => (
+      <div key={i} className="rounded-2xl border border-slate-200 bg-white p-7 animate-pulse">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="h-12 w-12 rounded-xl bg-slate-200" />
+          <div className="h-6 w-20 rounded-full bg-slate-200" />
+        </div>
+        <div className="mb-2 h-6 w-3/4 rounded bg-slate-200" />
+        <div className="mb-4 h-4 w-1/2 rounded bg-slate-200" />
+        <div className="mb-6 h-10 w-1/3 rounded bg-slate-200" />
+        <div className="space-y-3">
+          <div className="h-4 w-full rounded bg-slate-200" />
+          <div className="h-4 w-5/6 rounded bg-slate-200" />
+          <div className="h-4 w-4/5 rounded bg-slate-200" />
+          <div className="h-4 w-3/4 rounded bg-slate-200" />
+        </div>
+        <div className="mt-8 h-12 w-full rounded-xl bg-slate-200" />
+      </div>
+    ))}
+  </div>
+);
+
+// ─── Filter Component ───
+const PremiumFilter = ({ 
+  categories, 
+  activeCategory, 
+  setActiveCategory 
+}: { 
+  categories: string[]; 
+  activeCategory: string; 
+  setActiveCategory: (category: string) => void;
+}) => {
+  const getCategoryIcon = (category: string) => {
+    const cat = category?.toLowerCase() || "";
+    if (cat === "linkedin") return "💼";
+    if (cat === "referral") return "🎯";
+    if (cat === "resume" || cat === "cv") return "📄";
+    if (cat === "other") return "⚡";
+    return "⭐";
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        onClick={() => setActiveCategory("all")}
+        className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+          activeCategory === "all"
+            ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+            : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+        }`}
+      >
+        <LayoutGrid className="mr-2 inline-block h-4 w-4" />
+        All Plans
+      </button>
+      {categories.map((category) => (
+        <button
+          key={category}
+          onClick={() => setActiveCategory(category)}
+          className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+            activeCategory === category
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+          }`}
+        >
+          {getCategoryIcon(category)} {category.charAt(0).toUpperCase() + category.slice(1)}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// ─── Stats Section ───
+const STATS = [
+  { value: "10,000+", label: "Profiles Optimized" },
+  { value: "4.9/5", label: "Average Rating" },
+  { value: "50+", label: "Industries Covered" },
+  { value: "95%", label: "Success Rate" },
+];
+
+const StatsSection = () => (
+  <section className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-16">
+    <div className="mx-auto max-w-6xl">
+      <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+        {STATS.map((stat, idx) => (
+          <div key={idx} className="text-center text-white">
+            <div className="text-4xl font-black">{stat.value}</div>
+            <div className="mt-1 text-sm font-light text-blue-100">{stat.label}</div>
+          </div>
+        ))}
+      </div>
     </div>
   </section>
-)}
+);
 
+// ─── Testimonials ───
+const TESTIMONIALS = [
+  {
+    name: "Priya Sharma",
+    role: "Product Manager",
+    text: "The premium services completely transformed my career. From LinkedIn optimization to job referrals, everything was top-notch!",
+    rating: 5,
+    service: "LinkedIn Review",
+  },
+  {
+    name: "Rahul Verma",
+    role: "Strategy Consultant",
+    text: "Got referred to my dream company through this platform. The process was seamless and the results were amazing!",
+    rating: 5,
+    service: "Job Referral",
+  },
+  {
+    name: "Ananya Reddy",
+    role: "Design Lead",
+    text: "The resume review service helped me land interviews at top design agencies. Highly recommended for anyone looking to grow.",
+    rating: 5,
+    service: "Resume Review",
+  },
+];
+
+// ─── FAQs ───
+const FAQS = [
+  {
+    q: "What services do you offer?",
+    a: "We offer comprehensive career services including LinkedIn profile reviews, job referrals, resume reviews, CV optimization, and more.",
+  },
+  {
+    q: "How do I choose the right plan?",
+    a: "Browse through our plans and select the one that best fits your career goals. Each plan is designed for specific needs.",
+  },
+  {
+    q: "Are the services guaranteed?",
+    a: "We offer a 100% satisfaction guarantee on all our premium services. If you're not satisfied, we'll work to make it right.",
+  },
+  {
+    q: "How quickly will I see results?",
+    a: "Results vary by service. LinkedIn reviews show improvements within 2-4 weeks, while referrals can get you interviews within days.",
+  },
+  {
+    q: "Can I get a refund?",
+    a: "Yes, we offer a money-back guarantee if you're not satisfied with our services. Contact our support team for assistance.",
+  },
+  {
+    q: "Do you work with all industries?",
+    a: "Yes, we have experts and referral networks across 50+ industries including Technology, Finance, Healthcare, and more.",
+  },
+];
+
+// ============================================
+// MAIN PAGE
+// ============================================
+export default function PremiumPage() {
+  const [plans, setPlans] = useState<PremiumPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  // Get unique categories
+  const categories = Array.from(
+    new Set(plans.map((plan) => plan.category?.toLowerCase()).filter(Boolean))
+  );
+
+  // Filter plans based on active category
+  const filteredPlans = activeCategory === "all"
+    ? plans
+    : plans.filter((plan) => plan.category?.toLowerCase() === activeCategory);
+
+  // ✅ Fixed: Use useEffect instead of useState
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const data = await getAllPremiumPlans();
+        setPlans(data);
+      } catch (error) {
+        console.error("Error loading plans:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f9f5ef]">
+        <section className="px-6 py-16">
+          <div className="mx-auto max-w-6xl">
+            <PlansSkeleton />
+          </div>
+        </section>
       </div>
+    );
+  }
 
+  return (
+    <div className="min-h-screen bg-[#f9f5ef]">
+      {/* ─── HERO SECTION ─── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 px-6 py-20 sm:py-28">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400/10 blur-2xl" />
+        </div>
 
+        <div className="relative mx-auto max-w-5xl text-center">
+          <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-blue-400/30 bg-blue-900/30 px-5 py-2 backdrop-blur-sm">
+            <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-blue-300">
+              🚀 Premium Career Services
+            </span>
+          </div>
 
-    </>
+          <h1 className="mb-4 text-4xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            <span className="bg-gradient-to-r from-blue-300 via-sky-300 to-indigo-200 bg-clip-text text-transparent">
+              Premium
+            </span>{" "}
+            Career Plans
+          </h1>
+
+          <p className="mx-auto mb-8 max-w-2xl text-base font-light leading-relaxed text-blue-100 sm:text-lg">
+            Accelerate your career with our premium services. Get expert reviews, job referrals, 
+            and personalized guidance to land your dream role.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2 text-blue-300">
+              <BadgeCheck className="h-5 w-5" />
+              <span>Verified Experts</span>
+            </div>
+            <div className="flex items-center gap-2 text-blue-300">
+              <Shield className="h-5 w-5" />
+              <span>100% Satisfaction</span>
+            </div>
+            <div className="flex items-center gap-2 text-blue-300">
+              <Clock className="h-5 w-5" />
+              <span>Fast Delivery</span>
+            </div>
+            <div className="flex items-center gap-2 text-blue-300">
+              <HeartHandshake className="h-5 w-5" />
+              <span>Money-Back Guarantee</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── PLANS SECTION ─── */}
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <span className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-700">
+              <Sparkles className="h-3 w-3" />
+              Choose Your Plan
+            </span>
+            <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+              All <span className="text-blue-600">Premium</span> Services
+            </h2>
+            <p className="mt-2 text-slate-600">
+              Select from our comprehensive range of career advancement services
+            </p>
+          </div>
+
+          {plans.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+              <div className="mb-4 text-6xl">🚀</div>
+              <h3 className="mb-2 text-xl font-bold text-slate-900">
+                No Premium Plans Available
+              </h3>
+              <p className="text-slate-500">
+                We&apos;re preparing exciting new premium services for you. Check back soon!
+              </p>
+              <Link href="/career" className="mt-4 inline-block text-blue-600 hover:text-blue-700">
+                ← Browse Career Resources
+              </Link>
+            </div>
+          ) : (
+            <>
+              {categories.length > 0 && (
+                <div className="mb-8">
+                  <PremiumFilter 
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    setActiveCategory={setActiveCategory}
+                  />
+                </div>
+              )}
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredPlans.map((plan) => (
+                  <PremiumPlanCard key={plan._id} plan={plan} />
+                ))}
+              </div>
+
+              {filteredPlans.length === 0 && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+                  <p className="text-slate-500">No plans found in this category.</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* ─── STATS SECTION ─── */}
+      <StatsSection />
+
+      {/* ─── TESTIMONIALS ─── */}
+      <section className="bg-white px-6 py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 text-center">
+            <span className="mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700">
+              <Star className="h-3 w-3 fill-emerald-500" />
+              Success Stories
+            </span>
+            <h2 className="text-3xl font-bold text-slate-900">
+              What Our <span className="text-emerald-600">Community Says</span>
+            </h2>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {TESTIMONIALS.map((testimonial, idx) => (
+              <div
+                key={idx}
+                className="rounded-2xl border border-slate-200 bg-[#f9f5ef] p-6 shadow-sm transition hover:shadow-lg"
+              >
+                <div className="mb-3 flex items-center gap-1">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="mb-4 text-sm leading-relaxed text-slate-600">{testimonial.text}</p>
+                <div className="border-t border-slate-100 pt-4">
+                  <p className="font-semibold text-slate-900">{testimonial.name}</p>
+                  <p className="text-xs text-slate-500">{testimonial.role}</p>
+                  <span className="mt-1 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
+                    {testimonial.service}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ SECTION ─── */}
+      <section className="bg-[#f9f5ef] px-6 py-16">
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-10 text-center">
+            <span className="mb-2 inline-flex items-center gap-2 rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-purple-700">
+              <Lightbulb className="h-3 w-3" />
+              Got Questions?
+            </span>
+            <h2 className="text-3xl font-bold text-slate-900">
+              Frequently Asked <span className="text-purple-600">Questions</span>
+            </h2>
+          </div>
+
+          <div className="divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {FAQS.map((faq, idx) => (
+              <details key={idx} className="group px-6 py-5 first:rounded-t-2xl last:rounded-b-2xl">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-slate-800 marker:content-none hover:text-blue-600">
+                  <span className="flex items-center justify-between gap-4">
+                    {faq.q}
+                    <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition duration-300 group-open:rotate-45">
+                      <span className="text-xl font-light">+</span>
+                    </span>
+                  </span>
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-slate-500">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+
+          <div className="mt-8 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 p-6 text-center">
+            <p className="text-sm font-medium text-slate-700">
+              Still have questions? We&apos;re here to help!
+            </p>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-4">
+              <a
+                href="mailto:support@codelura.com"
+                className="inline-flex items-center gap-2 text-sm text-blue-600 transition hover:text-blue-700"
+              >
+                <Mail className="h-4 w-4" />
+                support@codelura.com
+              </a>
+              <span className="text-slate-300">|</span>
+              <a
+                href="tel:+919330456710"
+                className="inline-flex items-center gap-2 text-sm text-blue-600 transition hover:text-blue-700"
+              >
+                <Phone className="h-4 w-4" />
+                +91 9330456710
+              </a>
+              <span className="text-slate-300">|</span>
+              <a
+                href="#"
+                className="inline-flex items-center gap-2 text-sm text-blue-600 transition hover:text-blue-700"
+              >
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FINAL CTA ─── */}
+      <section className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-16">
+        <div className="mx-auto max-w-3xl text-center text-white">
+          <h2 className="text-3xl font-bold">
+            Ready to <span className="text-blue-200">Accelerate</span> Your Career?
+          </h2>
+          <p className="mt-2 text-blue-100">
+            Choose the right premium service and take the next step in your career journey.
+          </p>
+          <Link
+            href={plans.length > 0 ? `/premium/${plans[0]?.slug}` : "/career"}
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-blue-700 transition hover:scale-[1.02] hover:shadow-xl"
+          >
+            Explore Services
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+    </div>
   );
 }

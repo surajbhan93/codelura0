@@ -52,14 +52,14 @@ export default function CTASection() {
 
         {/* CTA BUTTONS */}
         <div className="mt-14 flex flex-wrap justify-center gap-6">
-          <Link href="/pricing">
+          <Link href="https://build.codelura.com/">
             <Button className="h-14 px-10 rounded-full bg-black text-white text-base font-semibold hover:bg-gray-900 shadow-xl">
               Get Started Now
               <ArrowRight className="ml-2" size={18} />
             </Button>
           </Link>
 
-          <Link href="/services">
+          <Link href="https://build.codelura.com/">
             <Button
               variant="outline"
               className="h-14 px-10 rounded-full border-white text-white text-base font-semibold hover:bg-white/10"

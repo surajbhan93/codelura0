@@ -1,56 +1,39 @@
 "use client";
-
 import { Button, TextInput, Checkbox, Label } from "flowbite-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
 import AbstractBackground from "@/components/AbstractBackground";
 import { GoogleLogin } from "@react-oauth/google";
 import { useTheme } from "next-themes";
-
+import { useRouter, useSearchParams } from "next/navigation";
 export default function LoginPage() {
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
+const searchParams = useSearchParams();
 
+const redirect = searchParams.get("redirect") || "/";
   const [form, setForm] = useState({
     email: "",
     password: "",
     remember: false
   });
 
-//  const submit = async () => {
-//   if (!form.email || !form.password) {
-//     toast.error("Please fill all fields");
-//     return;
-//   }
+useEffect(() => {
+  const token = localStorage.getItem("token");
 
-//   try {
-//     const res = await api.post(
-//       "/auth/login",
-//       {
-//         email: form.email,
-//         password: form.password
-//       }
-//     );
+  const isLoggedIn =
+    token &&
+    token !== "undefined" &&
+    token !== "null" &&
+    token.trim() !== "";
 
-//     const { user } = res.data;
+  if (isLoggedIn) {
+    router.push(redirect);
+  }
+}, []);
 
-//     // 🔥 ROLE STORE KARO (navbar ke liye)
-//     localStorage.setItem("role", user.role);
-
-//     toast.success("Welcome back to Codelura 🚀");
-
-//     // 🔥 ROLE BASED REDIRECT
-//     if (user.role === "admin") {
-//       window.location.href = "/admin";
-//     } else {
-//       window.location.href = "/";
-//     }
-
-//   } catch (err: any) {
-//     toast.error(err.response?.data?.message || "Login failed");
-//   }
-// };
 const submit = async () => {
   if (!form.email || !form.password) {
     toast.error("Please fill all fields");
@@ -74,7 +57,10 @@ const submit = async () => {
     if (user.role === "admin") {
       window.location.href = "/admin";
     } else {
-      window.location.href = "/";
+      // window.location.href = "/";
+      // 🔥 redirect back to premium page
+  localStorage.setItem("openBuyModal", "true");
+  router.push(redirect);
     }
 
   } catch (err: any) {
@@ -133,6 +119,12 @@ const submit = async () => {
                 width="100%"
               />
             </div>
+
+
+            {/* login by github  */}
+            <a href="http://localhost:3002/api/auth/github">
+              <button>Login with GitHub</button>
+            </a>
 
             {/* DIVIDER */}
             <div className="my-5 flex items-center gap-3">

@@ -43,12 +43,20 @@ export default function BlogSummary({
     try {
       setLoading(true);
       setSummary(null);
-
       const startTime = Date.now();
+      const plainText = content
+  .replace(/<[^>]+>/g, "")   // HTML हटाओ
+  .replace(/&nbsp;/g, " ")
+  .trim();
+if (!plainText) {
+  console.error("Content empty");
+  return;
+}
 
-      const { data } = await api.post("/ai/blog-summary", {
-        content,
-      });
+
+const { data } = await api.post("/ai/blog-summary", {
+  content: plainText,
+});
 
       const cleaned = cleanSummary(data.summary);
 
@@ -133,7 +141,19 @@ export default function BlogSummary({
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-gray-700 text-sm leading-relaxed"
+             className="
+    text-gray-700
+    text-sm
+    leading-relaxed
+    whitespace-normal
+    break-normal
+    w-full
+    overflow-hidden
+  "
+  style={{
+    wordBreak: "normal",
+    overflowWrap: "break-word",
+  }}
             dangerouslySetInnerHTML={{ __html: summary }}
           />
         )}

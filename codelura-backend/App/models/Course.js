@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const fileSchema = new mongoose.Schema(
   {
     fileName: String,
-    filePath: String,
+    fileUrl: String,
     fileSize: Number,
     fileType: {
       type: String, // pdf | excel | image | zip | other
@@ -44,18 +44,24 @@ const courseSchema = new mongoose.Schema(
     ===================== */
 
     // 🔥 Banner / Thumbnail image
+    // bannerImage: {
+    //   fileName: String,
+    //   filePath: String,
+    //   fileSize: Number
+    // },
+     // 🔥 Banner — Cloudinary URL (direct link, no upload)
     bannerImage: {
-      fileName: String,
-      filePath: String,
-      fileSize: Number
+      type: String,   // ✅ sirf Cloudinary URL string store karo
+      default: null,
     },
 
     // 🔥 Main PDF (notes / material)
-    pdf: {
-      fileName: String,
-      filePath: String,
-      fileSize: Number
-    },
+    // ✅ Ye karo:
+pdf: {
+  fileName: String,
+  fileUrl:  String,   // ← ye add karo
+  fileSize: Number
+},
 
     // 🔥 Additional files (Excel, ZIP, etc.)
     attachments: [fileSchema],

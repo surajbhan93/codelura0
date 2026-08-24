@@ -1,7 +1,10 @@
 import api from "@/lib/api";
 import BlogCard from "@/components/blog/BlogCard";
 import BlogSearch from "@/components/blog/BlogSearch";
+import { Suspense, cache } from "react";
+import { Metadata } from "next";
 
+// ─── Types ───
 interface Blog {
   _id: string;
   title: string;
@@ -17,412 +20,168 @@ interface Blog {
   publishedAt?: string;
 }
 
-export default async function BlogsPage() {
-  const { data } = await api.get("/blogs");
+// ─── Metadata ───
+// ─── Metadata ───
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ tag?: string; page?: string }>;
+}): Promise<Metadata> {
+  const { tag, page } = await searchParams;
+  const baseUrl = "https://codelura.com/blogs";
 
-  const blogs: Blog[] = data.blogs || [];
+  const title = tag
+    ? `${tag} Articles | Craft & Code Perspectives`
+    : "Blog | Craft & Code Perspectives";
 
-  const featuredBlogs = blogs.filter((b) => b.isFeatured);
-  const normalBlogs = blogs.filter((b) => !b.isFeatured);
+  const description = tag
+    ? `Explore articles tagged with "${tag}" — backend, frontend, and system design insights.`
+    : "Deep dives into backend architecture, frontend craft, and system design — written for builders, by builders.";
+
+  // Filtered/paginated views ko index nahi karna — sirf main listing index ho
+  const isFiltered = Boolean(tag || (page && page !== "1"));
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: baseUrl, // hamesha main /blogs page ki taraf point kare
+    },
+    robots: {
+      index: !isFiltered,
+      follow: true,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: baseUrl,
+    },
+  };
+}
+
+// ─── Cache Configuration ───
+export const revalidate = 60; // refresh every hour
+
+// ─── Data Fetching ───
+const getBlogs = cache(async (): Promise<Blog[]> => {
+  try {
+    const { data } = await api.get("/blogs");
+    return data.blogs || [];
+  } catch (error) {
+    console.error("Failed to fetch blogs:", error);
+    return [];
+  }
+});
+
+// ─── Page Component ───
+export default async function BlogsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tag?: string; page?: string }>;
+}) {
+  const { tag } = await searchParams;
+  const blogs = await getBlogs();
+
+  // Agar tag query hai to filter kar do (client-side hi sahi, abhi ke liye)
+  const filteredBlogs = tag
+    ? blogs.filter((b) => b.tags?.includes(tag))
+    : blogs;
+
+const featuredBlogs = filteredBlogs.filter((b) => b.isFeatured);
+  const normalBlogs = filteredBlogs.filter((b) => !b.isFeatured);
+  const totalTags = new Set(blogs.flatMap((b) => b.tags || [])).size;
+ const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: tag ? `${tag} Articles` : "Blog | Craft & Code Perspectives",
+    description:
+      "Deep dives into backend architecture, frontend craft, and system design.",
+    url: "https://codelura.com/blogs",
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: filteredBlogs.slice(0, 20).map((blog, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: `https://codelura.com/blogs/${blog.slug}`,
+        name: blog.title,
+      })),
+    },
+  };
 
   return (
-    <>
-      {/* ───────────── Global Styles ───────────── */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+    <div className="min-h-screen bg-gray-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900">
+            Craft &amp; Code <span className="text-orange-600">Perspectives</span>
+          </h1>
+          <p className="mt-3 text-gray-600 max-w-xl">
+            Deep dives into backend architecture, frontend craft, and system design —
+            written for builders, by builders.
+          </p>
 
-        :root {
-          --ink:        #0d0d0d;
-          --paper:      #f9f5ef;
-          --paper-2:    #f2ede4;
-          --accent:     #c8410a;
-          --accent-2:   #e8a87c;
-          --muted:      #7a7065;
-          --border:     #ddd5c8;
-          --card-bg:    #ffffff;
-          --featured-bg:#1a1208;
-        }
-
-        .blogs-root {
-          font-family: 'DM Sans', sans-serif;
-          background: var(--paper);
-          min-height: 100vh;
-          color: var(--ink);
-        }
-
-        /* ── Hero Header ── */
-        .blogs-hero {
-          position: relative;
-          background: var(--featured-bg);
-          overflow: hidden;
-          padding: 80px 24px 70px;
-        }
-
-        .blogs-hero::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background:
-            radial-gradient(ellipse 70% 60% at 80% 50%, #c8410a22 0%, transparent 70%),
-            radial-gradient(ellipse 50% 80% at 10% 80%, #e8a87c18 0%, transparent 60%);
-          pointer-events: none;
-        }
-
-        .blogs-hero-inner {
-          max-width: 1200px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-
-        .blogs-hero-eyebrow {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: var(--accent-2);
-          margin-bottom: 20px;
-        }
-
-        .blogs-hero-eyebrow span {
-          display: inline-block;
-          width: 28px;
-          height: 1px;
-          background: var(--accent-2);
-        }
-
-        .blogs-hero-title {
-          font-family: 'Playfair Display', serif;
-          font-size: clamp(48px, 7vw, 88px);
-          font-weight: 900;
-          line-height: 0.95;
-          color: #f9f5ef;
-          letter-spacing: -2px;
-        }
-
-        .blogs-hero-title em {
-          font-style: italic;
-          color: var(--accent-2);
-        }
-
-        .blogs-hero-subtitle {
-          margin-top: 20px;
-          font-size: 16px;
-          font-weight: 300;
-          color: #a89d8e;
-          max-width: 420px;
-          line-height: 1.7;
-        }
-
-        .blogs-hero-search-wrap {
-          margin-top: 36px;
-          max-width: 540px;
-        }
-
-        .blogs-hero-stats {
-          display: flex;
-          gap: 36px;
-          margin-top: 44px;
-          padding-top: 32px;
-          border-top: 1px solid #2e2618;
-        }
-
-        .blogs-hero-stat-value {
-          font-family: 'Playfair Display', serif;
-          font-size: 28px;
-          font-weight: 700;
-          color: #f9f5ef;
-        }
-
-        .blogs-hero-stat-label {
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: #6b5f50;
-          margin-top: 2px;
-        }
-
-        /* ── Page Body ── */
-        .blogs-body {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 60px 24px 100px;
-        }
-
-        /* ── Section Labels ── */
-        .section-header {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          margin-bottom: 28px;
-        }
-
-        .section-header-line {
-          flex: 1;
-          height: 1px;
-          background: var(--border);
-        }
-
-        .section-label {
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: var(--muted);
-          white-space: nowrap;
-        }
-
-        .section-title {
-          font-family: 'Playfair Display', serif;
-          font-size: clamp(22px, 3vw, 30px);
-          font-weight: 700;
-          color: var(--ink);
-          margin-bottom: 6px;
-        }
-
-        .section-title-accent {
-          color: var(--accent);
-        }
-
-        /* ── Featured Grid ── */
-        .featured-section {
-          margin-bottom: 72px;
-        }
-
-        .featured-grid {
-          display: grid;
-          grid-template-columns: 1.6fr 1fr 1fr;
-          grid-template-rows: auto auto;
-          gap: 2px;
-          background: var(--border);
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          overflow: hidden;
-        }
-
-        .featured-grid > *:first-child {
-          grid-row: 1 / span 2;
-        }
-
-        /* ── Blog Grid ── */
-        .blogs-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 24px;
-        }
-
-        /* ── Blog Card Overrides (wrapper) ── */
-        .blog-card-wrap {
-          background: var(--card-bg);
-          border-radius: 12px;
-          overflow: hidden;
-          border: 1px solid var(--border);
-          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-          cursor: pointer;
-        }
-
-        .blog-card-wrap:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 16px 48px -8px rgba(0,0,0,0.14);
-          border-color: var(--accent-2);
-        }
-
-        /* featured card wraps inside mosaic */
-        .featured-card-wrap {
-          background: var(--card-bg);
-          transition: opacity 0.2s ease;
-        }
-
-        .featured-card-wrap:hover {
-          opacity: 0.9;
-        }
-
-        /* ── Empty State ── */
-        .empty-state {
-          grid-column: 1 / -1;
-          text-align: center;
-          padding: 80px 24px;
-          color: var(--muted);
-        }
-
-        .empty-state-icon {
-          font-size: 48px;
-          margin-bottom: 16px;
-          opacity: 0.4;
-        }
-
-        .empty-state-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 22px;
-          color: var(--ink);
-          margin-bottom: 8px;
-        }
-
-        /* ── Decorative Divider ── */
-        .ornament-divider {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          margin: 60px 0;
-          color: var(--border);
-          font-size: 18px;
-        }
-
-        .ornament-divider::before,
-        .ornament-divider::after {
-          content: '';
-          flex: 1;
-          height: 1px;
-          background: var(--border);
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 1024px) {
-          .featured-grid {
-            grid-template-columns: 1fr 1fr;
-          }
-          .featured-grid > *:first-child {
-            grid-row: auto;
-            grid-column: 1 / span 2;
-          }
-          .blogs-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        @media (max-width: 640px) {
-          .blogs-hero {
-            padding: 52px 20px 48px;
-          }
-          .featured-grid {
-            grid-template-columns: 1fr;
-          }
-          .featured-grid > *:first-child {
-            grid-column: auto;
-          }
-          .blogs-grid {
-            grid-template-columns: 1fr;
-          }
-          .blogs-hero-stats {
-            gap: 24px;
-            flex-wrap: wrap;
-          }
-          .blogs-body {
-            padding: 36px 16px 72px;
-          }
-        }
-      `}</style>
-
-      <div className="blogs-root">
-        {/* ─────────── HERO HEADER ─────────── */}
-        <header className="blogs-hero">
-          <div className="blogs-hero-inner">
-            <p className="blogs-hero-eyebrow">
-              <span /> The Knowledge Hub <span />
-            </p>
-
-            <h1 className="blogs-hero-title">
-              Craft &amp; <em>Code</em><br />Perspectives
-            </h1>
-
-            <p className="blogs-hero-subtitle">
-              Deep dives into backend architecture, frontend craft, and system
-              design — written for builders, by builders.
-            </p>
-
-            {/* AI Semantic Search */}
-            <div className="blogs-hero-search-wrap">
+          <div className="mt-6 max-w-lg">
+            <Suspense fallback={<div className="h-11 bg-gray-100 rounded-lg animate-pulse" />}>
               <BlogSearch />
-            </div>
+            </Suspense>
+          </div>
 
-            <div className="blogs-hero-stats">
-              <div>
-                <div className="blogs-hero-stat-value">{blogs.length}</div>
-                <div className="blogs-hero-stat-label">Articles</div>
-              </div>
-              <div>
-                <div className="blogs-hero-stat-value">{featuredBlogs.length}</div>
-                <div className="blogs-hero-stat-label">Featured</div>
-              </div>
-              <div>
-                <div className="blogs-hero-stat-value">
-                  {[...new Set(blogs.flatMap((b) => b.tags))].length}
-                </div>
-                <div className="blogs-hero-stat-label">Topics</div>
-              </div>
+          <div className="flex gap-8 mt-8 pt-6 border-t border-gray-100 text-sm">
+            <div>
+              <span className="text-2xl font-bold text-gray-900">{blogs.length}</span>
+              <p className="text-gray-500">Articles</p>
+            </div>
+            <div>
+              <span className="text-2xl font-bold text-gray-900">{featuredBlogs.length}</span>
+              <p className="text-gray-500">Featured</p>
+            </div>
+            <div>
+              <span className="text-2xl font-bold text-gray-900">{totalTags}</span>
+              <p className="text-gray-500">Topics</p>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* ─────────── PAGE BODY ─────────── */}
-        <main className="blogs-body">
-
-          {/* ── FEATURED SECTION ── */}
-          {featuredBlogs.length > 0 && (
-            <section className="featured-section">
-              <div style={{ marginBottom: 24 }}>
-                <div className="section-header">
-                  <span className="section-label">Editors Picks</span>
-                  <div className="section-header-line" />
-                </div>
-                <h2 className="section-title">
-                  🌟 Featured{" "}
-                  <span className="section-title-accent">Stories</span>
-                </h2>
-              </div>
-
-              <div className="featured-grid">
-                {featuredBlogs.map((blog) => (
-                  <div key={blog._id} className="featured-card-wrap">
-                    <BlogCard blog={blog} featured />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ── ORNAMENT ── */}
-          {featuredBlogs.length > 0 && normalBlogs.length > 0 && (
-            <div className="ornament-divider">✦</div>
-          )}
-
-          {/* ── ALL BLOGS SECTION ── */}
-          <section>
-            <div style={{ marginBottom: 24 }}>
-              <div className="section-header">
-                <span className="section-label">Latest Articles</span>
-                <div className="section-header-line" />
-              </div>
-              <h2 className="section-title">
-                All{" "}
-                <span className="section-title-accent">Blogs</span>
-              </h2>
+      <main className="max-w-6xl mx-auto px-4 py-10">
+        {/* ─── Featured Section ─── */}
+        {featuredBlogs.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              ⭐ Featured <span className="text-orange-600">Stories</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredBlogs.map((blog) => (
+                <BlogCard key={blog._id} blog={blog} featured />
+              ))}
             </div>
-
-            {normalBlogs.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">📭</div>
-                <p className="empty-state-title">No articles yet</p>
-                <p style={{ fontSize: 14 }}>Check back soon for fresh content.</p>
-              </div>
-            ) : (
-              <div className="blogs-grid">
-                {normalBlogs.map((blog) => (
-                  <div key={blog._id} className="blog-card-wrap">
-                    <BlogCard blog={blog} />
-                  </div>
-                ))}
-              </div>
-            )}
           </section>
+        )}
 
-        </main>
-      </div>
-    </>
+        {/* ─── All Other Blogs ─── */}
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">All Blogs</h2>
+
+          {normalBlogs.length === 0 ? (
+            <div className="text-center py-16 text-gray-500">
+              <div className="text-4xl mb-3 opacity-40">📭</div>
+              <p className="text-lg text-gray-800 mb-1">No more articles</p>
+              <p className="text-sm">Check back soon for fresh content.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {normalBlogs.map((blog) => (
+                <BlogCard key={blog._id} blog={blog} />
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
   );
 }

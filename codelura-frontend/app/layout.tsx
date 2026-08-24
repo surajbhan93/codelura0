@@ -6,7 +6,7 @@ import { Toaster } from "react-hot-toast";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Providers } from "./providers";
 import Script from "next/script";
-
+import LayoutWrapper from "@/components/LayoutWrapper";
 export const metadata = {
   metadataBase: new URL("https://codelura.com"),
   title: "Codelura | Startup Development, Coding Skills & Tech Career Guidance",
@@ -84,7 +84,7 @@ publisher: "Codelura",
 category: "technology",
 applicationName: "Codelura",
 verification: {
-  google: "google-site-verification-code",
+  google: "OjEl21k_fS4xc-KLvDTIGTzwKGT4owc2huab4B6tFec",
 },
 };
 
@@ -95,12 +95,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
        <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       </head>
-      <body className="bg-white text-black">
+      {/* <body className="bg-white text-black"> */}
+      <body className="bg-white text-black transition-colors duration-300 dark:bg-[#09090B] dark:text-white">
 
         {/* Google Analytics */}
         <Script
@@ -130,35 +131,50 @@ export default function RootLayout({
 
                    {/* Schema JSON-LD */}
        {/* Schema JSON-LD */}
-        <Script id="schema-org" type="application/ld+json">
-          {JSON.stringify({
+      <Script id="organization-schema" type="application/ld+json">
+            {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "Codelura",
             url: "https://codelura.com",
             logo: "https://codelura.com/logo.png",
-            "potentialAction": {
-              "@type": "SearchAction",
-              "target": "https://codelura.com/search?q={search_term_string}",
-              "query-input": "required name=search_term_string"
+            description:
+              "Codelura helps developers learn coding, build startups, and grow their tech careers.",
+            founder: {
+              "@type": "Person",
+              name: "Suraj Bhan"
             },
-            sameAs: [
-              "https://www.linkedin.com/company/codelura",
-              "https://github.com/surajbhan93",
-              "https://www.instagram.com/codelura/"
-            ]
+          sameAs: [
+            "https://www.linkedin.com/company/codelura",
+            "https://github.com/surajbhan93",
+            "https://www.instagram.com/codelura/"
+          ]
           })}
-        </Script>
+          </Script>
+
+            <Script id="website-schema" type="application/ld+json">
+            {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Codelura",
+            url: "https://codelura.com",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://codelura.com/search?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+            })}
+            </Script>
 
          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
 
          
          <CursorGlow />
-        <Navbar />
+        <LayoutWrapper>
         <Providers>
             {children}
         </Providers>
-      
+      </LayoutWrapper>
          <Toaster position="top-right" reverseOrder={false} />
         <Footer />
         </GoogleOAuthProvider>

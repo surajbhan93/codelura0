@@ -9,26 +9,36 @@ import sanitizeHtml from "sanitize-html";
 export const createBlog = async (req, res) => {
     
   try {
-    const {
+  const {
       title,
       slug,
       excerpt,
       content: content,
-      summary,   // ✅ ADD THIS
+      summary,
+
+      faqs,                    // 👈 NEW
 
       coverImage,
+      coverImageAlt,           // 👈 NEW
       ogImage,
 
       metaTitle,
       metaDescription,
+      focusKeyword,            // 👈 NEW
+      secondaryKeywords,       // 👈 NEW
 
       tags,
       category,
       authorName,
+      authorBio,                // 👈 NEW
+      authorImage,               // 👈 NEW
 
       isFeatured,
       allowComments,
+      noIndex,                  // 👈 NEW
       readingTime,
+
+      schemaType,                // 👈 NEW
 
       publishNow
     } = req.body;
@@ -81,32 +91,42 @@ const cleanContent = sanitizeHtml(content, {
     const publishedAt = isPublished ? new Date() : null;
 
     // 📝 Create blog
-    const blog = await Blog.create({
+const blog = await Blog.create({
       title,
       slug: finalSlug,
       excerpt,
       content: cleanContent,
-      summary: summary || "",  // ✅ ADD THIS
+      summary: summary || "",
       contentMarkdown,
 
+      faqs: faqs || [],                          // 👈 NEW
+
       coverImage,
+      coverImageAlt: coverImageAlt || title,      // 👈 NEW (fallback title)
       ogImage: ogImage || coverImage,
 
       metaTitle: metaTitle || title,
       metaDescription,
-      canonicalUrl: `https://yourdomain.com/blog/${finalSlug}`,
+      canonicalUrl: `https://codelura.com/blogs/${finalSlug}`,   // ⚠️ domain fix bhi kiya, niche note dekho
+      focusKeyword: focusKeyword || "",           // 👈 NEW
+      secondaryKeywords: secondaryKeywords || [], // 👈 NEW
 
       tags,
       category,
       authorName,
+      authorBio: authorBio || "",                 // 👈 NEW
+      authorImage: authorImage || "",             // 👈 NEW
 
       isFeatured: isFeatured || false,
       allowComments: allowComments !== false,
+      noIndex: noIndex || false,                  // 👈 NEW
 
       readingTime,
+      schemaType: schemaType || "BlogPosting",    // 👈 NEW
 
       isPublished,
-      publishedAt
+      publishedAt,
+      lastModifiedAt: new Date()                  // 👈 NEW
     });
 
     res.status(201).json({
@@ -235,9 +255,9 @@ export const getAdminBlogById = async (req, res) => {
  */
 export const updateBlog = async (req, res) => {
   try {
-    const updated = await Blog.findByIdAndUpdate(
+   const updated = await Blog.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { ...req.body, lastModifiedAt: new Date() },   // 👈 lastModifiedAt hamesha update ho
       { new: true }
     );
 

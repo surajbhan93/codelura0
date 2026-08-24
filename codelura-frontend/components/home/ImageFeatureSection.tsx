@@ -265,7 +265,7 @@ export default function ImageFeatureSection() {
               className="mt-9 flex flex-wrap gap-3"
             >
               <motion.a
-                href="/learn"
+                href="https://career.codelura.com/career/learning/career-tracks"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-violet-700/30 transition-all duration-300 hover:shadow-violet-700/50"
@@ -275,7 +275,7 @@ export default function ImageFeatureSection() {
                 <ArrowRight className="h-4 w-4" />
               </motion.a>
               <motion.a
-                href="/jobs"
+                href="https://career.codelura.com/career/jobs/latest"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
                 className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/4 px-7 py-3 text-sm font-bold text-white/75 backdrop-blur transition-all duration-300 hover:border-white/25 hover:text-white"

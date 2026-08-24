@@ -4,32 +4,47 @@ import razorpay from "../../config/razorpay.js";
 import PremiumService from "../../models/PremiumService.js";
 import PremiumSubscription from "../../models/PremiumSubscription.js";
 import User from "../../models/User.js";
-
+import Coupon from "../../models/Coupon.js"; // 👈 add karo
 /* =====================================================
    1️⃣ CREATE ORDER
 ===================================================== */
+
 export const createOrder = async (req, res) => {
   try {
-    const { serviceId } = req.body;
-    const userId = req.user?._id;
+    const { serviceId, couponCode } = req.body; // 👈 couponCode bhi lo
 
-    if (!serviceId) {
+    if (!serviceId)
       return res.status(400).json({ message: "Service ID required" });
-    }
 
     const service = await PremiumService.findById(serviceId);
-
-    if (!service || !service.isActive) {
+    if (!service || !service.isActive)
       return res.status(404).json({ message: "Service not available" });
+
+    // 👇 discountedPrice ho toh wahi base price
+    let amount = service.discountedPrice ?? service.price;
+
+    // 👇 Coupon apply karo agar bheja ho
+    if (couponCode) {
+      const coupon = await Coupon.findOne({  // Coupon import karna padega
+        code: couponCode.toUpperCase().trim(),
+        isActive: true,
+      });
+
+      if (coupon) {
+        const discount =
+          coupon.discountType === "percentage"
+            ? Math.round((amount * coupon.discountValue) / 100)
+            : coupon.discountValue;
+
+        amount = Math.max(1, amount - discount); // minimum ₹1
+      }
     }
 
-    const options = {
-      amount: service.price * 100,
+    const order = await razorpay.orders.create({
+      amount: amount * 100, // 👈 correct amount
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
-    };
-
-    const order = await razorpay.orders.create(options);
+    });
 
     return res.status(200).json({
       success: true,
@@ -37,13 +52,11 @@ export const createOrder = async (req, res) => {
       key: process.env.RAZORPAY_KEY_ID,
       service,
     });
-
   } catch (error) {
     console.error("Create Order Error:", error);
     return res.status(500).json({ message: "Order creation failed" });
   }
 };
-
 /* =====================================================
    2️⃣ VERIFY PAYMENT
 ===================================================== */
@@ -113,6 +126,8 @@ export const verifyPayment = async (req, res) => {
     endDate.setMonth(endDate.getMonth() + service.durationInMonths);
 
     /* ================= CREATE SUBSCRIPTION ================= */
+// 👇 BAS YE LINE ADD KARO — service.price ki jagah
+const basePrice = service.discountedPrice ?? service.price;
 
     const subscription = await PremiumSubscription.create({
       user: userId,
@@ -123,7 +138,7 @@ export const verifyPayment = async (req, res) => {
       mobile,
       email,
       note,
-
+     finalAmount: basePrice, // 👈 service.price tha, ab basePrice
       finalAmount: service.price,
       status: "approved",
 

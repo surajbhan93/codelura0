@@ -2,6 +2,7 @@ import { serverFetch } from "@/lib/serverFetch";
 import WorkDetailClient from "./WorkDetailClient";
 
 /* ================= TYPES ================= */
+
 export type Work = {
   title: string;
   shortDescription?: string;
@@ -42,37 +43,61 @@ export type Work = {
 };
 
 /* ================= SEO ================= */
+
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  // ✅ MUST unwrap params
-  const { slug } = await params;
+  try {
+    const { slug } = params;
 
-  const res = await serverFetch(`/work/${slug}`);
-  const work: Work = res.data;
+    const res = await serverFetch(`/work/${slug}`);
+    const work: Work = res?.data;
 
-  return {
-    title: work.seo?.metaTitle || work.title,
-    description:
-      work.seo?.metaDescription ||
-      work.shortDescription ||
-      work.description.slice(0, 150),
-  };
+    return {
+      title: work?.seo?.metaTitle || work?.title || "Work",
+      description:
+        work?.seo?.metaDescription ||
+        work?.shortDescription ||
+        work?.description?.slice(0, 150) ||
+        "Project details",
+    };
+  } catch (error) {
+    return {
+      title: "Work",
+      description: "Project details",
+    };
+  }
 }
 
 /* ================= PAGE ================= */
+
 export default async function WorkDetail({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  // ✅ MUST unwrap params
-  const { slug } = await params;
+  try {
+    const { slug } = params;
 
-  const res = await serverFetch(`/work/${slug}`);
-  const work: Work = res.data;
+    const res = await serverFetch(`/work/${slug}`);
+    const work: Work = res?.data;
 
-  return <WorkDetailClient work={work} />;
+    if (!work) {
+      return (
+        <div style={{ padding: "80px", textAlign: "center" }}>
+          Work not found
+        </div>
+      );
+    }
+
+    return <WorkDetailClient work={work} />;
+  } catch (error) {
+    return (
+      <div style={{ padding: "80px", textAlign: "center" }}>
+        Something went wrong while loading this project.
+      </div>
+    );
+  }
 }

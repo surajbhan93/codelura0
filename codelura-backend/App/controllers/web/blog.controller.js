@@ -7,7 +7,7 @@ import BlogAnalytics from "../../models/BlogAnalytics.js";
 export const getAllBlogs = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 9;
+    const limit = Number(req.query.limit);
     const { category, tag } = req.query;
 
     const query = { isPublished: true };
@@ -15,9 +15,9 @@ export const getAllBlogs = async (req, res) => {
     if (category) query.category = category;
     if (tag) query.tags = tag;
 
-    const blogs = await Blog.find(query)
+ const blogs = await Blog.find(query)
      .select(
-  "title slug excerpt summary coverImage authorName readingTime tags category isFeatured createdAt publishedAt"
+  "title slug excerpt summary coverImage coverImageAlt authorName readingTime tags category isFeatured createdAt publishedAt lastModifiedAt"
 )
       .sort({ isFeatured: -1, publishedAt: -1, createdAt: -1 })
       .skip((page - 1) * limit)
@@ -56,9 +56,15 @@ export const getBlogBySlug = async (req, res) => {
     }
 
     // 🔥 Increment view
-    blog.views = (blog.views || 0) + 1;
-    await blog.save();
+    await Blog.findByIdAndUpdate(
+  blog._id,
+  {
+    $inc: { views: 1 },
+    $set: { lastModifiedAt: new Date() }
+  }
+);
 
+blog.views += 1;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

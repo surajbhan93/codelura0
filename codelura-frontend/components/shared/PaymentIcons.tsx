@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 const payments = [
   { src: "/footer/googlepay.svg", alt: "Google Pay" },
   { src: "/footer/paytm.svg", alt: "Paytm" },
@@ -12,24 +10,23 @@ const payments = [
 export default function PaymentIcons() {
   return (
     <div className="space-y-3">
-      <p className="text-xs tracking-wider text-indigo-200 text-center">
+      <p className="text-xs font-semibold tracking-wider text-slate-500 text-center">
         100% SECURE PAYMENT
       </p>
 
-      <div className="flex flex-wrap justify-center gap-3">
-        {payments.map((p) => (
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {payments.map((payment) => (
           <div
-            key={p.alt}
-            className="bg-white/90 rounded-md px-3 py-2
-                       flex items-center justify-center
-                       shadow-sm"
+            key={payment.alt}
+            className="w-[72px] h-[48px] bg-white border border-slate-200 rounded-lg flex items-center justify-center shadow-sm"
           >
-            <Image
-              src={p.src}
-              alt={p.alt}
-              width={40}
-              height={24}
-              className="object-contain"
+            <img
+              src={payment.src}
+              alt={payment.alt}
+              width={52}
+              height={30}
+              loading="lazy"
+              className="max-w-[52px] max-h-[30px] object-contain"
             />
           </div>
         ))}

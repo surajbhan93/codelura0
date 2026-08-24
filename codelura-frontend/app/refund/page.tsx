@@ -1,7 +1,6 @@
-"use client";
-
-import React, { useState } from "react";
-import { motion, Variants } from "framer-motion";
+import React from "react";
+import { Metadata } from "next";
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronUp,
@@ -13,55 +12,32 @@ import {
   Mail,
 } from "lucide-react";
 
-interface ExpandedSections {
-  [key: number]: boolean;
-}
+// Metadata for SEO
+export const metadata: Metadata = {
+  title: "Refund Policy | Codelura - Subscriptions, Courses & Services",
+  description: "Learn about Codelura's refund policy for premium subscriptions, digital courses, hackathons, services, and more. Clear terms for billing and refunds.",
+  keywords: "refund policy, billing policy, Codelura refund, subscription refund, course refund, hackathon refund",
+  openGraph: {
+    title: "Refund Policy | Codelura",
+    description: "Comprehensive refund policy for Codelura platform services",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
+// Types
 interface PolicySection {
   id: number;
   title: string;
   icon?: React.ReactNode;
   content: React.ReactNode;
 }
-const fadeInUp: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 40,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut", // ✅ now valid
-    },
-  },
-};
 
-const fadeInDown: Variants = {
-  hidden: {
-    opacity: 0,
-    y: -40,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.7,
-      ease: "easeOut",
-    },
-  },
-};
-export default function RefundPolicyPage(): React.ReactElement {
-  const [expandedSections, setExpandedSections] = useState<ExpandedSections>({});
-
-  const toggleSection = (sectionId: number): void => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [sectionId]: !prev[sectionId],
-    }));
-  };
-
+// Server Component
+export default function RefundPolicyPage() {
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -70,11 +46,12 @@ export default function RefundPolicyPage(): React.ReactElement {
 
   const currentYear = new Date().getFullYear();
 
+  // Static sections data
   const sections: PolicySection[] = [
     {
       id: 1,
-      title: "1. Policy Overview &amp; Scope",
-      icon: <FileText className="w-5 h-5 text-blue-400" />,
+      title: "1. Policy Overview & Scope",
+      icon: <FileText className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -84,23 +61,23 @@ export default function RefundPolicyPage(): React.ReactElement {
           <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-lg p-4 border border-gray-700">
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Premium subscriptions and memberships</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Digital courses and learning materials</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Hackathon and event registrations</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Service-based projects and custom work</span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>Digital content and tools</span>
               </li>
             </ul>
@@ -113,8 +90,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 2,
-      title: "2. Premium Subscriptions &amp; Memberships",
-      icon: <DollarSign className="w-5 h-5 text-green-400" />,
+      title: "2. Premium Subscriptions & Memberships",
+      icon: <DollarSign className="w-5 h-5 text-green-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -124,21 +101,21 @@ export default function RefundPolicyPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">Refund Eligibility Timeline</h4>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <Clock className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
                   <p className="font-semibold text-sm text-yellow-300">Within 7 Days</p>
                   <p className="text-sm mt-1">Full refund if subscription unused or minimal features accessed</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+                <Clock className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
                   <p className="font-semibold text-sm text-orange-300">7-30 Days</p>
                   <p className="text-sm mt-1">Partial refund (50%) if less than 25% of features utilized</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <Clock className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
                   <p className="font-semibold text-sm text-red-300">After 30 Days</p>
                   <p className="text-sm mt-1">No refund unless technical failure or service issue occurred</p>
@@ -158,7 +135,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 3,
-      title: "3. Digital Courses &amp; Learning Materials",
+      title: "3. Digital Courses & Learning Materials",
+      icon: <FileText className="w-5 h-5 text-purple-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -168,19 +146,19 @@ export default function RefundPolicyPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">Course Refund Conditions</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-green-300">Full Refund:</span> Within 7 days &amp; less than 10% course content accessed
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-yellow-300">Partial Refund (50%):</span> Within 14 days &amp; 10-25% content accessed
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-red-300">No Refund:</span> More than 25% course content accessed
                 </span>
@@ -199,7 +177,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 4,
-      title: "4. Hackathons &amp; Event Registrations",
+      title: "4. Hackathons & Event Registrations",
+      icon: <Clock className="w-5 h-5 text-orange-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -209,25 +188,25 @@ export default function RefundPolicyPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">Event Refund Timeline</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-green-300">Full Refund:</span> Cancellation 30+ days before event
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-yellow-300">75% Refund:</span> 15-29 days before event
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-orange-300">50% Refund:</span> Less than 15 days before event
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-red-300">No Refund:</span> After event has started
                 </span>
@@ -248,7 +227,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 5,
-      title: "5. Service-Based Projects &amp; Custom Work",
+      title: "5. Service-Based Projects & Custom Work",
+      icon: <DollarSign className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -258,19 +238,19 @@ export default function RefundPolicyPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">Service Work Refund Policy</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-green-300">Full Refund:</span> Before work commencement (if agreed in contract)
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-yellow-300">Partial Refund:</span> Based on work completed (documented in contract)
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-red-300">No Refund:</span> After service delivery or substantial work completion
                 </span>
@@ -289,7 +269,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 6,
-      title: "6. Digital Downloads &amp; Resources",
+      title: "6. Digital Downloads & Resources",
+      icon: <FileText className="w-5 h-5 text-red-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -317,7 +298,7 @@ export default function RefundPolicyPage(): React.ReactElement {
     {
       id: 7,
       title: "7. Refund Request Process",
-      icon: <FileText className="w-5 h-5 text-purple-400" />,
+      icon: <FileText className="w-5 h-5 text-purple-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -328,7 +309,7 @@ export default function RefundPolicyPage(): React.ReactElement {
             <ol className="space-y-3 text-sm">
               <li className="flex gap-3">
                 <span className="font-bold text-blue-400 w-6 flex-shrink-0">1.</span>
-                <span>Log in to your Codelura account and navigate to &quot;Billing&quot; section</span>
+                <span>Log in to your Codelura account and navigate to "Billing" section</span>
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-blue-400 w-6 flex-shrink-0">2.</span>
@@ -336,7 +317,7 @@ export default function RefundPolicyPage(): React.ReactElement {
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-blue-400 w-6 flex-shrink-0">3.</span>
-                <span>Click &quot;Request Refund&quot; and select reason from dropdown</span>
+                <span>Click "Request Refund" and select reason from dropdown</span>
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-blue-400 w-6 flex-shrink-0">4.</span>
@@ -367,8 +348,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 8,
-      title: "8. Processing Time &amp; Methods",
-      icon: <Clock className="w-5 h-5 text-blue-400" />,
+      title: "8. Processing Time & Methods",
+      icon: <Clock className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -378,19 +359,19 @@ export default function RefundPolicyPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">Processing Timeline</h4>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <Clock className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-yellow-300">Review Period:</span> 3-5 business days
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <Clock className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-blue-300">Processing:</span> 5-10 business days after approval
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <Clock className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   <span className="font-semibold text-green-300">Bank Transfer:</span> 3-7 business days (varies by bank)
                 </span>
@@ -419,7 +400,7 @@ export default function RefundPolicyPage(): React.ReactElement {
     {
       id: 9,
       title: "9. Non-Refundable Scenarios",
-      icon: <XCircle className="w-5 h-5 text-red-400" />,
+      icon: <XCircle className="w-5 h-5 text-red-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -430,37 +411,37 @@ export default function RefundPolicyPage(): React.ReactElement {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <ul className="space-y-2 text-sm text-red-200">
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Purchaser change of mind</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Product or service was fully used</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>User violation of Terms &amp; Conditions</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Account suspended or terminated</span>
                 </li>
               </ul>
               <ul className="space-y-2 text-sm text-red-200">
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Fraudulent transaction</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Refund request beyond policy timeframe</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Chargeback filed with credit card company</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span>Third-party charges or taxes</span>
                 </li>
               </ul>
@@ -472,6 +453,7 @@ export default function RefundPolicyPage(): React.ReactElement {
     {
       id: 10,
       title: "10. Payment Method Specific Terms",
+      icon: <DollarSign className="w-5 h-5 text-green-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -500,7 +482,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 11,
-      title: "11. Duplicate Charges &amp; Billing Errors",
+      title: "11. Duplicate Charges & Billing Errors",
+      icon: <Clock className="w-5 h-5 text-yellow-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -528,7 +511,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 12,
-      title: "12. Chargebacks &amp; Dispute Resolution",
+      title: "12. Chargebacks & Dispute Resolution",
+      icon: <XCircle className="w-5 h-5 text-red-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -558,7 +542,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 13,
-      title: "13. Tax &amp; Currency Considerations",
+      title: "13. Tax & Currency Considerations",
+      icon: <DollarSign className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -586,8 +571,8 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
     {
       id: 14,
-      title: "14. Policy Updates &amp; Contact Support",
-      icon: <Mail className="w-5 h-5 text-blue-400" />,
+      title: "14. Policy Updates & Contact Support",
+      icon: <Mail className="w-5 h-5 text-blue-400" aria-hidden="true" />,
       content: (
         <div className="space-y-4 text-gray-400 leading-relaxed">
           <p>
@@ -597,39 +582,33 @@ export default function RefundPolicyPage(): React.ReactElement {
             <h4 className="text-white font-semibold mb-3">Policy Updates</h4>
             <ul className="list-disc ml-6 space-y-1 text-sm">
               <li>Updates take effect on the date posted</li>
-              <li>&quot;Last Updated&quot; date shown at bottom of page</li>
+              <li>"Last Updated" date shown at bottom of page</li>
               <li>Significant changes communicated via email</li>
               <li>Continued use of platform = acceptance of updated policy</li>
             </ul>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <motion.div
-              variants={fadeInUp}
-              className="bg-gradient-to-r from-blue-900/50 to-blue-800/50 rounded-lg p-4 border border-blue-700 hover:border-blue-600 transition-colors"
-            >
+            <div className="bg-gradient-to-r from-blue-900/50 to-blue-800/50 rounded-lg p-4 border border-blue-700 hover:border-blue-600 transition-colors">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <Mail className="w-4 h-4 text-blue-400" />
+                <Mail className="w-4 h-4 text-blue-400" aria-hidden="true" />
                 Billing &amp; Refunds
               </h4>
               <p className="text-blue-400 font-medium hover:text-blue-300 transition-colors text-sm">
                 <a href="mailto:billing@codelura.com">billing@codelura.com</a>
               </p>
               <p className="text-xs text-gray-400 mt-2">For refund requests &amp; billing issues</p>
-            </motion.div>
-            <motion.div
-              variants={fadeInUp}
-              className="bg-gradient-to-r from-green-900/50 to-green-800/50 rounded-lg p-4 border border-green-700 hover:border-green-600 transition-colors"
-            >
+            </div>
+            <div className="bg-gradient-to-r from-green-900/50 to-green-800/50 rounded-lg p-4 border border-green-700 hover:border-green-600 transition-colors">
               <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                <Mail className="w-4 h-4 text-green-400" />
+                <Mail className="w-4 h-4 text-green-400" aria-hidden="true" />
                 General Support
               </h4>
               <p className="text-blue-400 font-medium hover:text-blue-300 transition-colors text-sm">
                 <a href="mailto:support@codelura.com">support@codelura.com</a>
               </p>
               <p className="text-xs text-gray-400 mt-2">For general inquiries &amp; issues</p>
-            </motion.div>
+            </div>
           </div>
 
           <div className="bg-blue-950/20 border border-blue-900 rounded-lg p-4 mt-6">
@@ -644,6 +623,73 @@ export default function RefundPolicyPage(): React.ReactElement {
     },
   ];
 
+  // Client-side accordion component
+  // const AccordionSection = ({ section }: { section: PolicySection }) => {
+  //   'use client';
+  //   const [isExpanded, setIsExpanded] = React.useState(false);
+
+  //   return (
+  //     <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-gray-600">
+  //       <button
+  //         onClick={() => setIsExpanded(!isExpanded)}
+  //         className="w-full px-6 py-5 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
+  //         aria-expanded={isExpanded}
+  //       >
+  //         <div className="flex items-center gap-3 text-left">
+  //           {section.icon}
+  //           <h3 className="text-lg font-semibold text-white">{section.title}</h3>
+  //         </div>
+  //         <div
+  //           className={`transform transition-transform duration-300 ${
+  //             isExpanded ? "rotate-180" : ""
+  //           }`}
+  //         >
+  //           {isExpanded ? (
+  //             <ChevronUp className="w-5 h-5 text-blue-400 flex-shrink-0" aria-hidden="true" />
+  //           ) : (
+  //             <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" aria-hidden="true" />
+  //           )}
+  //         </div>
+  //       </button>
+
+  //       <div
+  //         className={`overflow-hidden transition-all duration-300 ${
+  //           isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+  //         }`}
+  //       >
+  //         <div className="px-6 py-4 border-t border-gray-700 bg-black/30">
+  //           {section.content}
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  const AccordionSection = ({ section }: { section: PolicySection }) => {
+  return (
+    <details className="group bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-gray-600">
+      <summary className="list-none cursor-pointer w-full px-6 py-5 flex items-center justify-between hover:bg-gray-800/50 transition-colors">
+        <div className="flex items-center gap-3 text-left">
+          {section.icon}
+          <h3 className="text-lg font-semibold text-white">
+            {section.title}
+          </h3>
+        </div>
+
+        <div className="transition-transform duration-300 group-open:rotate-180">
+          <ChevronDown
+            className="w-5 h-5 text-gray-400 flex-shrink-0"
+            aria-hidden="true"
+          />
+        </div>
+      </summary>
+
+      <div className="px-6 py-4 border-t border-gray-700 bg-black/30">
+        {section.content}
+      </div>
+    </details>
+  );
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-gray-900 text-gray-300 px-6 md:px-16 py-20">
       {/* SEO Hidden Heading */}
@@ -651,19 +697,11 @@ export default function RefundPolicyPage(): React.ReactElement {
         Codelura Refund Policy - Subscriptions, Courses, Hackathons &amp; Services Refund Terms
       </h1>
 
-      {/* HEADER */}
-      <motion.section
-        variants={fadeInDown}
-        initial="hidden"
-        animate="show"
-        className="max-w-5xl mx-auto text-center mb-20"
-      >
-        <motion.div
-          variants={fadeInUp}
-          className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-green-950/40 to-green-900/40 border border-green-900 rounded-full"
-        >
+      {/* Header */}
+      <header className="max-w-5xl mx-auto text-center mb-20">
+        <div className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-green-950/40 to-green-900/40 border border-green-900 rounded-full">
           <p className="text-green-300 text-sm font-semibold">REFUND &amp; BILLING POLICY</p>
-        </motion.div>
+        </div>
 
         <h2 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
           Refund Policy
@@ -688,91 +726,40 @@ export default function RefundPolicyPage(): React.ReactElement {
             </p>
           </div>
         </div>
-      </motion.section>
+      </header>
 
-      {/* TABLE OF CONTENTS */}
-      <motion.section
-        variants={fadeInUp}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="max-w-5xl mx-auto mb-16"
-      >
+      {/* Table of Contents */}
+      <section className="max-w-5xl mx-auto mb-16">
         <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg p-6">
           <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-400" />
+            <FileText className="w-5 h-5 text-blue-400" aria-hidden="true" />
             Quick Navigation
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {sections.map((section: PolicySection) => (
-              <button
+            {sections.map((section) => (
+              <Link
                 key={section.id}
-                onClick={() => toggleSection(section.id)}
-                className="text-left text-blue-400 hover:text-blue-300 text-sm transition-colors hover:translate-x-1"
+                href={`#section-${section.id}`}
+                className="text-blue-400 hover:text-blue-300 text-sm transition-colors hover:translate-x-1"
               >
                 → {section.title}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* CONTENT SECTIONS */}
+      {/* Content Sections */}
       <div className="max-w-5xl mx-auto space-y-4 mb-16">
-        {sections.map((section: PolicySection) => (
-          <motion.section
-            key={section.id}
-            variants={fadeInUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-gray-600"
-          >
-            <button
-              onClick={() => toggleSection(section.id)}
-              className="w-full px-6 py-5 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
-            >
-              <div className="flex items-center gap-3 text-left">
-                {section.icon}
-                <h3 className="text-lg font-semibold text-white">{section.title}</h3>
-              </div>
-              <motion.div
-                animate={{ rotate: expandedSections[section.id] ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {expandedSections[section.id] ? (
-                  <ChevronUp className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                )}
-              </motion.div>
-            </button>
-
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{
-                height: expandedSections[section.id] ? "auto" : 0,
-                opacity: expandedSections[section.id] ? 1 : 0,
-              }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="px-6 py-4 border-t border-gray-700 bg-black/30">
-                {section.content}
-              </div>
-            </motion.div>
-          </motion.section>
+        {sections.map((section) => (
+          <div key={section.id} id={`section-${section.id}`}>
+            <AccordionSection section={section} />
+          </div>
         ))}
       </div>
 
-      {/* FOOTER */}
-      <motion.footer
-        variants={fadeInUp}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true }}
-        className="max-w-5xl mx-auto border-t border-gray-800 pt-12"
-      >
+      {/* Footer */}
+      <footer className="max-w-5xl mx-auto border-t border-gray-800 pt-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div>
             <h3 className="text-white font-semibold mb-3">About This Policy</h3>
@@ -785,19 +772,19 @@ export default function RefundPolicyPage(): React.ReactElement {
             <h3 className="text-white font-semibold mb-3">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Terms &amp; Conditions
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/support" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Contact Support
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -820,7 +807,7 @@ export default function RefundPolicyPage(): React.ReactElement {
             Codelura Refund Policy | Last Updated: {currentDate} | Version 2.0
           </p>
         </div>
-      </motion.footer>
+      </footer>
     </div>
   );
 }

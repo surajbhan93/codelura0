@@ -223,9 +223,9 @@ export const getBlogSummary = async (req, res) => {
 
     // Validation: Minimum 200 words
     const wordCount = content.trim().split(/\s+/).length;
-    if (wordCount < 200) {
+    if (wordCount < 100) {
       return res.status(400).json({ 
-        message: "Blog content must be at least 200 words long to generate a summary." 
+        message: "Blog content must be at least 100 words long to generate a summary." 
       });
     }
 

@@ -323,11 +323,11 @@ export default function TestimonialsSection() {
         >
           <p className="text-sm text-white/35">
             Join{" "}
-            <span className="font-bold text-white/65">25,000+</span> developers
+            <span className="font-bold text-white/65">10,000+</span> developers
             already building their future
           </p>
           <motion.a
-            href="/pricing"
+            href="/auth/singup"
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-700/30 transition-all duration-300 hover:shadow-violet-700/55"

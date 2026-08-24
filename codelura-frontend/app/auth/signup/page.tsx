@@ -69,7 +69,7 @@ window.location.href = "/auth/check-email";
             </p>
 
             {/* GOOGLE LOGIN */}
-            <div className="w-full">
+            {/* <div className="w-full">
               <GoogleLogin
                 onSuccess={async (res) => {
                   await api.post("/auth/google", { token: res.credential });
@@ -78,7 +78,7 @@ window.location.href = "/auth/check-email";
                 onError={() => toast.error("Google signup failed")}
                 width="100%"
               />
-            </div>
+            </div> */}
 
             {/* DIVIDER */}
             <div className="my-5 flex items-center gap-3">
