@@ -171,13 +171,13 @@ export default function RootLayout({
          
          <CursorGlow />
         <LayoutWrapper>
-        <Providers>
+          <Providers>
             {children}
-        </Providers>
-      </LayoutWrapper>
-         <Toaster position="top-right" reverseOrder={false} />
-        <Footer />
-        </GoogleOAuthProvider>
+          </Providers>
+        </LayoutWrapper>
+        <Toaster position="top-right" reverseOrder={false} />
+      </GoogleOAuthProvider>
+
 
         {/* Razorpay Script */}
        <Script

@@ -57,11 +57,11 @@ export default function AccountMenu({ jobsAlertUrl }: { jobsAlertUrl: string }) 
             <div className="user-avatar">
               <User size={14} />
             </div>
-            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "#374151" }}>Account</span>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "rgba(255, 255, 255, 0.85)" }}>Account</span>
             <ChevronDown
               size={14}
               className={`chevron-icon ${open ? "open" : ""}`}
-              style={{ color: "#9ca3af" }}
+              style={{ color: "rgba(255, 255, 255, 0.5)" }}
             />
           </button>
           {open && (
@@ -78,7 +78,7 @@ export default function AccountMenu({ jobsAlertUrl }: { jobsAlertUrl: string }) 
               <Link href="/contact" className="dropdown-item">
                 Contact
               </Link>
-              <div style={{ height: "1px", background: "#f3f4f6", margin: "4px 0" }} />
+              <div style={{ height: "1px", background: "rgba(255, 255, 255, 0.08)", margin: "4px 0" }} />
               <button onClick={handleLogout} className="logout-btn">
                 <span style={{ fontSize: "16px" }}>👋</span> Logout
               </button>

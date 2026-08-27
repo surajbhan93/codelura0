@@ -1,45 +1,35 @@
+import Link from "next/link";
 import {
-  ShoppingCart,
-  LayoutDashboard,
   Globe,
-  Rocket,
-  Code2,
-  Star,
-  Users,
-  Calendar,
-  ArrowRight,
+  Bot,
+  MapPin,
   Sparkles,
+  ArrowRight,
   CheckCircle2,
   Zap,
+  Star,
+  Calendar,
+  Users,
+  Rocket,
+  ShieldCheck,
+  TrendingUp,
+  Layers,
 } from "lucide-react";
 import SectionWrapper from "@/components/shared/SectionWrapper";
 
-/* ────────────────────────────────────────────────────────────
-   PURE SERVER COMPONENT. No "use client", no hooks, no
-   framer-motion — zero client JS shipped.
-
-   What changed vs the original:
-   - useInView scroll-triggered fades → CSS animation playing
-     once on load with a per-card stagger delay.
-   - onMouseEnter/onMouseLeave inline box-shadow → CSS custom
-     property (--glow) + Tailwind hover: + arbitrary shadow.
-   - whileHover scale/lift on cards & stat tiles → CSS
-     hover:scale/-translate-y with transition.
-   - The infinite marquee (animate x: 0% → -50%) → a single CSS
-     @keyframes running on the compositor thread — this is
-     actually a bigger perf win than JS-driven, since
-     framer-motion was recalculating this transform every frame
-     on the main thread before.
-   ──────────────────────────────────────────────────────────── */
-
-interface Service {
+interface PrimaryService {
+  id: string;
+  badge: string;
+  badgeColor: string;
   title: string;
   desc: string;
   perks: string[];
+  metrics: { val: string; label: string }[];
   icon: React.ComponentType<{ className?: string }>;
   gradient: string;
   glow: string;
   border: string;
+  link: string;
 }
 
 interface TrustStat {
@@ -57,68 +47,69 @@ interface ClientLogo {
   color: string;
 }
 
-const SERVICES: Service[] = [
+/* ─── 3 CORE HERO SERVICES ─── */
+const PRIMARY_SERVICES: PrimaryService[] = [
   {
-    title: "E-Commerce Websites",
-    desc: "High-performance online stores with payment gateway, cart, admin & order management.",
-    perks: ["Stripe & Razorpay", "Admin Dashboard", "Mobile-First"],
-    icon: ShoppingCart,
-    gradient: "from-orange-500 to-rose-500",
-    glow: "rgba(249,115,22,0.3)",
-    border: "border-orange-500/20",
-  },
-  {
-    title: "SaaS Dashboards",
-    desc: "Scalable SaaS products with auth, subscriptions, analytics and multi-tenancy.",
-    perks: ["Auth & Billing", "Analytics Panel", "API Ready"],
-    icon: LayoutDashboard,
-    gradient: "from-violet-500 to-indigo-500",
-    glow: "rgba(139,92,246,0.3)",
-    border: "border-violet-500/20",
-  },
-  {
-    title: "Startup Landing Pages",
-    desc: "Conversion-focused landing pages engineered for startup launches and growth.",
-    perks: ["SEO Optimised", "Fast Load", "A/B Ready"],
-    icon: Rocket,
-    gradient: "from-emerald-500 to-teal-500",
-    glow: "rgba(16,185,129,0.3)",
-    border: "border-emerald-500/20",
-  },
-  {
-    title: "Admin Panels",
-    desc: "Secure role-based admin panels with data tables, filters and bulk operations.",
-    perks: ["Role Access", "Data Tables", "Export CSV"],
-    icon: Code2,
-    gradient: "from-amber-500 to-orange-500",
-    glow: "rgba(245,158,11,0.3)",
-    border: "border-amber-500/20",
-  },
-  {
-    title: "Portfolio Websites",
-    desc: "Modern personal & business portfolios that build credibility and global visibility.",
-    perks: ["Custom Domain", "CMS Blog", "Dark Mode"],
+    id: "website",
+    badge: "Fast Web Platforms",
+    badgeColor: "border-cyan-500/30 bg-cyan-500/10 text-cyan-300",
+    title: "High-Performance Websites & Web Apps",
+    desc: "Sub-second Next.js 15 & React platforms with 99+ Core Web Vitals, conversion-first UX, and payment integrations.",
+    perks: ["Next.js 15 & React 19", "E-Commerce & SaaS Portals", "SEO & Speed 99+"],
+    metrics: [
+      { val: "99+", label: "PageSpeed" },
+      { val: "<0.8s", label: "Load Time" },
+      { val: "+140%", label: "Conversion" },
+    ],
     icon: Globe,
-    gradient: "from-pink-500 to-fuchsia-500",
-    glow: "rgba(236,72,153,0.3)",
-    border: "border-pink-500/20",
+    gradient: "from-cyan-500 to-blue-600",
+    glow: "rgba(6,182,212,0.35)",
+    border: "border-cyan-500/30",
+    link: "/services/Enquiries?service=Website%20Development",
   },
   {
-    title: "Full-Stack Projects",
-    desc: "End-to-end full-stack solutions using Next.js, Node, Prisma & cloud infra.",
-    perks: ["Next.js 14", "PostgreSQL", "Deployed"],
-    icon: LayoutDashboard,
-    gradient: "from-cyan-500 to-blue-500",
-    glow: "rgba(6,182,212,0.3)",
-    border: "border-cyan-500/20",
+    id: "ai-bot",
+    badge: "Autonomous AI Agents",
+    badgeColor: "border-purple-500/30 bg-purple-500/10 text-purple-300",
+    title: "Custom AI Bots & Workflow Automation",
+    desc: "Intelligent RAG AI bots trained on your business data. Deploy 24/7 lead capture and support on WhatsApp and Web.",
+    perks: ["Custom Data Training", "WhatsApp & Web Chat", "CRM & Lead Auto-Sync"],
+    metrics: [
+      { val: "85%", label: "Auto-Resolved" },
+      { val: "0.2s", label: "Response" },
+      { val: "3.8x", label: "More Leads" },
+    ],
+    icon: Bot,
+    gradient: "from-purple-500 to-pink-600",
+    glow: "rgba(168,85,247,0.35)",
+    border: "border-purple-500/30",
+    link: "/services/Enquiries?service=AI%20Solutions",
+  },
+  {
+    id: "gbp-audit",
+    badge: "Google 3-Pack Maps",
+    badgeColor: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+    title: "Google Business Profile Audit & Local SEO",
+    desc: "100+ point technical GBP audits and hyper-local SEO campaigns that push your local business into Google Maps top rank.",
+    perks: ["100+ Point Audit", "Geo-Grid Rank Boost", "5-Star Review Automation"],
+    metrics: [
+      { val: "Top 3", label: "Maps Rank" },
+      { val: "+320%", label: "Call Growth" },
+      { val: "100%", label: "Citations" },
+    ],
+    icon: MapPin,
+    gradient: "from-amber-500 to-emerald-600",
+    glow: "rgba(245,158,11,0.35)",
+    border: "border-amber-500/30",
+    link: "/services/Enquiries?service=GBP%20Audit%20SEO",
   },
 ];
 
 const TRUST_STATS: TrustStat[] = [
-  { icon: Star, value: "200+", label: "Websites Delivered", iconColor: "text-amber-400", bg: "bg-amber-500/8", border: "border-amber-500/20" },
-  { icon: Calendar, value: "4+ Yrs", label: "Industry Experience", iconColor: "text-violet-400", bg: "bg-violet-500/8", border: "border-violet-500/20" },
-  { icon: Users, value: "Global", label: "Clients Worldwide", iconColor: "text-emerald-400", bg: "bg-emerald-500/8", border: "border-emerald-500/20" },
-  { icon: Rocket, value: "48hrs", label: "Average First Draft", iconColor: "text-rose-400", bg: "bg-rose-500/8", border: "border-rose-500/20" },
+  { icon: Star, value: "250+", label: "Websites Delivered", iconColor: "text-amber-400", bg: "bg-amber-500/8", border: "border-amber-500/20" },
+  { icon: Bot, value: "50M+", label: "AI Interactions Handled", iconColor: "text-purple-400", bg: "bg-purple-500/8", border: "border-purple-500/20" },
+  { icon: MapPin, value: "100+", label: "GBP Audits Completed", iconColor: "text-emerald-400", bg: "bg-emerald-500/8", border: "border-emerald-500/20" },
+  { icon: Rocket, value: "99.8%", label: "Client Satisfaction", iconColor: "text-rose-400", bg: "bg-rose-500/8", border: "border-rose-500/20" },
 ];
 
 const CLIENT_LOGOS: ClientLogo[] = [
@@ -151,70 +142,12 @@ function ServiceStyles() {
   );
 }
 
-function ServiceCard({ s, i }: { s: Service; i: number }) {
-  const Icon = s.icon;
-
-  return (
-    <div className="group relative flex flex-col">
-      <div
-        className={`svc-card relative h-full overflow-hidden rounded-3xl border ${s.border} bg-white/4 p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-[0_12px_48px_var(--glow)]`}
-        style={{ animationDelay: `${i * 0.08}s`, ["--glow" as string]: s.glow }}
-      >
-        {/* Top glow line on hover */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-          style={{ background: `linear-gradient(90deg,transparent,${s.glow},transparent)` }}
-        />
-
-        {/* Icon */}
-        <div
-          className={`mb-5 flex items-center justify-center rounded-2xl bg-gradient-to-br ${s.gradient} shadow-lg`}
-          style={{ width: 52, height: 52 }}
-        >
-          <Icon className="h-6 w-6 text-white" />
-        </div>
-
-        {/* Title & desc */}
-        <h3 className="mb-2 text-base font-black text-white">{s.title}</h3>
-        <p className="text-sm leading-relaxed text-white/45">{s.desc}</p>
-
-        {/* Perks */}
-        <div className="mt-5 flex flex-wrap gap-2">
-          {s.perks.map((p) => (
-            <span
-              key={p}
-              className={`inline-flex items-center gap-1 rounded-full border ${s.border} bg-white/4 px-2.5 py-1 text-[10px] font-semibold text-white/50`}
-            >
-              <CheckCircle2 className="h-2.5 w-2.5 text-white/40" />
-              {p}
-            </span>
-          ))}
-        </div>
-
-        {/* Arrow CTA */}
-        <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-white/30 transition-all duration-300 group-hover:text-white/70">
-          Learn more
-          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-        </div>
-
-        {/* Watermark icon */}
-        <div
-          className="pointer-events-none absolute -bottom-3 -right-3 opacity-[0.04] transition-opacity duration-300 group-hover:opacity-[0.07]"
-          aria-hidden="true"
-        >
-          <Icon className="h-24 w-24 text-white" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function LogoMarquee() {
   const doubled = [...CLIENT_LOGOS, ...CLIENT_LOGOS];
   return (
-    <div className="mt-24">
-      <p className="mb-8 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/25">
-        Trusted by startups, brands &amp; global clients
+    <div className="mt-20">
+      <p className="mb-8 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/30">
+        Trusted by startups, local brands &amp; high-growth enterprises
       </p>
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-[#07060f] to-transparent" />
@@ -232,7 +165,7 @@ function LogoMarquee() {
               >
                 {logo.initials}
               </span>
-              <span className="text-sm font-semibold text-white/45 whitespace-nowrap">
+              <span className="text-sm font-semibold text-white/50 whitespace-nowrap">
                 {logo.name}
               </span>
             </div>
@@ -255,14 +188,14 @@ export default function ServicesSection() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Service",
-            name: "Website Development Services — Codelura",
+            name: "Digital Engineering Services — Codelura",
             description:
-              "Codelura offers e-commerce, SaaS dashboards, landing pages, admin panels, portfolios and full-stack development services.",
-            provider: { "@type": "Organization", name: "Codelura", url: "https://build.codelura.com/services" },
+              "Codelura delivers high-speed Next.js websites, custom AI bots, and Google Business Profile (GBP) local SEO audits.",
+            provider: { "@type": "Organization", name: "Codelura", url: "https://codelura.com/services" },
             hasOfferCatalog: {
               "@type": "OfferCatalog",
-              name: "Web Development Services",
-              itemListElement: SERVICES.map((s, i) => ({
+              name: "Core Digital Services",
+              itemListElement: PRIMARY_SERVICES.map((s, i) => ({
                 "@type": "Offer",
                 position: i + 1,
                 itemOffered: { "@type": "Service", name: s.title, description: s.desc },
@@ -273,45 +206,111 @@ export default function ServicesSection() {
       />
 
       <div className="relative overflow-hidden">
-        {/* Ambient glow — hidden on mobile */}
+        {/* Ambient glow */}
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden hidden sm:block">
-          <div className="absolute left-1/2 top-0 h-[400px] w-[640px] -translate-x-1/2 rounded-full bg-violet-700/10 blur-[120px]" />
-          <div className="absolute right-0 bottom-0 h-[320px] w-[320px] rounded-full bg-cyan-700/8 blur-[110px]" />
-          <div
-            className="absolute inset-0 opacity-[0.022]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.6) 1px,transparent 1px)",
-              backgroundSize: "55px 55px",
-            }}
-          />
+          <div className="absolute left-1/2 top-0 h-[450px] w-[700px] -translate-x-1/2 rounded-full bg-purple-700/10 blur-[130px]" />
+          <div className="absolute right-0 bottom-0 h-[350px] w-[350px] rounded-full bg-cyan-700/10 blur-[120px]" />
         </div>
 
         {/* Header */}
         <div className="svc-card mb-16 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-500/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-violet-400">
-            <Zap className="h-3 w-3 fill-violet-400" />
-            Professional Development
+          <span className="inline-flex items-center gap-2 rounded-full border border-purple-500/25 bg-purple-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-purple-300">
+            <Zap className="h-3 w-3 fill-purple-400" />
+            OUR 3 CORE PILLARS
           </span>
 
-          <h2 className="mt-5 text-3xl font-black text-white md:text-5xl">
-            Website Development{" "}
-            <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">
-              Services
+          <h2 className="mt-5 text-3xl font-black text-white md:text-5xl lg:text-6xl tracking-tight">
+            Websites, AI Bots &amp;{" "}
+            <span className="bg-gradient-to-r from-cyan-400 via-purple-300 to-amber-300 bg-clip-text text-transparent">
+              GBP Local Dominance
             </span>
           </h2>
 
-          <p className="mt-4 mx-auto max-w-2xl text-base text-white/40 leading-relaxed">
-            We design and develop high-quality websites, SaaS platforms and
-            e-commerce solutions — trusted by clients worldwide.
+          <p className="mt-4 mx-auto max-w-2xl text-base text-slate-400 leading-relaxed">
+            We focus on the 3 fundamental engines that directly increase inquiries, automate operations, and generate revenue for modern businesses.
           </p>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3" aria-label="Web development service offerings">
-          {SERVICES.map((s, i) => (
-            <ServiceCard key={s.title} s={s} i={i} />
-          ))}
+        {/* 3 Core Services Grid */}
+        <div className="grid gap-7 lg:grid-cols-3" aria-label="Core digital service offerings">
+          {PRIMARY_SERVICES.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div
+                key={s.id}
+                className={`svc-card group relative flex flex-col justify-between overflow-hidden rounded-3xl border ${s.border} bg-slate-900/60 p-8 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_var(--glow)]`}
+                style={{ animationDelay: `${i * 0.1}s`, ["--glow" as string]: s.glow }}
+              >
+                {/* Top glow line on hover */}
+                <div
+                  className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  style={{ background: `linear-gradient(90deg,transparent,${s.glow},transparent)` }}
+                />
+
+                <div>
+                  {/* Badge & Icon Row */}
+                  <div className="flex items-center justify-between mb-6">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${s.badgeColor}`}>
+                      <Sparkles className="w-3 h-3" />
+                      {s.badge}
+                    </span>
+
+                    <div
+                      className={`flex items-center justify-center rounded-2xl bg-gradient-to-br ${s.gradient} shadow-lg shadow-black/40`}
+                      style={{ width: 48, height: 48 }}
+                    >
+                      <Icon className="h-5 w-5 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Title & Desc */}
+                  <h3 className="mb-3 text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-slate-400 mb-6">
+                    {s.desc}
+                  </p>
+
+                  {/* Metrics Box */}
+                  <div className="grid grid-cols-3 gap-2 bg-slate-950/80 border border-slate-800 rounded-2xl p-3 mb-6 text-center">
+                    {s.metrics.map((m, mIdx) => (
+                      <div key={mIdx}>
+                        <div className="text-base font-black text-white">{m.val}</div>
+                        <div className="text-[10px] text-slate-400">{m.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Perks list */}
+                  <div className="space-y-2 mb-8">
+                    {s.perks.map((p) => (
+                      <div key={p} className="flex items-center gap-2 text-xs sm:text-sm text-slate-300">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+                        <span>{p}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bottom CTA Link */}
+                <Link
+                  href={s.link}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl bg-slate-800/80 border border-slate-700 hover:border-cyan-500/50 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold shadow-md transition-all group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-indigo-600"
+                >
+                  <span>Explore Solution</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+
+                {/* Watermark icon */}
+                <div
+                  className="pointer-events-none absolute -bottom-4 -right-4 opacity-[0.03] transition-opacity duration-300 group-hover:opacity-[0.06]"
+                  aria-hidden="true"
+                >
+                  <Icon className="h-32 w-32 text-white" />
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Trust Stats */}
@@ -327,7 +326,7 @@ export default function ServicesSection() {
             >
               <Icon className={`h-5 w-5 ${iconColor}`} />
               <p className="text-2xl font-black text-white">{value}</p>
-              <p className="text-xs text-white/40 font-medium">{label}</p>
+              <p className="text-xs text-white/50 font-medium">{label}</p>
             </div>
           ))}
         </div>
@@ -337,18 +336,15 @@ export default function ServicesSection() {
 
         {/* CTA */}
         <div className="svc-card mt-16 flex flex-col items-center gap-4" style={{ animationDelay: "0.3s" }}>
-          <p className="text-sm text-white/30">Ready to build something great?</p>
-          <a
-            href="https://build.codelura.com/services"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View all Codelura web development services"
-            className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-9 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-700/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-violet-700/55 active:scale-[0.97]"
+          <p className="text-sm text-slate-400">Ready to build your next digital asset?</p>
+          <Link
+            href="/services"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 px-9 py-4 text-sm font-bold text-white shadow-xl shadow-purple-700/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-purple-700/50 active:scale-[0.97]"
           >
-            <Sparkles className="h-4 w-4" />
-            View All Services
+            <Sparkles className="h-4 w-4 text-amber-300" />
+            Explore All Services &amp; Free Audits
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </Link>
         </div>
       </div>
     </SectionWrapper>

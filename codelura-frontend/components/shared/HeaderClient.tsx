@@ -29,16 +29,7 @@ export default function HeaderClient({
 
   return (
     <header className={`${className} ${scrolled ? "scrolled" : ""}`}>
-      <nav
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "14px 24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <nav className="nav-container">
         {children}
 
         {/* MOBILE TOGGLE */}

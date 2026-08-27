@@ -1,155 +1,184 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Users,
-  Briefcase,
-  Building2,
-  Star,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Users, Briefcase, Building2, Star, TrendingUp } from "lucide-react";
 
-type Stat = {
-  value: number;
-  suffix: string;
-  label: string;
-  icon: React.ElementType;
-};
-
-const stats: Stat[] = [
+/* ─── Stat data ─── */
+const stats = [
   {
-    value: 100,
+    value: 250,
     suffix: "+",
     label: "Happy Clients",
+    sublabel: "Across India",
     icon: Users,
+    grad: "from-violet-500 to-purple-700",
+    glow: "rgba(139,92,246,0.4)",
+    numColor: "from-violet-300 to-purple-400",
   },
   {
-    value: 150,
+    value: 500,
     suffix: "+",
     label: "Projects Delivered",
+    sublabel: "On time, on budget",
     icon: Briefcase,
+    grad: "from-cyan-400 to-blue-600",
+    glow: "rgba(6,182,212,0.4)",
+    numColor: "from-cyan-300 to-blue-400",
   },
   {
-    value: 15,
+    value: 50,
     suffix: "+",
     label: "Industries Served",
+    sublabel: "Nationwide reach",
     icon: Building2,
+    grad: "from-fuchsia-500 to-pink-700",
+    glow: "rgba(217,70,239,0.4)",
+    numColor: "from-fuchsia-300 to-pink-400",
   },
   {
     value: 99,
     suffix: "%",
     label: "Client Satisfaction",
+    sublabel: "4.9 / 5.0 avg rating",
     icon: Star,
+    grad: "from-amber-400 to-orange-500",
+    glow: "rgba(251,191,36,0.4)",
+    numColor: "from-amber-300 to-orange-400",
   },
 ];
 
-function Counter({
-  end,
-  suffix,
-}: {
-  end: number;
-  suffix: string;
-}) {
+/* ─── Animated counter using IntersectionObserver ─── */
+function Counter({ end, suffix, colorClass }: { end: number; suffix: string; colorClass: string }) {
   const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const started = useRef(false);
 
   useEffect(() => {
-    let start = 0;
-
-    const duration = 2000;
-    const increment = end / (duration / 16);
-
-    const timer = setInterval(() => {
-      start += increment;
-
-      if (start >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 16);
-
-    return () => clearInterval(timer);
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started.current) {
+          started.current = true;
+          const duration = 1800;
+          const steps = 60;
+          const increment = end / steps;
+          let current = 0;
+          const timer = setInterval(() => {
+            current += increment;
+            if (current >= end) {
+              setCount(end);
+              clearInterval(timer);
+            } else {
+              setCount(Math.floor(current));
+            }
+          }, duration / steps);
+        }
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [end]);
 
   return (
-    <>
-      {count}
-      {suffix}
-    </>
+    <span ref={ref} className={`bg-gradient-to-r ${colorClass} bg-clip-text text-transparent`}>
+      {count}{suffix}
+    </span>
   );
 }
 
 export default function Stats() {
   return (
-    <section className="relative overflow-hidden py-24 bg-[#030712]">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.25),transparent_30%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.20),transparent_30%)]" />
+    <section className="relative overflow-hidden bg-[#04040a] py-12 sm:py-16 text-white">
+      {/* Background glows */}
+      <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[900px] rounded-full bg-indigo-950/20 blur-[150px]" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Heading */}
-        <div className="max-w-3xl mx-auto text-center">
-          <span className="inline-flex rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-400">
-            Our Achievements
-          </span>
 
-          <h2 className="mt-6 text-4xl md:text-5xl font-extrabold text-white">
+        {/* ── Header ── */}
+        <div className="mx-auto max-w-3xl text-center mb-12">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400 mb-6">
+            <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
+            Our Achievements
+          </div>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
             Trusted By Businesses
-            <span className="block bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+            <br />
+            <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
               Across Industries
             </span>
           </h2>
-
-          <p className="mt-5 text-lg text-slate-400">
-            Delivering high-quality software, websites and digital growth
-            solutions with measurable business results.
+          <p className="mt-5 text-slate-500 text-sm sm:text-base max-w-xl mx-auto">
+            Delivering software, websites and digital growth with measurable, real-world results.
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* ── Stats Grid ── */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => {
             const Icon = stat.icon;
-
             return (
               <div
                 key={stat.label}
-                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-blue-500/40"
+                className="group relative flex flex-col rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2"
+                style={{
+                  background: "linear-gradient(145deg, #09090f 0%, #07070d 100%)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 50px ${stat.glow}, 0 0 15px ${stat.glow}`;
+                  (e.currentTarget as HTMLDivElement).style.borderColor = stat.glow;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                  (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.07)";
+                }}
               >
-                <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-                  <div className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-blue-500/20 blur-3xl" />
-                </div>
-
-                <div className="relative z-10">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                    <Icon size={28} />
+                {/* Icon with gradient border ring */}
+                <div className="relative mb-6 self-start">
+                  <div
+                    className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${stat.grad} p-[1.5px]`}
+                  >
+                    <div className="flex h-full w-full items-center justify-center rounded-[14px] bg-[#09090f]">
+                      <Icon className="w-6 h-6 text-white/60 group-hover:text-white transition-colors duration-300" />
+                    </div>
                   </div>
-
-                  <h3 className="mt-6 text-5xl font-extrabold text-white">
-                    <Counter
-                      end={stat.value}
-                      suffix={stat.suffix}
-                    />
-                  </h3>
-
-                  <p className="mt-3 text-slate-400 font-medium">
-                    {stat.label}
-                  </p>
-
-                  <div className="mt-5 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500 group-hover:w-24" />
+                  {/* Glow behind icon */}
+                  <div
+                    className="absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-300"
+                    style={{ background: stat.glow }}
+                  />
                 </div>
+
+                {/* Big number */}
+                <div className="text-5xl sm:text-6xl font-black tracking-tight mb-1">
+                  <Counter end={stat.value} suffix={stat.suffix} colorClass={stat.numColor} />
+                </div>
+
+                {/* Label */}
+                <p className="text-white/80 font-bold text-base mb-1">
+                  {stat.label}
+                </p>
+                <p className="text-slate-600 text-xs font-mono group-hover:text-slate-400 transition-colors">
+                  {stat.sublabel}
+                </p>
+
+                {/* Bottom gradient divider — grows on hover */}
+                <div
+                  className={`mt-6 h-[2px] w-10 rounded-full bg-gradient-to-r ${stat.grad} transition-all duration-500 group-hover:w-full`}
+                />
               </div>
             );
           })}
         </div>
 
-        {/* Bottom Trust Content */}
-        <div className="mt-20 text-center">
-          <p className="mx-auto max-w-4xl text-slate-400 leading-8">
-            Codelura Technologies has successfully delivered custom software,
-            business websites, eCommerce solutions, mobile applications,
-            SEO campaigns and digital marketing services for startups,
-            enterprises and local businesses across multiple industries.
+        {/* ── Bottom trust strip ── */}
+        <div className="mt-16 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-8 py-6 text-center">
+          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-4xl mx-auto">
+            Codelura Technologies has successfully delivered custom software, business websites, eCommerce solutions,
+            mobile applications, SEO campaigns and digital marketing services for startups, enterprises and local
+            businesses across multiple industries.
           </p>
         </div>
       </div>

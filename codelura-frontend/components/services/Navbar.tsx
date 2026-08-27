@@ -303,12 +303,6 @@ export default function Navbar() {
         heading: "Work Proof",
         items: [
           {
-            name: "Portfolio",
-            slug: "work",
-            description: "Selected websites, apps and software work",
-            base: "/",
-          },
-          {
             name: "Case Studies",
             slug: "case-studies",
             description: "Detailed project problems and solutions",
@@ -350,7 +344,11 @@ export default function Navbar() {
 
   const megaMenus: MegaMenu[] = [servicesMenu, industriesMenu, companyMenu];
 
-  const simpleLinks = [{ name: "Home", href: "/services" }];
+  const simpleLinks = [
+    { name: "Home", href: "/services" },
+    { name: "Our Work", href: "/work" }
+  ];
+
 
   /* ---------------- BEHAVIOR ---------------- */
 
@@ -403,30 +401,32 @@ export default function Navbar() {
   return (
     <header
       ref={navRef}
-      className={`sticky top-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
         scrolled
-          ? "bg-white/95 backdrop-blur-md shadow-[0_1px_0_0_rgba(0,0,0,0.06),0_8px_24px_-12px_rgba(15,23,42,0.12)]"
-          : "bg-white border-b border-slate-100"
+          ? "bg-[#050714]/90 backdrop-blur-md border-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]"
+          : "bg-[#050714]/65 backdrop-blur-sm border-white/5"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-[72px]">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center text-[24px] lg:text-[26px] font-extrabold tracking-tight text-slate-900 transition-opacity hover:opacity-80"
+            className="flex items-center text-[22px] lg:text-[24px] font-extrabold tracking-tight transition-opacity hover:opacity-90 text-white"
           >
-            Codelura
-            <span className="text-blue-600">.</span>
+            <span className="bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+              Codelura
+            </span>
           </Link>
 
+
           {/* Desktop Menu */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1.5">
             {simpleLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-4 py-2 text-[15px] font-medium text-slate-700 rounded-lg transition-colors hover:bg-slate-50 hover:text-slate-900"
+                className="px-4 py-2 text-[14px] font-medium text-slate-300 rounded-full transition-all hover:bg-white/5 hover:text-white"
               >
                 {link.name}
               </Link>
@@ -438,28 +438,28 @@ export default function Navbar() {
                 <div key={menu.key} className="relative">
                   <button
                     onClick={() => toggleMenu(menu.key as MenuKey)}
-                    className={`flex items-center gap-1 px-4 py-2 text-[15px] font-medium rounded-lg transition-colors ${
+                    className={`flex items-center gap-1 px-4 py-2 text-[14px] font-medium rounded-full transition-all ${
                       openMenu === menu.key
-                        ? "bg-slate-50 text-slate-900"
-                        : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                        ? "bg-white/10 text-white"
+                        : "text-slate-300 hover:bg-white/5 hover:text-white"
                     }`}
                     aria-expanded={openMenu === menu.key}
                     aria-haspopup="true"
                   >
                     {menu.label}
                     <ChevronDown
-                      size={16}
-                      className={`transition-transform duration-200 ${
+                      size={14}
+                      className={`transition-transform duration-200 opacity-60 ${
                         openMenu === menu.key ? "rotate-180" : ""
                       }`}
                     />
                   </button>
 
                   <div
-                    className={`absolute top-full mt-3 origin-top rounded-2xl border border-slate-100 bg-white shadow-[0_24px_70px_-15px_rgba(15,23,42,0.2)] transition-all duration-200 ${
+                    className={`absolute top-full mt-3 origin-top rounded-2xl border border-white/10 bg-[#090b1c]/95 backdrop-blur-xl shadow-[0_24px_70px_rgba(0,0,0,0.7)] transition-all duration-200 ${
                       isWide
                         ? "left-1/2 w-[min(92vw,860px)] -translate-x-[42%] p-6"
-                        : "left-1/2 w-[420px] -translate-x-1/2 p-5"
+                        : "right-[-120px] sm:right-[-60px] md:right-0 lg:left-1/2 lg:-translate-x-1/2 w-[min(92vw,600px)] p-6"
                     } ${
                       openMenu === menu.key
                         ? "opacity-100 visible translate-y-0"
@@ -467,6 +467,7 @@ export default function Navbar() {
                     }`}
                     role="menu"
                   >
+
                     <div
                       className={`grid gap-x-6 gap-y-6 ${
                         isWide ? "grid-cols-4" : "grid-cols-3"
@@ -474,7 +475,7 @@ export default function Navbar() {
                     >
                       {menu.columns.map((col) => (
                         <div key={col.heading} className="min-w-0">
-                          <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-blue-600 whitespace-nowrap">
+                          <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-indigo-400 whitespace-nowrap">
                             {col.heading}
                           </p>
                           <ul className="space-y-2.5">
@@ -483,12 +484,12 @@ export default function Navbar() {
                                 <Link
                                   href={basePath(item)}
                                   onClick={() => setOpenMenu(null)}
-                                  className="block rounded-lg -mx-2 px-2 py-1.5 transition-colors hover:bg-slate-50"
+                                  className="block rounded-lg -mx-2 px-2 py-1.5 transition-colors hover:bg-white/5"
                                 >
-                                  <span className="block text-sm font-semibold text-slate-900 leading-snug">
+                                  <span className="block text-sm font-semibold text-slate-100 leading-snug">
                                     {item.name}
                                   </span>
-                                  <span className="block text-[12.5px] text-slate-500 leading-snug">
+                                  <span className="block text-[12.5px] text-slate-400 leading-snug">
                                     {item.description}
                                   </span>
                                 </Link>
@@ -500,11 +501,11 @@ export default function Navbar() {
                     </div>
 
                     {menu.key === "services" && (
-                      <div className="mt-6 border-t border-slate-100 pt-4 text-center">
+                      <div className="mt-6 border-t border-white/10 pt-4 text-center">
                         <Link
                           href="/services/getallservice"
                           onClick={() => setOpenMenu(null)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:scale-[1.02]"
                         >
                           View All Services (100+ Services)
                         </Link>
@@ -515,50 +516,50 @@ export default function Navbar() {
               );
             })}
 
-            <div className="ml-3 flex items-center gap-2.5">
+            <div className="ml-4 flex items-center gap-2.5">
               <Link
                 href="https://wa.me/919336289192"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500 px-4 py-2.5 text-[15px] font-semibold text-emerald-600 transition-colors hover:bg-emerald-50"
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-[14px] font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20 hover:border-emerald-500/50"
               >
                 WhatsApp
               </Link>
               <Link
-  href="https://calendly.com/codelura/free-project-consultation-codelura"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="inline-flex items-center gap-2 rounded-lg border border-blue-600 px-4 py-2.5 text-[15px] font-semibold text-blue-600 transition-all hover:bg-blue-50"
->
-  📅 Book Free Consultation
-</Link>
+                href="https://calendly.com/codelura/free-project-consultation-codelura"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 px-5 py-2 text-[14px] font-bold text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-105 hover:shadow-indigo-500/40"
+              >
+                Book Free Consultation
+              </Link>
             </div>
           </nav>
 
           {/* Mobile Button */}
           <button
-            className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-slate-50"
+            className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-white/5"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
       <div
-        className={`lg:hidden fixed inset-x-0 top-16 bottom-0 bg-white transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed inset-x-0 top-16 bottom-0 bg-[#050714]/98 backdrop-blur-xl border-t border-white/10 transition-transform duration-300 ease-in-out ${
           mobileOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="h-full overflow-y-auto px-4 py-4">
+        <div className="h-full overflow-y-auto px-4 py-6 space-y-4">
           {simpleLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className="block rounded-lg px-3 py-3 text-base font-medium text-slate-800 hover:bg-slate-50"
+              className="block rounded-lg px-3 py-2 text-base font-medium text-slate-200 hover:bg-white/5"
             >
               {link.name}
             </Link>
@@ -572,13 +573,13 @@ export default function Navbar() {
                     prev === menu.key ? null : (menu.key as MenuKey)
                   )
                 }
-                className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-base font-medium text-slate-800 hover:bg-slate-50"
+                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-base font-medium text-slate-200 hover:bg-white/5"
                 aria-expanded={mobileSubOpen === menu.key}
               >
                 {menu.label}
                 <ChevronDown
-                  size={18}
-                  className={`transition-transform duration-200 ${
+                  size={16}
+                  className={`transition-transform duration-200 opacity-60 ${
                     mobileSubOpen === menu.key ? "rotate-180" : ""
                   }`}
                 />
@@ -589,13 +590,13 @@ export default function Navbar() {
                   mobileSubOpen === menu.key ? "max-h-[2200px]" : "max-h-0"
                 }`}
               >
-                <div className="space-y-4 py-2 pl-3">
+                <div className="space-y-4 py-2 pl-4 border-l border-white/5 mt-1">
                   {menu.columns.map((col) => (
                     <div key={col.heading}>
-                      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-blue-600">
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-indigo-400">
                         {col.heading}
                       </p>
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         {col.items.map((item) => (
                           <Link
                             key={item.slug}
@@ -604,12 +605,12 @@ export default function Navbar() {
                               setMobileOpen(false);
                               setMobileSubOpen(null);
                             }}
-                            className="block rounded-lg px-2 py-2 hover:bg-slate-50"
+                            className="block rounded-lg px-2 py-2 hover:bg-white/5"
                           >
-                            <span className="block text-sm font-medium text-slate-800">
+                            <span className="block text-sm font-medium text-slate-100">
                               {item.name}
                             </span>
-                            <span className="block text-xs text-slate-500">
+                            <span className="block text-xs text-slate-400 mt-0.5">
                               {item.description}
                             </span>
                           </Link>
@@ -619,14 +620,14 @@ export default function Navbar() {
                   ))}
 
                   {menu.key === "services" && (
-                    <div className="pt-1">
+                    <div className="pt-2">
                       <Link
                         href="/services/getallservices"
                         onClick={() => {
                           setMobileOpen(false);
                           setMobileSubOpen(null);
                         }}
-                        className="block rounded-lg bg-blue-600 px-3 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700"
+                        className="block rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 py-3 text-center text-sm font-semibold text-white hover:opacity-90"
                       >
                         View All Services (100+ Services)
                       </Link>
@@ -637,27 +638,28 @@ export default function Navbar() {
             </div>
           ))}
 
-          <div className="mt-4 space-y-2">
+          <div className="pt-4 border-t border-white/10 space-y-3">
             <Link
               href="https://wa.me/919336289192"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMobileOpen(false)}
-              className="block rounded-lg border border-emerald-500 px-3 py-3 text-center text-base font-semibold text-emerald-600 hover:bg-emerald-50"
+              className="block rounded-full border border-emerald-500/40 bg-emerald-500/10 py-3 text-center text-base font-semibold text-emerald-400 hover:bg-emerald-500/20"
             >
               WhatsApp
             </Link>
-           <Link
-  href="https://calendly.com/surajbhan/free-project-consultation-codelura"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="inline-flex items-center gap-2 rounded-lg border border-blue-600 px-4 py-2.5 text-[15px] font-semibold text-blue-600 transition-all hover:bg-blue-50"
->
-  📅 Book Free Consultation
-</Link>
+            <Link
+              href="https://calendly.com/surajbhan/free-project-consultation-codelura"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 py-3 text-center text-base font-bold text-white shadow-lg shadow-indigo-500/25"
+            >
+              Book Free Consultation
+            </Link>
           </div>
         </div>
       </div>
     </header>
   );
-}
+}

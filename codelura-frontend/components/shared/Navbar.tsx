@@ -4,75 +4,131 @@ import { Briefcase, Wrench, BookOpen, Rocket } from "lucide-react";
 import AccountMenu from "./AccountMenu";
 import HeaderClient from "./HeaderClient";
 
-/* ────────────────────────────────────────────────────────────
-   SERVER COMPONENT — no "use client" here.
-   Simple flat navbar: Career + Build go to their own subdomains
-   (all the sub-content lives there, no dropdown needed on the
-   home navbar), plus Blogs + Hackathons as direct links, plus
-   Contact.
-
-   Only two things need real browser state, so they're split
-   into small client islands:
-     - HeaderClient.tsx  ("use client") — scroll shadow +
-       mobile menu toggle/panel (share state, kept together)
-     - AccountMenu.tsx   ("use client") — reads localStorage
-       role, renders login/CTA or account dropdown + logout
-   Everything else (logo, links, layout, styles) is rendered
-   on the server.
-   ──────────────────────────────────────────────────────────── */
-
 const syne = Syne({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-syne" });
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-dm-sans" });
 
 const CAREER_URL = "https://career.codelura.com/career";
 const BUILD_URL = "https://build.codelura.com/";
 
-// Single source of truth for the simple link list — used by
-// both the desktop row (server-rendered) and the mobile panel
-// (rendered inside the client island).
 export const NAV_LINKS = [
-  { label: "Career", href: CAREER_URL, external: true, icon: Briefcase, emoji: "💼" },
-  { label: "Services", href: BUILD_URL, external: true, icon: Wrench, emoji: "🛠️" },
-  { label: "Blogs", href: "/blogs", external: false, icon: BookOpen, emoji: "📘" },
-  { label: "Hackathons", href: "/hackathons", external: false, icon: Rocket, emoji: "🚀" },
+  { label: "Career",     href: CAREER_URL, external: true,  icon: Briefcase, emoji: "💼" },
+  { label: "Services",   href: BUILD_URL,   external: true,  icon: Wrench,    emoji: "🛠️" },
+  { label: "Blogs",      href: "/blogs",    external: false, icon: BookOpen,  emoji: "📘" },
+  { label: "Hackathons", href: "/hackathons",external: false,icon: Rocket,    emoji: "🚀" },
 ];
 
 export default function AppNavbar() {
   return (
     <>
       <style>{`
+        /* ─── Fonts ─── */
         .nav-root { font-family: var(--font-dm-sans), sans-serif; }
         .nav-logo { font-family: var(--font-syne), sans-serif; font-weight: 800; letter-spacing: -0.5px; }
 
-        .nav-link {
-          font-weight: 500;
-          font-size: 0.875rem;
-          color: #374151;
-          transition: color 0.2s;
-          position: relative;
+        /* ─── Header bar & Container ─── */
+        .header-bar {
+          position: sticky; top: 0; z-index: 50;
+          background: rgba(5, 7, 20, 0.75);
+          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          transition: box-shadow 0.3s, background 0.3s;
+        }
+        .header-bar.scrolled {
+          background: rgba(5, 7, 20, 0.92);
+          box-shadow: 0 4px 40px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .nav-container {
+          max-width: 1440px;
+          margin: 0 auto;
+          padding: 10px 16px;
           display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 6px;
+          width: 100%;
+        }
+        @media (min-width: 768px) {
+          .nav-container {
+            padding: 12px 24px;
+          }
+        }
+
+        /* ─── Nav links ─── */
+        .nav-link {
+          font-weight: 500; font-size: 0.85rem;
+          color: rgba(255,255,255,0.65);
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          display: flex; align-items: center; gap: 8px;
+          text-decoration: none;
+          padding: 8px 16px;
+          border-radius: 99px;
+        }
+        .nav-link:hover {
+          color: #fff;
+          background: rgba(255,255,255,0.06);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+
+
+        /* ─── CTA button ─── */
+        .btn-cta {
+          font-weight: 600; font-size: 0.8rem; color: white;
+          padding: 8px 20px; border-radius: 999px;
+          background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #0ea5e9 100%);
+          border: none; cursor: pointer; transition: all 0.25s;
+          box-shadow: 0 0 20px rgba(124,58,237,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+          display: flex; align-items: center; gap: 6px;
+          text-decoration: none; letter-spacing: 0.02em;
+          white-space: nowrap;
+        }
+        .btn-cta:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 0 32px rgba(124,58,237,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        .btn-cta:active { transform: translateY(0); }
+
+        /* ─── Login button ─── */
+        .btn-login {
+          font-weight: 500; font-size: 0.85rem;
+          color: rgba(255,255,255,0.6);
+          padding: 7px 16px; border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.04);
+          cursor: pointer; transition: all 0.2s;
           text-decoration: none;
         }
-        .nav-link:hover { color: #4f46e5; }
-        .nav-link::after {
-          content: '';
-          position: absolute;
-          bottom: -2px; left: 0;
-          width: 0; height: 2px;
-          background: linear-gradient(90deg, #6366f1, #8b5cf6);
-          border-radius: 99px;
-          transition: width 0.25s ease;
+        .btn-login:hover {
+          color: white;
+          border-color: rgba(255,255,255,0.25);
+          background: rgba(255,255,255,0.08);
         }
-        .nav-link:hover::after { width: 100%; }
 
+        /* ─── User account button ─── */
+        .user-btn {
+          display: flex; align-items: center; gap: 8px;
+          padding: 6px 14px; border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.05);
+          cursor: pointer; transition: all 0.2s; color: white;
+        }
+        .user-btn:hover {
+          border-color: rgba(139,92,246,0.4);
+          background: rgba(139,92,246,0.08);
+        }
+        .user-avatar {
+          width: 26px; height: 26px; border-radius: 8px;
+          background: linear-gradient(135deg, #7c3aed, #06b6d4);
+          display: flex; align-items: center; justify-content: center; color: white;
+          font-size: 11px; font-weight: 700;
+        }
+
+        /* ─── Dropdown ─── */
         .dropdown-panel {
-          background: rgba(255,255,255,0.95);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(99,102,241,0.12);
-          border-radius: 16px;
-          box-shadow: 0 20px 60px rgba(79,70,229,0.12), 0 4px 16px rgba(0,0,0,0.06);
+          background: rgba(10, 10, 20, 0.96);
+          backdrop-filter: blur(24px);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 14px;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
           overflow: hidden;
           animation: dropFade 0.18s ease;
         }
@@ -82,114 +138,129 @@ export default function AppNavbar() {
         }
         .dropdown-item {
           display: flex; align-items: center; gap: 10px;
-          padding: 11px 18px; font-size: 0.875rem; color: #374151;
+          padding: 10px 16px; font-size: 0.85rem;
+          color: rgba(255,255,255,0.6);
           transition: background 0.15s, color 0.15s; font-weight: 400;
           text-decoration: none;
         }
-        .dropdown-item:hover { background: linear-gradient(90deg, #f0f0ff, #f5f3ff); color: #4338ca; }
-
-        .btn-login {
-          font-weight: 500; font-size: 0.875rem; color: #374151;
-          padding: 8px 18px; border-radius: 10px; border: 1.5px solid #e5e7eb;
-          background: white; cursor: pointer; transition: all 0.2s;
-        }
-        .btn-login:hover { border-color: #a5b4fc; color: #4338ca; background: #f5f3ff; }
-
-        .btn-cta {
-          font-weight: 600; font-size: 0.875rem; color: white;
-          padding: 9px 22px; border-radius: 10px;
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-          border: none; cursor: pointer; transition: all 0.2s;
-          box-shadow: 0 4px 14px rgba(99,102,241,0.35);
-          display: flex; align-items: center; gap: 6px;
-          text-decoration: none;
-        }
-        .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.45); }
-        .btn-cta:active { transform: translateY(0); }
-
-        .user-btn {
-          display: flex; align-items: center; gap: 8px;
-          padding: 7px 14px; border-radius: 10px; border: 1.5px solid #e5e7eb;
-          background: white; cursor: pointer; transition: all 0.2s;
-        }
-        .user-btn:hover { border-color: #a5b4fc; background: #f5f3ff; }
-        .user-avatar {
-          width: 28px; height: 28px; border-radius: 8px;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          display: flex; align-items: center; justify-content: center; color: white;
+        .dropdown-item:hover {
+          background: rgba(139,92,246,0.1);
+          color: white;
         }
 
+        /* ─── Logout ─── */
         .logout-btn {
-          width: 100%; text-align: left; padding: 11px 18px; font-size: 0.875rem;
-          color: #ef4444; background: none; border: none; cursor: pointer;
+          width: 100%; text-align: left; padding: 10px 16px; font-size: 0.85rem;
+          color: #f87171; background: none; border: none; cursor: pointer;
           transition: background 0.15s; display: flex; align-items: center; gap: 8px;
         }
-        .logout-btn:hover { background: #fef2f2; }
+        .logout-btn:hover { background: rgba(248,113,113,0.08); }
 
+        /* ─── Mobile menu ─── */
         .mobile-menu {
-          background: linear-gradient(160deg, #fafafa 0%, #f5f3ff 100%);
-          border-top: 1px solid rgba(99,102,241,0.1);
-          padding: 24px 20px 28px;
-          animation: slideDown 0.22s ease;
+          background: rgba(5, 7, 20, 0.98);
+          border-top: 1px solid rgba(255,255,255,0.06);
+          padding: 20px 16px 24px;
+          animation: slideDown 0.2s ease;
         }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         .mobile-link {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 14px 16px; border-radius: 12px; background: white;
-          border: 1px solid #f0eeff; box-shadow: 0 1px 4px rgba(99,102,241,0.06);
-          transition: all 0.18s; margin-bottom: 10px; color: #1f2937;
+          padding: 12px 16px; border-radius: 12px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.07);
+          transition: all 0.18s; margin-bottom: 8px;
+          color: rgba(255,255,255,0.7);
           font-weight: 500; font-size: 0.9rem; text-decoration: none;
         }
-        .mobile-link:hover { border-color: #c7d2fe; background: #f5f3ff; transform: translateX(2px); }
+        .mobile-link:hover {
+          border-color: rgba(139,92,246,0.3);
+          background: rgba(139,92,246,0.08);
+          color: white;
+          transform: translateX(3px);
+        }
         .mobile-cta {
-          display: block; text-align: center; margin-top: 20px;
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-          color: white; padding: 14px; border-radius: 14px;
-          font-family: var(--font-syne), sans-serif; font-weight: 700; font-size: 0.95rem;
-          letter-spacing: 0.01em; box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+          display: block; text-align: center; margin-top: 16px;
+          background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #0ea5e9 100%);
+          color: white; padding: 13px; border-radius: 14px;
+          font-family: var(--font-syne), sans-serif;
+          font-weight: 700; font-size: 0.9rem;
+          letter-spacing: 0.02em;
+          box-shadow: 0 0 24px rgba(124,58,237,0.4);
           transition: all 0.2s; text-decoration: none;
         }
-        .mobile-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.45); }
+        .mobile-cta:hover { transform: translateY(-1px); box-shadow: 0 0 36px rgba(124,58,237,0.55); }
 
-        .header-bar {
-          position: sticky; top: 0; z-index: 50;
-          background: rgba(255,255,255,0.9);
-          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid #f0eeff;
-          transition: box-shadow 0.3s;
+        /* ─── Mobile toggle ─── */
+        .mobile-toggle {
+          display: flex; align-items: center; justify-content: center;
+          width: 36px; height: 36px; border-radius: 10px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.05);
+          cursor: pointer; color: rgba(255,255,255,0.7);
+          transition: all 0.2s;
         }
-        .header-bar.scrolled { box-shadow: 0 4px 30px rgba(99,102,241,0.08); }
+        .mobile-toggle:hover {
+          border-color: rgba(139,92,246,0.4);
+          background: rgba(139,92,246,0.08);
+          color: white;
+        }
 
-        .chevron-icon { transition: transform 0.2s; }
-        .chevron-icon.open { transform: rotate(180deg); }
-
+        /* ─── Responsive show/hide ─── */
         .desktop-menu, .desktop-right { display: none; align-items: center; }
         .mobile-toggle { display: flex; }
         @media (min-width: 768px) {
           .desktop-menu, .desktop-right { display: flex !important; }
           .mobile-toggle { display: none !important; }
         }
+
+        /* ─── Chevron ─── */
+        .chevron-icon { transition: transform 0.2s; }
+        .chevron-icon.open { transform: rotate(180deg); }
       `}</style>
 
       <HeaderClient className={`header-bar nav-root ${syne.variable} ${dmSans.variable}`}>
         {/* LOGO */}
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <span className="nav-logo" style={{ fontSize: "1.5rem", color: "#111827" }}>
-            Codelura<span style={{ color: "#6366f1" }}>.</span>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}>
+          <span
+            className="nav-logo"
+            style={{
+              fontSize: "1.35rem",
+              background: "linear-gradient(135deg, #fff 30%, #a78bfa 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Codelura
+          </span>
+          <span
+            style={{
+              fontSize: "0.55rem",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              color: "rgba(255,255,255,0.25)",
+              textTransform: "uppercase",
+              paddingTop: "2px",
+            }}
+          >
+            TECH
           </span>
         </Link>
 
-        {/* DESKTOP MENU — flat links, no dropdown */}
-        <div className="desktop-menu" style={{ gap: "32px" }}>
+        {/* DESKTOP LINKS */}
+        <div className="desktop-menu" style={{ gap: "28px" }}>
           {NAV_LINKS.map(({ label, href, external, icon: Icon }) =>
             external ? (
               <a key={label} href={href} className="nav-link">
-                <Icon size={15} style={{ color: "#9ca3af" }} />
+                <Icon size={13} style={{ opacity: 0.5 }} />
                 {label}
               </a>
             ) : (
               <Link key={label} href={href} className="nav-link">
-                <Icon size={15} style={{ color: "#9ca3af" }} />
+                <Icon size={13} style={{ opacity: 0.5 }} />
                 {label}
               </Link>
             )
@@ -199,7 +270,7 @@ export default function AppNavbar() {
           </Link>
         </div>
 
-        {/* RIGHT SIDE (auth-aware, client) */}
+        {/* RIGHT — auth-aware (client) */}
         <AccountMenu jobsAlertUrl={CAREER_URL} />
       </HeaderClient>
     </>
