@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   GraduationCap,
   Code2,
@@ -7,293 +8,312 @@ import {
   Laptop,
   ArrowRight,
   Sparkles,
-  CheckCircle2,
 } from "lucide-react";
 
 /* ────────────────────────────────────────────────────────────
-   PURE SERVER COMPONENT. No "use client", no hooks, no
-   framer-motion — zero client JS shipped.
-
-   What changed vs the original:
-   - useInView scroll-triggered fades → CSS animation playing
-     once on load with a per-card stagger delay.
-   - useState(hovered) + inline boxShadow → CSS custom property
-     (--glow) + Tailwind hover: + arbitrary shadow value. No
-     re-render on hover at all now, purely browser-native.
-   - whileHover card lift / button nudge → CSS transitions.
-   - Pill stagger + CTA hover/tap → CSS keyframes + hover/active
-     scale utilities.
+   PURE SERVER COMPONENT — no "use client", no hooks.
+   Left-text + Right-flip-cards layout (Fusion Ventures style).
+   Stylized Vector Logo Badges represent premium company brands.
    ──────────────────────────────────────────────────────────── */
 
-interface UseCase {
+interface UseCaseCard {
+  index: string;
+  category: string;
   title: string;
   desc: string;
   perks: string[];
+  href: string;
   cta: string;
-  icon: React.ComponentType<{ className?: string }>;
-  gradient: string;
-  glow: string;
-  border: string;
-  accentBg: string;
-  emoji: string;
+  backBg: string;
+  textGrad: string;
+  badgeColor: string;
+  glowColor: string;
+  logo: React.ReactNode;
 }
 
-const USE_CASES: UseCase[] = [
+const USE_CASES: UseCaseCard[] = [
   {
+    index: "01",
+    category: "ACADEMY",
     title: "Students & Freshers",
-    desc: "Preparing for tech jobs with structured learning, projects and interview-ready material.",
-    perks: ["DSA & System Design", "Resume Building", "Mock Interviews"],
-    cta: "Start Learning Free",
-    icon: GraduationCap,
-    gradient: "from-violet-500 to-indigo-500",
-    glow: "rgba(139,92,246,0.28)",
-    border: "border-violet-500/20",
-    accentBg: "bg-violet-500/10",
-    emoji: "🎓",
+    desc: "Structured roadmaps, DSA cheat sheets, and mock interviewer feedback to crack your first tech job callback.",
+    perks: ["DSA & System Design", "Interactive Templates", "Mock Interviews"],
+    href: "https://career.codelura.com/career/learning/study-material",
+    cta: "Start Learning →",
+    backBg: "bg-gradient-to-br from-[#100d2b] via-[#090717] to-[#020205] border-violet-500/40",
+    textGrad: "from-violet-400 to-fuchsia-300",
+    badgeColor: "text-violet-400 border-violet-500/30 bg-violet-500/10",
+    glowColor: "shadow-violet-500/20 group-hover:border-violet-500/40",
+    logo: (
+      <div className="flex flex-col items-center gap-1 font-sans">
+        <div className="flex items-center gap-1.5 text-violet-600">
+          <GraduationCap className="h-5 w-5" />
+          <span className="font-mono text-xs font-black tracking-widest">GRAD</span>
+        </div>
+        <span className="text-[14px] font-black tracking-tight text-slate-800">base.io</span>
+      </div>
+    ),
   },
   {
+    index: "02",
+    category: "ENGINEERING",
     title: "Working Developers",
-    desc: "Upskilling in backend, frontend, system design and real-world production architectures.",
-    perks: ["Advanced Patterns", "System Design", "AI Integration"],
-    cta: "Explore Courses",
-    icon: Code2,
-    gradient: "from-cyan-500 to-blue-500",
-    glow: "rgba(6,182,212,0.28)",
-    border: "border-cyan-500/20",
-    accentBg: "bg-cyan-500/10",
-    emoji: "💻",
+    desc: "Upskill with advanced design patterns, system design blueprints, and production deployment templates.",
+    perks: ["Advanced Patterns", "System Design", "Cloud Architecture"],
+    href: "https://career.codelura.com/career/learning/career-tracks",
+    cta: "Explore Courses →",
+    backBg: "bg-gradient-to-br from-[#051c27] via-[#030e15] to-[#020205] border-cyan-500/40",
+    textGrad: "from-cyan-400 to-blue-300",
+    badgeColor: "text-cyan-400 border-cyan-500/30 bg-cyan-500/10",
+    glowColor: "shadow-cyan-500/20 group-hover:border-cyan-500/40",
+    logo: (
+      <div className="flex flex-col items-center gap-1 font-sans">
+        <div className="flex items-center gap-1.5 text-cyan-500">
+          <Code2 className="h-5 w-5" />
+          <span className="font-mono text-xs font-black tracking-widest">DEV</span>
+        </div>
+        <span className="text-[14px] font-black tracking-tight text-slate-800">rise.co</span>
+      </div>
+    ),
   },
   {
+    index: "03",
+    category: "GIG ECONOMY",
     title: "Freelancers",
-    desc: "Building strong portfolios, landing global clients and delivering professional projects.",
-    perks: ["Portfolio Website", "Client Proposals", "Project Templates"],
-    cta: "Build Your Profile",
-    icon: Briefcase,
-    gradient: "from-emerald-500 to-teal-500",
-    glow: "rgba(16,185,129,0.28)",
-    border: "border-emerald-500/20",
-    accentBg: "bg-emerald-500/10",
-    emoji: "🧑‍💼",
+    desc: "Build highly attractive portfolios, leverage pre-made project contracts, and land global client mandates.",
+    perks: ["Portfolio Hosting", "Client Contracts", "Project Outlines"],
+    href: "https://career.codelura.com/career/mentorship/one-on-one",
+    cta: "Build Profile →",
+    backBg: "bg-gradient-to-br from-[#011b15] via-[#010e0b] to-[#020205] border-emerald-500/40",
+    textGrad: "from-emerald-400 to-teal-300",
+    badgeColor: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
+    glowColor: "shadow-emerald-500/20 group-hover:border-emerald-500/40",
+    logo: (
+      <div className="flex flex-col items-center gap-1 font-sans">
+        <div className="flex items-center gap-1.5 text-emerald-500">
+          <Briefcase className="h-5 w-5" />
+          <span className="font-mono text-xs font-black tracking-widest">SOLO</span>
+        </div>
+        <span className="text-[14px] font-black tracking-tight text-slate-800">work.net</span>
+      </div>
+    ),
   },
   {
+    index: "04",
+    category: "FOUNDERS",
     title: "Startup Founders",
-    desc: "Getting MVPs, landing pages, admin panels and scalable web solutions shipped fast.",
-    perks: ["MVP in 14 Days", "Admin Panels", "SaaS Ready"],
-    cta: "Get a Quote",
-    icon: Rocket,
-    gradient: "from-orange-500 to-rose-500",
-    glow: "rgba(249,115,22,0.28)",
-    border: "border-orange-500/20",
-    accentBg: "bg-orange-500/10",
-    emoji: "🚀",
+    desc: "Ship landing pages, customer MVPs, admin dashboards, and scalable database integrations in record time.",
+    perks: ["MVP in 14 Days", "Admin Panels", "SEO Setup"],
+    href: "https://build.codelura.com/services",
+    cta: "Ship MVP →",
+    backBg: "bg-gradient-to-br from-[#2f0310] via-[#170208] to-[#020205] border-rose-500/40",
+    textGrad: "from-rose-400 to-orange-300",
+    badgeColor: "text-rose-400 border-rose-500/30 bg-rose-500/10",
+    glowColor: "shadow-rose-500/20 group-hover:border-rose-500/40",
+    logo: (
+      <div className="flex flex-col items-center gap-1 font-sans">
+        <div className="flex items-center gap-1.5 text-rose-500">
+          <Rocket className="h-5 w-5" />
+          <span className="font-mono text-xs font-black tracking-widest">MVP</span>
+        </div>
+        <span className="text-[14px] font-black tracking-tight text-slate-800">ship.xyz</span>
+      </div>
+    ),
   },
   {
+    index: "05",
+    category: "SELF-STUDY",
     title: "Self Learners",
-    desc: "Accessing blogs, case studies and practical tutorials curated from real industry experience.",
-    perks: ["Free Content", "Case Studies", "Weekly Updates"],
-    cta: "Browse Resources",
-    icon: BookOpen,
-    gradient: "from-amber-500 to-orange-400",
-    glow: "rgba(245,158,11,0.28)",
-    border: "border-amber-500/20",
-    accentBg: "bg-amber-500/10",
-    emoji: "📚",
+    desc: "Master system architectures and coding hacks at your own pace with curated developer guides.",
+    perks: ["Curated Guides", "Interactive Labs", "Weekly Drops"],
+    href: "https://career.codelura.com/career/learning/study-material",
+    cta: "Browse Guides →",
+    backBg: "bg-gradient-to-br from-[#2b1002] via-[#150801] to-[#020205] border-amber-500/40",
+    textGrad: "from-amber-400 to-orange-300",
+    badgeColor: "text-amber-400 border-amber-500/30 bg-amber-500/10",
+    glowColor: "shadow-amber-500/20 group-hover:border-amber-500/40",
+    logo: (
+      <div className="flex flex-col items-center gap-1 font-sans">
+        <div className="flex items-center gap-1.5 text-amber-500">
+          <BookOpen className="h-5 w-5" />
+          <span className="font-mono text-xs font-black tracking-widest">AUTO</span>
+        </div>
+        <span className="text-[14px] font-black tracking-tight text-slate-800">didact.io</span>
+      </div>
+    ),
   },
   {
+    index: "06",
+    category: "Hiring",
     title: "Hiring Companies",
-    desc: "Finding skilled developers trained with real-world projects and production mindset.",
-    perks: ["Vetted Talent", "Project Portfolio", "Quick Hire"],
-    cta: "Post a Role",
-    icon: Laptop,
-    gradient: "from-pink-500 to-fuchsia-500",
-    glow: "rgba(236,72,153,0.28)",
-    border: "border-pink-500/20",
-    accentBg: "bg-pink-500/10",
-    emoji: "🏢",
+    desc: "Gain instant access to job-ready software developers trained with active production frameworks.",
+    perks: ["Vetted Developers", "Code Portfolios", "Direct Hiring"],
+    href: "https://build.codelura.com/services",
+    cta: "Find Talent →",
+    backBg: "bg-gradient-to-br from-[#0d1633] via-[#060b1b] to-[#020205] border-blue-500/40",
+    textGrad: "from-blue-400 to-indigo-300",
+    badgeColor: "text-blue-400 border-blue-500/30 bg-blue-500/10",
+    glowColor: "shadow-blue-500/20 group-hover:border-blue-500/40",
+    logo: (
+      <div className="flex flex-col items-center gap-1 font-sans">
+        <div className="flex items-center gap-1.5 text-blue-500">
+          <Laptop className="h-5 w-5" />
+          <span className="font-mono text-xs font-black tracking-widest">TALENT</span>
+        </div>
+        <span className="text-[14px] font-black tracking-tight text-slate-800">pool.tech</span>
+      </div>
+    ),
   },
 ];
-
-function UseCaseStyles() {
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes ucFadeUp { from { opacity:0; transform:translateY(36px);} to { opacity:1; transform:translateY(0);} }
-          @keyframes ucPop { from { opacity:0; transform:scale(0.85);} to { opacity:1; transform:scale(1);} }
-
-          .uc-card { opacity:0; animation: ucFadeUp 0.5s ease-out forwards; }
-          .uc-pill { opacity:0; animation: ucPop 0.4s ease-out forwards; }
-        `,
-      }}
-    />
-  );
-}
-
-function UseCaseCard({ u, i }: { u: UseCase; i: number }) {
-  const Icon = u.icon;
-
-  return (
-    <div className="group relative flex flex-col">
-      <div
-        className={`uc-card relative flex h-full flex-col overflow-hidden rounded-3xl border ${u.border} bg-white/4 p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-[7px] hover:scale-[1.02] hover:shadow-[0_16px_56px_var(--glow)]`}
-        style={{ animationDelay: `${i * 0.08}s`, ["--glow" as string]: u.glow }}
-      >
-        {/* Top glow line */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-          style={{ background: `linear-gradient(90deg,transparent,${u.glow},transparent)` }}
-        />
-
-        {/* Emoji + Icon row */}
-        <div className="mb-5 flex items-center justify-between">
-          <div
-            className={`flex items-center justify-center rounded-2xl bg-gradient-to-br ${u.gradient} shadow-lg`}
-            style={{ width: 52, height: 52 }}
-          >
-            <Icon className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-2xl" aria-hidden="true">{u.emoji}</span>
-        </div>
-
-        {/* Title */}
-        <h3 className="mb-2 text-base font-black text-white">{u.title}</h3>
-
-        {/* Desc */}
-        <p className="mb-5 text-sm leading-relaxed text-white/45 flex-1">{u.desc}</p>
-
-        {/* Perks */}
-        <ul className="mb-6 space-y-2" aria-label={`${u.title} benefits`}>
-          {u.perks.map((p) => (
-            <li key={p} className="flex items-center gap-2 text-xs text-white/55">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-white/30" />
-              {p}
-            </li>
-          ))}
-        </ul>
-
-        {/* CTA */}
-        <button
-          className={`mt-auto inline-flex w-fit items-center gap-2 rounded-full ${u.accentBg} border ${u.border} px-4 py-2 text-xs font-bold text-white/60 transition-all duration-300 hover:translate-x-[3px] group-hover:text-white/90`}
-          aria-label={`${u.cta} — ${u.title}`}
-        >
-          {u.cta}
-          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-        </button>
-
-        {/* Watermark icon */}
-        <div
-          className="pointer-events-none absolute -bottom-2 -right-2 opacity-[0.035] transition-opacity duration-300 group-hover:opacity-[0.07]"
-          aria-hidden="true"
-        >
-          <Icon className="h-24 w-24 text-white" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function UseCases() {
   return (
     <section
-      aria-label="Who is Codelura for — Use Cases"
-      className="relative overflow-hidden bg-[#07060f] py-10 md:py-14 text-white"
+      aria-label="Who Is Codelura For"
+      className="relative overflow-hidden bg-black py-24 border-t border-white/5"
     >
-      <UseCaseStyles />
+      {/* Ambient background glows */}
+      <div className="pointer-events-none absolute -left-40 top-1/3 h-[500px] w-[500px] rounded-full bg-violet-600/5 blur-[150px]" />
+      <div className="pointer-events-none absolute -right-40 bottom-1/4 h-[400px] w-[400px] rounded-full bg-cyan-600/5 blur-[120px]" />
 
-      {/* SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            name: "Who is Codelura For",
-            description:
-              "Codelura serves students, developers, freelancers, startup founders, self-learners and hiring companies.",
-            itemListElement: USE_CASES.map((u, i) => ({
-              "@type": "ListItem",
-              position: i + 1,
-              name: u.title,
-              description: u.desc,
-            })),
-          }),
-        }}
-      />
+      <div className="mx-auto max-w-[1536px] px-4 sm:px-8 md:px-12 lg:px-16">
+        <div className="grid grid-cols-1 gap-14 lg:grid-cols-12 items-start">
 
-      {/* Ambient glow — hidden on mobile */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden hidden sm:block">
-        <div className="absolute left-1/2 top-0 h-[400px] w-[560px] -translate-x-1/2 rounded-full bg-violet-700/10 blur-[120px]" />
-        <div className="absolute right-0 bottom-0 h-[320px] w-[320px] rounded-full bg-fuchsia-700/8 blur-[110px]" />
-        <div className="absolute left-0 top-1/2 h-[240px] w-[240px] rounded-full bg-cyan-700/6 blur-[100px]" />
-        <div
-          className="absolute inset-0 opacity-[0.022]"
-          style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px)",
-            backgroundSize: "42px 42px",
-          }}
-        />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-7xl px-6">
-        {/* Header */}
-        <div className="uc-card mb-16 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-500/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-violet-400">
-            <Sparkles className="h-3 w-3" />
-            Built for Everyone
-          </span>
-
-          <h2 className="mt-5 text-3xl font-black md:text-5xl">
-            Who Is{" "}
-            <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">
-              Codelura
-            </span>{" "}
-            For?
-          </h2>
-
-          <p className="mt-4 mx-auto max-w-xl text-base text-white/40 leading-relaxed">
-            From fresh graduates to startup founders — Codelura is built for
-            every developer who believes in real skills, real projects and real outcomes.
-          </p>
-        </div>
-
-        {/* Cards Grid */}
-        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3" aria-label="Use case categories">
-          {USE_CASES.map((u, i) => (
-            <UseCaseCard key={u.title} u={u} i={i} />
-          ))}
-        </div>
-
-        {/* Bottom Tagline */}
-        <div className="uc-card mt-20 flex flex-col items-center gap-5 text-center" style={{ animationDelay: "0.4s" }}>
-          {/* Pill row */}
-          <div className="flex flex-wrap justify-center gap-3">
-            {["Learn", "Build", "Get Hired"].map((label, i) => (
-              <span
-                key={label}
-                className="uc-pill rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-bold text-white/60 backdrop-blur"
-                style={{ animationDelay: `${0.5 + i * 0.1}s` }}
-              >
-                {label}
+          {/* ═══ LEFT SIDE TEXT (4 cols — sticky) ═══ */}
+          <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-28">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-400">
+                BUILT FOR EVERYONE
               </span>
-            ))}
+              <h2 className="mt-4 text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold leading-[1.15] tracking-tight text-white">
+                Who is
+                <span className="block mt-1 bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+                  Codelura for?
+                </span>
+              </h2>
+            </div>
+
+            <p className="text-sm text-slate-400 leading-relaxed max-w-md font-medium">
+              From fresh graduates seeking structured roadmaps to startup founders building out core software architectures in record time.
+            </p>
+
+            <div>
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center gap-2 text-xs font-bold text-violet-400 hover:text-violet-300 transition-colors uppercase tracking-widest"
+              >
+                <span>Join the platform</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            {/* Bottom indicators */}
+            <div className="pt-8 border-t border-white/10 flex items-center gap-10">
+              <div>
+                <div className="text-3xl font-black text-violet-400 font-mono">06</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1">
+                  USE CASES
+                </div>
+              </div>
+              <div className="h-10 w-[1px] bg-white/10" />
+              <div>
+                <div className="text-3xl font-black font-mono text-violet-400">10K+</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1">
+                  GLOBAL USERS
+                </div>
+              </div>
+            </div>
           </div>
 
-          <p className="text-base font-semibold text-white/40">
-            That&apos;s the{" "}
-            <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent font-black">
-              Codelura
-            </span>{" "}
-            way.
-          </p>
+          {/* ═══ RIGHT SIDE — 3D FLIP CARDS GRID (8 cols) ═══ */}
+          <div className="lg:col-span-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {USE_CASES.map((f) => {
+                return (
+                  <div
+                    key={f.title}
+                    className="group w-full h-[370px] [perspective:1000px] cursor-pointer"
+                  >
+                    {/* 3D Flip Container */}
+                    <div className="relative w-full h-full duration-700 transition-transform [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
 
-          <a
-            href="/auth/login"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-700/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-violet-700/50 active:scale-[0.97]"
-            aria-label="Join Codelura platform"
-          >
-            Join the Platform
-            <ArrowRight className="h-4 w-4" />
-          </a>
+                      {/* ── FRONT (Dark Black, Stylized Brand Box) ── */}
+                      <div className={`absolute inset-0 w-full h-full flex flex-col justify-between p-6 rounded-2xl border border-white/5 bg-[#0a0a0f] [backface-visibility:hidden] shadow-2xl transition-all duration-500 hover:shadow-2xl ${f.glowColor}`}>
+                        {/* Index */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold font-mono text-violet-400/80">
+                            {f.index}
+                          </span>
+                        </div>
+
+                        {/* Centered Graphic Brand Logo */}
+                        <div className="flex-1 flex items-center justify-center py-4">
+                          <div className="flex h-24 w-40 items-center justify-center rounded-2xl bg-white border border-white/10 shadow-xl shadow-black/40 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-1">
+                            {f.logo}
+                          </div>
+                        </div>
+
+                        {/* Bottom Category */}
+                        <div className="text-center pt-2 border-t border-white/5">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400">
+                            {f.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* ── BACK (Detailed Specs) ── */}
+                      <div
+                        className={`absolute inset-0 w-full h-full flex flex-col justify-between p-6 rounded-2xl border shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)] ${f.backBg}`}
+                      >
+                        <div className="space-y-4">
+                          {/* Badge + Index */}
+                          <div className="flex items-center justify-between">
+                            <span className={`text-[9px] font-extrabold uppercase tracking-[0.2em] px-2.5 py-0.5 rounded-full border ${f.badgeColor}`}>
+                              {f.category}
+                            </span>
+                            <span className="text-xs font-bold font-mono text-white/50">
+                              {f.index}
+                            </span>
+                          </div>
+
+                          {/* Title */}
+                          <h3 className="text-2xl font-black text-white tracking-tight leading-none">
+                            {f.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                            {f.desc}
+                          </p>
+
+                          {/* Perks */}
+                          <ul className="space-y-1.5 pt-1">
+                            {f.perks.map((p) => (
+                              <li key={p} className="flex items-center gap-2 text-[11px] font-semibold text-slate-200/80">
+                                <span className={`h-1.5 w-1.5 rounded-full bg-gradient-to-r ${f.textGrad}`} />
+                                {p}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* CTA Redirect with Hover Shift */}
+                        <div className="pt-4 border-t border-white/10">
+                          <Link
+                            href={f.href}
+                            className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-gradient-to-r ${f.textGrad} bg-clip-text text-transparent transition-transform duration-300 group-hover:translate-x-1`}
+                          >
+                            <span>{f.cta}</span>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
       </div>
     </section>

@@ -3,13 +3,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, lazy } from "react";
 import { Metadata } from "next";
+import StarryBackground from "@/components/career/StarryBackground";
+import StatsSection from "@/components/career/StatsSection";
 import {
   Briefcase,
+
+
   GraduationCap,
   Users,
   Wrench,
   ArrowUpRight,
+  ArrowRight,
   Star,
+
   TrendingUp,
   Building2,
   FileText,
@@ -60,58 +66,109 @@ export const metadata: Metadata = {
 const LazyCharts = lazy(() => import("@/components/career/Charts"));
 
 // ─── Static Data ───
-const STATS = [
-  { label: "Learners placed", value: "24,600+", icon: Briefcase, change: "+12%" },
-  { label: "Hiring partners", value: "310+", icon: Building2, change: "+8%" },
-  { label: "Avg. salary hike", value: "42%", icon: TrendingUp, change: "+5%" },
-  { label: "Mentor rating", value: "4.8 / 5", icon: Star, change: "★" },
-];
+
 
 const TOOLS = [
   {
+    index: "01",
+    category: "FREE TOOL",
     title: "ATS Resume Checker",
-    desc: "Get your resume past automated screening systems",
+    desc: "Instantly score your resume against automated ATS filters. Fix keywords and formatting to double your interview callbacks.",
     icon: FileText,
     href: "/career/tools/ats-resume-checker",
-    color: "from-blue-500 to-cyan-500",
-    popular: true,
+    cta: "Verify Score →",
+    backBg: "bg-gradient-to-br from-[#1e1b4b] via-[#0f0e26] to-[#040612] border-indigo-500/40",
+    textGrad: "from-indigo-400 to-cyan-300",
+    badgeColor: "text-indigo-400 border-indigo-500/30 bg-indigo-500/10"
   },
   {
+    index: "02",
+    category: "CREATOR",
     title: "Resume Builder",
-    desc: "Create ATS-friendly resumes in minutes",
+    desc: "Create single-page, ATS-friendly Markdown resumes. Pre-loaded with action-verb bullet points approved by senior recruiters.",
     icon: UserCircle,
     href: "/career/tools/resume-builder",
-    color: "from-purple-500 to-pink-500",
+    cta: "Build Resume →",
+    backBg: "bg-gradient-to-br from-[#3b0764] via-[#1b0a2a] to-[#040612] border-purple-500/40",
+    textGrad: "from-purple-400 to-pink-300",
+    badgeColor: "text-purple-400 border-purple-500/30 bg-purple-500/10"
   },
   {
+    index: "03",
+    category: "ANALYTICS",
     title: "Salary Calculator",
-    desc: "Know your market worth with real data",
+    desc: "Analyze stock options, cash components, and cost-of-living metrics to negotiate the package you truly deserve.",
     icon: Calculator,
     href: "/career/tools/salary-calculator",
-    color: "from-green-500 to-emerald-500",
+    cta: "Calculate Hike →",
+    backBg: "bg-gradient-to-br from-[#022c22] via-[#021f18] to-[#040612] border-emerald-500/40",
+    textGrad: "from-emerald-400 to-teal-300",
+    badgeColor: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
   },
   {
-    title: "Mentorship",
-    desc: "Connect with industry experts 1:1",
+    index: "04",
+    category: "GUIDANCE",
+    title: "1:1 Mentorship",
+    desc: "Book live mock calls with SDE leaders from Amazon, Meta, and Google for real DSA and system design feedback.",
     icon: Users,
     href: "/career/mentorship/one-on-one",
-    color: "from-orange-500 to-red-500",
+    cta: "Book Free Call →",
+    backBg: "bg-gradient-to-br from-[#451a03] via-[#240e02] to-[#040612] border-amber-500/40",
+    textGrad: "from-amber-400 to-orange-300",
+    badgeColor: "text-amber-400 border-amber-500/30 bg-amber-500/10"
   },
   {
-    title: "Courses",
-    desc: "Learn skills that recruiters actually want",
-    icon: BookOpen,
-    href: "/career/learning/programs",
-    color: "from-indigo-500 to-violet-500",
-  },
-  {
-    title: "Jobs",
-    desc: "Curated openings from top companies",
+    index: "05",
+    category: "PLACEMENT",
+    title: "Job Hub",
+    desc: "Fresh off-campus drives, direct corporate referrals, and hiring alerts updated daily by our placement team.",
     icon: Briefcase,
     href: "/career/jobs/latest",
-    color: "from-rose-500 to-pink-500",
+    cta: "Explore Openings →",
+    backBg: "bg-gradient-to-br from-[#172554] via-[#0f172a] to-[#040612] border-blue-500/40",
+    textGrad: "from-blue-400 to-indigo-300",
+    badgeColor: "text-blue-400 border-blue-500/30 bg-blue-500/10"
+  },
+  {
+    index: "06",
+    category: "CURRICULUM",
+    title: "Career Tracks",
+    desc: "Placement-focused learning paths mapped to tech recruiter requests. Build real-world capstone projects live.",
+    icon: GraduationCap,
+    href: "/career/learning/career-tracks",
+    cta: "Start Roadmap →",
+    backBg: "bg-gradient-to-br from-[#4c0519] via-[#1f030a] to-[#040612] border-rose-500/40",
+    textGrad: "from-rose-400 to-pink-300",
+    badgeColor: "text-rose-400 border-rose-500/30 bg-rose-500/10"
+  },
+  {
+    index: "07",
+    category: "RESOURCES",
+    title: "Study Notes",
+    desc: "Ditch boring lectures. Access hand-written DSA sheets, System Design visual blueprints, and interview cheat codes.",
+    icon: BookOpen,
+    href: "https://career.codelura.com/career/learning/study-material",
+    cta: "Get Notes →",
+    external: true,
+    backBg: "bg-gradient-to-br from-[#083344] via-[#041a24] to-[#040612] border-cyan-500/40",
+    textGrad: "from-cyan-400 to-teal-300",
+    badgeColor: "text-cyan-400 border-cyan-500/30 bg-cyan-500/10"
+  },
+  {
+    index: "08",
+    category: "ACADEMY",
+    title: "Premium Batches",
+    desc: "Guaranteed 1:1 mentorship calls, mock interviews, and dedicated career coach support for placements.",
+    icon: Rocket,
+    href: "/career/learning/programs",
+    cta: "Join Cohort →",
+    backBg: "bg-gradient-to-br from-[#831843] via-[#380b1d] to-[#040612] border-pink-500/40",
+    textGrad: "from-pink-400 to-purple-300",
+    badgeColor: "text-pink-400 border-pink-500/30 bg-pink-500/10"
   },
 ];
+
+
 
 const PILLARS = [
   {
@@ -181,102 +238,157 @@ const COMPANIES = [
 
 // ─── Helper Components ───
 
-// Stats Section (Server)
-function StatsSection() {
-  return (
-    <section className="relative border-y border-purple-500/20 bg-[#07091B] text-white">
-      <div className="mx-auto max-w-[1440px] px-4 py-10 lg:px-8">
-        <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-          {STATS.map((s) => {
-            const Icon = s.icon;
-            return (
-              <div
-                key={s.label}
-                className="group flex items-center gap-4 rounded-2xl border border-purple-500/20 bg-[#0C0F28] p-4 transition-all hover:border-purple-500/40 hover:bg-[#0F1334]"
-              >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-950/60 text-purple-400 border border-purple-500/30 transition-colors group-hover:bg-purple-600 group-hover:text-white">
-                  <Icon size={22} />
-                </div>
-                <div>
-                  <p className="text-2xl font-extrabold text-white tracking-tight">
-                    {s.value}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs font-medium text-slate-400">
-                      {s.label}
-                    </p>
-                    {s.change && (
-                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                        {s.change}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
+
+
 
 // Tools Section (Server)
 function ToolsSection() {
   return (
-    <section className="py-20 bg-[#050714] text-white">
-      <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
-        <div className="mb-12 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-950/40 px-3 py-1 text-xs font-bold text-purple-300">
-              <Wrench size={14} />
-              Free Tools
-            </div>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white">
-              Everything you need to <span className="text-purple-400">succeed</span>
-            </h2>
-            <p className="mt-2 text-slate-400">
-              12+ tools to accelerate your career growth
-            </p>
-          </div>
-          <Link
-            href="/career/tools/ats-resume-checker"
-            className="inline-flex items-center gap-1 text-sm font-bold text-purple-400 hover:text-purple-300"
-          >
-            View all tools
-            <ArrowUpRight size={16} />
-          </Link>
-        </div>
+    <section className="py-24 bg-[#040612] text-white border-t border-white/5 relative overflow-hidden">
+      {/* Soft background glow */}
+      <div className="pointer-events-none absolute -right-40 top-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-purple-600/5 blur-[150px]" />
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {TOOLS.map((tool) => {
-            const Icon = tool.icon;
-            return (
+      <div className="mx-auto max-w-[1536px] px-4 sm:px-8 md:px-12 lg:px-16">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 items-start">
+          
+          {/* LEFT SIDE TEXT & STATS (4 Cols - Fusion Ventures Style) */}
+          <div className="lg:col-span-4 space-y-8 sticky top-28">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-400">
+                OUR ECOSYSTEM
+              </span>
+              <h2 className="mt-4 text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold leading-[1.15] tracking-tight text-white">
+                Tools &amp; Programs <br />
+                built for your <span className="bg-gradient-to-r from-purple-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">growth.</span>
+              </h2>
+            </div>
+
+            <p className="text-sm text-slate-400 leading-relaxed max-w-md font-medium">
+              We build category-defining career tools, ATS checkers, placement roadmaps, and study notes to launch your tech career into top-tier companies.
+            </p>
+
+            <div>
               <Link
-                key={tool.title}
-                href={tool.href}
-                className="group relative rounded-2xl border border-purple-500/20 bg-[#0C0F28] p-6 transition-all hover:-translate-y-1 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-950/50"
+                href="/career/tools/ats-resume-checker"
+                className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest"
               >
-                {tool.popular && (
-                  <span className="absolute -top-2 -right-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-lg shadow-orange-400/20">
-                    Popular
-                  </span>
-                )}
-                <div
-                  className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${tool.color} text-white shadow-lg transition-transform group-hover:scale-105`}
-                >
-                  <Icon size={22} />
-                </div>
-                <h3 className="mt-4 text-base font-bold text-white">
-                  {tool.title}
-                </h3>
-                <p className="mt-1.5 text-sm text-slate-400">{tool.desc}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-purple-400 opacity-0 transition-opacity group-hover:opacity-100">
-                  Get started <ArrowUpRight size={13} />
-                </span>
+                <span>Explore all resources</span>
+                <ArrowRight size={14} />
               </Link>
-            );
-          })}
+            </div>
+
+            {/* Bottom Indicators Row */}
+            <div className="pt-8 border-t border-white/10 flex items-center gap-10">
+              <div>
+                <div className="text-3xl font-black text-amber-400 font-mono">08</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1">
+                  TOOLS &amp; TRACKS
+                </div>
+              </div>
+              <div className="h-10 w-[1px] bg-white/10" />
+              <div>
+                <div className="text-3xl font-black font-mono text-amber-400">04</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1">
+                  CORE CATEGORIES
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE FLIP CARDS GRID (8 Cols) */}
+          <div className="lg:col-span-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {TOOLS.map((tool) => {
+                const Icon = tool.icon;
+                return (
+                  <div
+                    key={tool.title}
+                    className="group w-full h-[370px] [perspective:1000px] cursor-pointer"
+                  >
+                    {/* 3D Flip Card Inner Container */}
+                    <div 
+                      className="relative w-full h-full duration-700 transition-transform [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]"
+                    >
+                      {/* FRONT SIDE (Sleek Dark Frame with Centered Light Box) */}
+                      <div 
+                        className="absolute inset-0 w-full h-full flex flex-col justify-between p-6 rounded-2xl border border-white/10 bg-[#07091b] backdrop-blur-md [backface-visibility:hidden] shadow-xl group-hover:border-amber-400/40 transition-colors duration-300"
+                      >
+                        {/* Index Top Left */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold font-mono text-amber-400/80">
+                            {tool.index}
+                          </span>
+                        </div>
+
+                        {/* Centered White Graphic Box */}
+                        <div className="flex-1 flex items-center justify-center py-4">
+                          <div className="flex h-24 w-40 items-center justify-center rounded-2xl bg-white border border-white/10 shadow-xl shadow-black/30 transition-transform duration-300 group-hover:scale-105">
+                            <Icon className="h-10 w-10 text-slate-900" />
+                          </div>
+                        </div>
+
+                        {/* Bottom Category */}
+                        <div className="text-center pt-2 border-t border-white/5">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400">
+                            {tool.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* BACK SIDE (Vibrant Colored Theme on Flip) */}
+                      <div 
+                        className={`absolute inset-0 w-full h-full flex flex-col justify-between p-6 rounded-2xl border shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)] ${tool.backBg}`}
+                      >
+                        <div>
+                          {/* Top Label Badge */}
+                          <div className="flex items-center justify-between">
+                            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-0.5 rounded-full border ${tool.badgeColor}`}>
+                              {tool.category}
+                            </span>
+                            <span className="text-xs font-bold font-mono text-white/50">
+                              {tool.index}
+                            </span>
+                          </div>
+
+                          {/* Title */}
+                          <h3 className="mt-4 text-xl font-extrabold text-white leading-tight">
+                            {tool.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="mt-3 text-xs text-slate-300 leading-relaxed font-medium">
+                            {tool.desc}
+                          </p>
+                        </div>
+
+                        {/* Bottom Action CTA */}
+                        <div className="pt-4 border-t border-white/10">
+                          {tool.external ? (
+                            <a
+                              href={tool.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`inline-flex items-center gap-2 text-xs font-extrabold transition-transform group-hover:translate-x-1 bg-gradient-to-r ${tool.textGrad} bg-clip-text text-transparent`}
+                            >
+                              <span>{tool.cta}</span>
+                            </a>
+                          ) : (
+                            <Link
+                              href={tool.href}
+                              className={`inline-flex items-center gap-2 text-xs font-extrabold transition-transform group-hover:translate-x-1 bg-gradient-to-r ${tool.textGrad} bg-clip-text text-transparent`}
+                            >
+                              <span>{tool.cta}</span>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -498,204 +610,47 @@ export default function CareerHomePage() {
   );
 }
 
-// ─── Hero Section MATCHING DESIGN MOCKUP ───
+// ─── Hero Section WITH STARRY SKY BACKGROUND & PREMIUM CENTERED LAYOUT ───
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden border-b border-purple-500/20 bg-gradient-to-b from-[#0B0E28] via-[#07091B] to-[#040612] px-4 py-10 lg:px-8 lg:py-14">
-      {/* Ambient Glow Effects */}
-      <div className="pointer-events-none absolute -top-40 left-1/4 h-[600px] w-[600px] rounded-full bg-purple-600/20 blur-[150px]" />
-      <div className="pointer-events-none absolute top-1/3 -right-20 h-[500px] w-[500px] rounded-full bg-blue-600/20 blur-[150px]" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black text-white px-4 py-16 sm:py-24">
+      {/* Starry sky canvas animation */}
+      <StarryBackground />
 
-      <div className="relative mx-auto max-w-[1440px]">
-        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
-          {/* Left Hero Content (6 Cols) */}
-          <div className="space-y-6 lg:col-span-6">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-950/40 px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest text-purple-300 backdrop-blur-md shadow-lg shadow-purple-950/50">
-              <span className="h-2 w-2 rounded-full bg-purple-400 animate-pulse"></span>
-              🚀 ACCELERATED CAREER HUB
-            </div>
+      {/* Soft dark vignette overlay */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_30%,rgba(4,6,18,0.85)_90%)]" />
 
-            {/* Main Headline */}
-            <h1 className="text-4xl font-extrabold leading-tight text-white md:text-5xl lg:text-[3.4rem] tracking-tight">
-              Master Production <br />
-              Tech &amp; Land{" "}
-              <span className="bg-gradient-to-r from-purple-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">
-                Your
-              </span>{" "}
-              <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Dream Job
-              </span>
-            </h1>
+      <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
+        
+        {/* Subtle Label */}
+        <span className="inline-block text-xs font-bold uppercase tracking-[0.3em] text-purple-400 mb-2">
+          Codelura Academy
+        </span>
 
-            {/* Subtitle */}
-            <p className="text-sm text-slate-300 md:text-base max-w-xl leading-relaxed">
-              Jobs, learning paths, mentors, and tools — all in one place, so every step actually moves you toward an offer.
-            </p>
+        {/* Minimal Headline */}
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.1] text-white tracking-tight">
+          Skills. Placement. / <br className="sm:hidden" />
+          <span className="bg-gradient-to-r from-purple-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">
+            Land Your Offer.
+          </span>
+        </h1>
 
-            {/* 3 Feature Highlights Row */}
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <div className="flex items-center gap-2.5 rounded-xl border border-purple-500/20 bg-purple-950/30 px-3.5 py-2 text-xs font-semibold text-slate-200">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600/30 text-blue-400 font-mono font-bold text-xs">
-                  &lt;/&gt;
-                </span>
-                <span>Real-world Projects</span>
-              </div>
+        {/* Tagline */}
+        <p className="text-base sm:text-lg lg:text-xl text-slate-400 max-w-2xl mx-auto mb-10 font-medium">
+          Courses. Job Alerts. Mentor Support.
+        </p>
 
-              <div className="flex items-center gap-2.5 rounded-xl border border-purple-500/20 bg-purple-950/30 px-3.5 py-2 text-xs font-semibold text-slate-200">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600/30 text-purple-300 text-xs">
-                  👥
-                </span>
-                <span>1:1 Expert Mentorship</span>
-              </div>
-
-              <div className="flex items-center gap-2.5 rounded-xl border border-purple-500/20 bg-purple-950/30 px-3.5 py-2 text-xs font-semibold text-slate-200">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600/30 text-indigo-300 text-xs">
-                  💼
-                </span>
-                <span>Placement Support</span>
-              </div>
-            </div>
-
-            {/* Stats Bar Row */}
-            <div className="grid grid-cols-3 gap-4 border-t border-purple-500/20 pt-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20 text-blue-400 text-lg">
-                  👤
-                </div>
-                <div>
-                  <div className="text-xl font-black text-white md:text-2xl">
-                    24,600+
-                  </div>
-                  <div className="text-[11px] font-medium text-slate-400">
-                    Learners Placed
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 text-lg">
-                  ⭐
-                </div>
-                <div>
-                  <div className="text-xl font-black text-emerald-400 md:text-2xl">
-                    4.8 / 5
-                  </div>
-                  <div className="text-[11px] font-medium text-slate-400">
-                    Mentor Rating
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-lg">
-                  💼
-                </div>
-                <div>
-                  <div className="text-xl font-black text-amber-400 md:text-2xl">
-                    310+
-                  </div>
-                  <div className="text-[11px] font-medium text-slate-400">
-                    Hiring Partners
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              <Link
-                href="/career/jobs/latest"
-                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 px-6 py-3.5 text-xs font-bold text-white shadow-lg shadow-purple-600/40 hover:brightness-110 transition active:scale-95 whitespace-nowrap"
-              >
-                Explore Jobs →
-              </Link>
-              <Link
-                href="/career/mentorship/one-on-one"
-                className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-950/40 px-6 py-3.5 text-xs font-bold text-slate-200 backdrop-blur-md transition hover:bg-purple-900/50"
-              >
-                Talk to a Mentor 👥
-              </Link>
-            </div>
-
-            {/* Category Filter Pills Bar */}
-            <div className="flex flex-wrap items-center gap-2.5 pt-2">
-              {[
-                {
-                  name: "Full Stack Development",
-                  icon: "💻",
-                  border:
-                    "border-blue-500/40 bg-blue-950/20 text-blue-300 hover:border-blue-400",
-                },
-                {
-                  name: "AI & Machine Learning",
-                  icon: "🧠",
-                  border:
-                    "border-purple-500/40 bg-purple-950/20 text-purple-300 hover:border-purple-400",
-                },
-                {
-                  name: "DevOps & Cloud",
-                  icon: "☁️",
-                  border:
-                    "border-emerald-500/40 bg-emerald-950/20 text-emerald-300 hover:border-emerald-400",
-                },
-                {
-                  name: "Cybersecurity",
-                  icon: "🛡️",
-                  border:
-                    "border-pink-500/40 bg-pink-950/20 text-pink-300 hover:border-pink-400",
-                },
-                {
-                  name: "Mobile Development",
-                  icon: "📱",
-                  border:
-                    "border-amber-500/40 bg-amber-950/20 text-amber-300 hover:border-amber-400",
-                },
-                {
-                  name: "Data Science",
-                  icon: "📊",
-                  border:
-                    "border-yellow-500/40 bg-yellow-950/20 text-yellow-300 hover:border-yellow-400",
-                },
-              ].map((cat) => (
-                <Link
-                  key={cat.name}
-                  href={`/career/learning/career-tracks?search=${encodeURIComponent(cat.name)}`}
-                  className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold backdrop-blur-md transition-all duration-300 hover:scale-105 ${cat.border}`}
-                >
-                  <span>{cat.icon}</span>
-                  <span>{cat.name}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Hero Image Showcase (6 Cols - Larger & More Attractive) */}
-          <div className="relative flex items-center justify-center lg:col-span-6">
-            <div className="relative w-full">
-              {/* Glow ring behind the image */}
-              <div className="pointer-events-none absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-purple-600/30 via-indigo-500/20 to-pink-500/20 blur-2xl" />
-
-              {/* Gradient border frame */}
-              <div className="relative rounded-[2rem] bg-gradient-to-br from-purple-500/60 via-indigo-400/40 to-pink-500/60 p-[2px] shadow-2xl shadow-purple-900/80">
-                <div className="relative overflow-hidden rounded-[calc(2rem-2px)] bg-[#07091B]">
-                  <img
-                    src="https://res.cloudinary.com/dbezxtffm/image/upload/v1786802957/ChatGPT_Image_Aug_15_2026_07_38_52_PM_janrnt.png"
-                    alt="Codelura Career Showcase"
-                    className="w-full h-auto max-h-[720px] object-cover transition duration-500 hover:scale-[1.03]"
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#040612]/30 via-transparent to-purple-500/10" />
-                </div>
-              </div>
-
-              {/* Floating accent badge */}
-              <div className="absolute -bottom-4 -left-4 hidden items-center gap-2 rounded-2xl border border-emerald-400/40 bg-[#07091B]/90 px-4 py-2.5 text-xs font-bold text-emerald-300 shadow-xl shadow-emerald-900/40 backdrop-blur-md sm:flex">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                All Systems Operational
-              </div>
-            </div>
-          </div>
+        {/* Single Call To Action */}
+        <div className="flex justify-center pt-4">
+          <Link
+            href="/career/jobs/latest"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-4 text-sm font-extrabold text-white shadow-xl shadow-purple-600/30 transition-all hover:scale-105 hover:brightness-110 active:scale-95"
+          >
+            <span>Explore Jobs</span>
+            <ArrowRight size={15} className="ml-1" />
+          </Link>
         </div>
+
       </div>
     </section>
   );

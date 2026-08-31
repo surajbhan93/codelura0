@@ -273,7 +273,7 @@ export default async function ServicesPage() {
 // ─── HERO SECTION — MINIMAL / CLEAN ───
 function HeroSection() {
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-black text-white px-4">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black text-white px-4">
       {/* ── Premium Aurora Background ── */}
       <HeroBackground />
 

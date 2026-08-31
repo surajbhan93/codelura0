@@ -87,9 +87,9 @@ export default function Footer(): React.ReactElement {
             </h4>
             <ul className="space-y-2.5 text-sm">
               {[
-                { label: "Website Development", href: "/services" },
+                { label: "Websites & Web Apps", href: "/services" },
                 { label: "Custom CRM & ERP", href: "/services" },
-                { label: "AI Bot Development", href: "/services" },
+                { label: "Custom AI Bots & Workflow Automation", href: "/services/ai-development" },
                 { label: "GBP Audit / Google SEO", href: "https://vyaparsetiai.codelura.com/dental-audit", external: true },
                 { label: "UI/UX Product Design", href: "/services" },
               ].map((link) => (
@@ -164,7 +164,7 @@ export default function Footer(): React.ReactElement {
                 { label: "About Us", href: "/about" },
                 { label: "Our Team", href: "/services/team" },
                 { label: "Client Reviews", href: "/testimonial" },
-                { label: "Case Studies", href: "/services/case-studies" },
+                { label: "Our Work", href: "/work" },
                 { label: "Contact Us", href: "/contact" },
               ].map((link) => (
                 <li key={link.label}>

@@ -81,6 +81,14 @@ const startTimeRef = useRef<number | null>(null);
   return count;
 }
 
+/* ─── Color themes per stat ─────────────────────────────────── */
+const STAT_THEMES = [
+  { bg: "from-violet-600/15 to-fuchsia-600/5", glow: "rgba(139,92,246,0.12)", border: "border-violet-500/25 hover:border-violet-400/40", accent: "text-violet-400", bar: "from-violet-500 to-fuchsia-400" },
+  { bg: "from-emerald-600/15 to-teal-600/5", glow: "rgba(16,185,129,0.12)", border: "border-emerald-500/25 hover:border-emerald-400/40", accent: "text-emerald-400", bar: "from-emerald-500 to-cyan-400" },
+  { bg: "from-amber-600/15 to-orange-600/5", glow: "rgba(245,158,11,0.12)", border: "border-amber-500/25 hover:border-amber-400/40", accent: "text-amber-400", bar: "from-amber-500 to-orange-400" },
+  { bg: "from-cyan-600/15 to-blue-600/5", glow: "rgba(6,182,212,0.12)", border: "border-cyan-500/25 hover:border-cyan-400/40", accent: "text-cyan-400", bar: "from-cyan-500 to-blue-400" },
+];
+
 /* ─── Single Stat Counter (memoized) ────────────────────────── */
 const StatCounter = memo(function StatCounter({ 
   item, 
@@ -92,6 +100,7 @@ const StatCounter = memo(function StatCounter({
   inView: boolean;
 }) {
   const count = useCountUp(item.value, inView);
+  const theme = STAT_THEMES[index % STAT_THEMES.length];
 
   return (
     <motion.div
@@ -99,25 +108,27 @@ const StatCounter = memo(function StatCounter({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
-      whileHover={{ scale: 1.02 }}
-      className="group relative overflow-hidden rounded-2xl border border-white/8 bg-white/3 p-4 md:p-6 backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/30 hover:bg-white/6 cursor-default"
+      whileHover={{ scale: 1.03, y: -4 }}
+      className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br ${theme.bg} ${theme.border} p-5 md:p-6 backdrop-blur-md transition-all duration-300 cursor-default`}
       role="listitem"
     >
-      <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-        style={{ background: "radial-gradient(circle at 50% 0%, rgba(16,185,129,0.08), transparent 70%)" }}
+      {/* Corner glow */}
+      <div
+        className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full opacity-0 transition-opacity duration-500 group-hover:opacity-100 blur-2xl"
+        style={{ background: theme.glow }}
       />
 
-      <span className="mb-4 block text-2xl" aria-hidden="true">{item.icon}</span>
+      <span className="mb-3 block text-2xl" aria-hidden="true">{item.icon}</span>
 
       <p className="text-4xl font-black tabular-nums text-white md:text-5xl">
         {count.toLocaleString()}
-        <span className="text-emerald-400">{item.suffix ?? "+"}</span>
+        <span className={theme.accent}>{item.suffix ?? "+"}</span>
       </p>
 
-      <p className="mt-2 text-sm font-medium tracking-wide text-white/45">{item.label}</p>
+      <p className="mt-2 text-sm font-medium tracking-wide text-white/50">{item.label}</p>
 
       <motion.div
-        className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-emerald-500 to-cyan-400"
+        className={`absolute bottom-0 left-0 h-[3px] bg-gradient-to-r ${theme.bar}`}
         initial={{ scaleX: 0, originX: 0 }}
         whileInView={{ scaleX: 1 }}
         viewport={{ once: true }}
