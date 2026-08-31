@@ -160,7 +160,7 @@ export default function Services() {
                 <div className="relative w-full h-full duration-700 transition-transform [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
 
                   {/* ── FRONT SIDE (Original Minimal Design) ── */}
-                  <div className={`absolute inset-0 w-full h-full flex flex-col items-center justify-between p-8 bg-black [backface-visibility:hidden] shadow-2xl transition-all duration-500 hover:bg-neutral-950/80 ${roundedClass} ${borderFrontClass} ${t.glowColor}`}>
+                  <div className={`absolute inset-0 w-full h-full flex flex-col items-center justify-between p-8 bg-black [backface-visibility:hidden] shadow-2xl transition-all duration-500 hover:bg-neutral-950/80 ${roundedClass} ${borderFrontClass}`}>
                     
                     {/* Index Top Left Removed */}
                     <div className="w-full flex justify-between" />
