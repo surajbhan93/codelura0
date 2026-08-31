@@ -7,6 +7,7 @@ import { Globe, Bot, MapPin, ArrowRight, CheckCircle2 } from "lucide-react";
 const SERVICES = [
   {
     id: "website",
+    badge: "Fast Web Platforms",
     icon: Globe,
     titleFront: "Websites & Web Apps",
     titleBack: "High-Performance Websites & Web Apps",
@@ -37,6 +38,7 @@ const SERVICES = [
   },
   {
     id: "ai-bot",
+    badge: "Autonomous AI Agents",
     icon: Bot,
     titleFront: "Custom AI Bots & Workflow Automation",
     titleBack: "Custom AI Bots & Workflow Automation",
@@ -67,6 +69,7 @@ const SERVICES = [
   },
   {
     id: "gbp-audit",
+    badge: "Google 3-Pack Maps",
     icon: MapPin,
     titleFront: "GBP Audit & Local SEO",
     titleBack: "Google Business Profile Audit & Local SEO",
