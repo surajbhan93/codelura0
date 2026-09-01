@@ -112,7 +112,7 @@ export default function AdminWorkPage() {
                     </td>
                     <td className="px-5 py-4 text-right">
                       <Link
-                        href={`/admin/work/edit/${work._id}`}
+                        href={`/admin/work/edit/${(work as any).slug || work._id}`}
                         className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-400 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-all duration-150"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

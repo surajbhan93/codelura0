@@ -215,7 +215,11 @@ export default function WorkPage() {
             </p>
             {!loading && works.length > 0 && (
               <div className="wfu wd4 w-stats-row" style={{ display:"flex", justifyContent:"center", gap:"56px", flexWrap:"wrap" }}>
-                {[{ label:"Projects", value:`${works.length}+` }, { label:"Featured", value:`${featured.length}` }, { label:"Industries", value:`${industryCount}` }].map((s) => (
+                {[
+  { label: "Projects", value: works.length * 5 + 3 },
+  { label: "Featured", value: featured.length * 5 + 3 },
+  { label: "Industries", value: industryCount * 5 + 3 },
+].map((s) => (
                   <div key={s.label} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
                     <span className="w-stat-val">{s.value}</span>
                     <span style={{ fontSize:"10px", color:"rgba(255,255,255,0.3)", fontWeight:700, letterSpacing:".12em", textTransform:"uppercase" }}>{s.label}</span>
