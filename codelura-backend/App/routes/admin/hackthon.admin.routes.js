@@ -8,6 +8,7 @@ import {
   togglePublishHackathon,
   getAllSubmissions,
   getHackathonSubmissions,
+  getHackathonParticipantsAdmin,
   saveSubmissionScores
 } from "../../controllers/admin/hackathon.admin.controller.js";
 
@@ -32,8 +33,9 @@ router.get("/hackathons/:id/analytics", protect, adminOnly, getHackathonAnalytic
 router.patch("/hackathons/:id/publish", protect, adminOnly, togglePublishHackathon);
 
 router.get("/submissions", protect, adminOnly, getAllSubmissions);
-router.get("/hackathons/:id/submissions",protect, adminOnly,getHackathonSubmissions);
-router.patch("/submissions/:id/scores",protect, adminOnly, saveSubmissionScores);
+router.get("/hackathons/:id/submissions", protect, adminOnly, getHackathonSubmissions);
+router.get("/hackathons/:id/participants", protect, adminOnly, getHackathonParticipantsAdmin);
+router.patch("/submissions/:id/scores", protect, adminOnly, saveSubmissionScores);
 
 
 export default router;

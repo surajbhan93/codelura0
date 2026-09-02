@@ -1,590 +1,537 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import Link from "next/link";
+import {
+  Trophy,
+  GraduationCap,
+  Flame,
+  Wallet,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  Send,
+  Sparkles,
+  BookOpen,
+  ArrowRight,
+  ShieldCheck,
+  Calendar,
+  Code,
+  FileText,
+  Activity,
+} from "lucide-react";
 
-export default function Profile() {
+interface ActivityItem {
+  id: string;
+  type: "hackathon" | "enrollment" | "submission" | "enquiry" | "profile";
+  title: string;
+  subtitle: string;
+  status?: string;
+  date: string;
+  link?: string;
+  badgeColor?: string;
+  icon: any;
+}
+
+export default function DashboardAllActivityPage() {
   const [user, setUser] = useState<any>(null);
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [hackathons, setHackathons] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [enquiries, setEnquiries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"all" | "hackathons" | "learning" | "enquiries">("all");
 
   useEffect(() => {
-    api.get("/auth/me").then((res) => setUser(res.data.user));
-    api
-      .get("/enrollments/my-enrollments")
-      .then((res) => {
-        if (res.data.success) {
-          setEnrollments(res.data.data || []);
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch User profile
+        const userRes = await api.get("/auth/me").catch(() => null);
+        if (userRes?.data?.user) {
+          setUser(userRes.data.user);
         }
-      })
-      .catch(() => {});
+
+        // Fetch Enrollments
+        const enrollRes = await api.get("/enrollments/my-enrollments").catch(() => null);
+        if (enrollRes?.data?.success) {
+          setEnrollments(enrollRes.data.data || []);
+        }
+
+        // Fetch My Participations / Registered Hackathons
+        const hackathonRes = await api.get("/participation/my-participations").catch(async () => {
+          return await api.get("/hackathons").catch(() => null);
+        });
+        if (hackathonRes?.data?.data) {
+          setHackathons(Array.isArray(hackathonRes.data.data) ? hackathonRes.data.data : []);
+        }
+
+        // Fetch My Submissions
+        const subRes = await api.get("/participation/my-submissions").catch(() => null);
+        if (subRes?.data?.data) {
+          setSubmissions(Array.isArray(subRes.data.data) ? subRes.data.data : []);
+        }
+
+        // Fetch My Enquiries
+        const enquiryRes = await api.get("/enquiries/my-enquiries").catch(() => null);
+        if (enquiryRes?.data?.data) {
+          setEnquiries(Array.isArray(enquiryRes.data.data) ? enquiryRes.data.data : []);
+        }
+
+      } catch (err) {
+        console.error("Error loading user activity", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
-  if (!user)
+  if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#0b0d17",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 14,
-          fontFamily: "'Segoe UI', system-ui, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            border: "3px solid #1f2937",
-            borderTop: "3px solid #7c3aed",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite",
-          }}
-        />
-        <p style={{ margin: 0, color: "#6b7280", fontSize: 14 }}>
-          Loading your profile...
-        </p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="min-h-screen bg-[#0b0d17] text-white flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+        <p className="text-slate-400 text-sm font-medium">Loading your activity dashboard...</p>
       </div>
     );
+  }
 
-  const initials = user.name
+  const initials = user?.name
     ?.split(" ")
     .map((n: string) => n[0])
     .join("")
-    .toUpperCase();
+    .toUpperCase() || "U";
+
+  // Build unified chronological activity feed items
+  const activityList: ActivityItem[] = [];
+
+  // Add Enrollments to activity
+  enrollments.forEach((e) => {
+    activityList.push({
+      id: `enr-${e._id}`,
+      type: "enrollment",
+      title: e.itemTitle || e.itemRef?.title || e.itemRef?.name || "Program Enrollment",
+      subtitle: e.itemType === "CareerTrack" ? "Career Track Program" : "Course Track",
+      status: "Active Learning",
+      date: new Date(e.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+      link: e.itemType === "CareerTrack" ? `/career/learning/career-tracks/${e.itemRef?.slug || ""}` : `/career/learning/programs/${e.itemRef?.slug || ""}`,
+      badgeColor: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+      icon: GraduationCap,
+    });
+  });
+
+  // Add Hackathons to activity
+  hackathons.forEach((h) => {
+    const slugOrId = h.slug || h.hackathon?.slug || h._id || h.id || h.hackathon?._id;
+    activityList.push({
+      id: `hack-${h._id || h.id}`,
+      type: "hackathon",
+      title: h.title || h.hackathon?.title || "Hackathon Event",
+      subtitle: `Registered · Team: ${h.teamName || "Participant"}`,
+      status: h.status || "Registered",
+      date: h.createdAt ? new Date(h.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Recent",
+      link: `/hackathons/${slugOrId}`,
+      badgeColor: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+      icon: Trophy,
+    });
+  });
+
+  // Add Submissions to activity
+  submissions.forEach((s) => {
+    activityList.push({
+      id: `sub-${s._id}`,
+      type: "submission",
+      title: `Submitted Project: ${s.projectTitle}`,
+      subtitle: s.hackathon?.title ? `Hackathon: ${s.hackathon.title}` : "Project Submission",
+      status: s.status?.toUpperCase() || "SUBMITTED",
+      date: new Date(s.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+      link: `/hackathons/${s.hackathon?._id || s.hackathon}/submission`,
+      badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      icon: Code,
+    });
+  });
+
+  // Add Enquiries to activity
+  enquiries.forEach((q) => {
+    activityList.push({
+      id: `enq-${q._id}`,
+      type: "enquiry",
+      title: `Service Enquiry: ${q.serviceName || q.subject || "Contact Request"}`,
+      subtitle: q.message ? `"${q.message.slice(0, 50)}..."` : "Inquiry submitted",
+      status: q.status || "Received",
+      date: new Date(q.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+      link: `/contact`,
+      badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+      icon: Send,
+    });
+  });
 
   const stats = [
-    { label: "Wallet", value: `₹${user.walletBalance || 0}`, icon: "💰" },
-    { label: "Role", value: user.role || "Student", icon: "🎓" },
-    { label: "Courses", value: user.coursesEnrolled || "—", icon: "📚" },
-    { label: "Streak", value: user.streak ? `${user.streak}d 🔥` : "0d", icon: "⚡" },
-  ];
-
-  const quickLinks = [
-    {
-      title: "Change Password",
-      desc: "Update your account password",
-      icon: "🔐",
-      color: "#7c3aed",
-      bg: "#1c1a3a",
-      border: "#4f46e5",
-      href: "/dashboard/settings?tab=account",
-    },
-    {
-      title: "Referral Program",
-      desc: "Invite friends & earn rewards",
-      icon: "🎁",
-      color: "#f59e0b",
-      bg: "#1a160a",
-      border: "#78350f",
-      badge: "Coming Soon",
-    },
-    {
-      title: "Notifications",
-      desc: "Manage your alerts & updates",
-      icon: "🔔",
-      color: "#34d399",
-      bg: "#0a1a12",
-      border: "#065f46",
-      href: "/dashboard/notifications",
-      badge: user.unreadNotifications > 0 ? `${user.unreadNotifications} New` : null,
-    },
-    {
-      title: "My Certificates",
-      desc: "View & download certificates",
-      icon: "🏅",
-      color: "#60a5fa",
-      bg: "#0c1828",
-      border: "#1e3a5f",
-      badge: "Coming Soon",
-    },
+    { label: "Wallet Balance", value: `₹${user?.walletBalance || 0}`, icon: Wallet, color: "text-emerald-400" },
+    { label: "Role", value: user?.role || "Student", icon: GraduationCap, color: "text-indigo-400" },
+    { label: "Programs Enrolled", value: enrollments.length, icon: BookOpen, color: "text-purple-400" },
+    { label: "Learning Streak", value: user?.streak ? `${user.streak}d 🔥` : "1d 🔥", icon: Flame, color: "text-orange-400" },
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#0b0d17",
-        color: "#f9fafb",
-        fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
-        padding: "28px 20px",
-      }}
-    >
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .fade-up { animation: fadeUp 0.4s ease forwards; }
-        .quick-card { transition: transform 0.15s, border-color 0.15s; cursor: pointer; }
-        .quick-card:hover { transform: translateY(-2px); }
-      `}</style>
+    <div className="min-h-screen bg-[#0b0d17] text-white p-4 sm:p-6 lg:p-8 font-sans">
+      <div className="max-w-5xl mx-auto space-y-8">
 
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
+        {/* ── PROFILE HERO HEADER ── */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#121428] via-[#101222] to-[#0c0d1a] border border-white/10 p-6 sm:p-8 shadow-2xl">
+          {/* Ambient Glow */}
+          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-violet-600/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-indigo-600/15 blur-3xl" />
 
-        {/* ── Coming Soon Banner ── */}
-        <div
-          className="fade-up"
-          style={{
-            marginBottom: 24,
-            borderRadius: 14,
-            border: "1px solid #312e81",
-            background: "linear-gradient(135deg, #1e1b4b 0%, #0f0c2e 100%)",
-            padding: "14px 18px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            animationDelay: "0s",
-          }}
-        >
-          <span style={{ fontSize: 22 }}>🚧</span>
-          <div>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: "#a5b4fc" }}>
-              Your Full Dashboard is Coming Soon
-            </p>
-            <p style={{ margin: "3px 0 0", fontSize: 12, color: "#6366f1" }}>
-              We're building something amazing for you. Stay tuned!
-            </p>
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="relative shrink-0">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-white shadow-xl ring-4 ring-white/10">
+                  {initials}
+                </div>
+                {user?.isEmailVerified && (
+                  <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-1 border-2 border-[#0b0d17]">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{user?.name}</h1>
+                  {user?.isEmailVerified && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      <ShieldCheck className="w-3 h-3" /> Verified
+                    </span>
+                  )}
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 capitalize">
+                    {user?.role || "Student"}
+                  </span>
+                </div>
+                <p className="text-slate-400 text-xs sm:text-sm">{user?.email}</p>
+              </div>
+            </div>
+
+            {/* Quick Action Button */}
+            <div className="flex flex-wrap gap-3 w-full md:w-auto">
+              <Link
+                href="/hackathons"
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition shadow-lg shadow-violet-600/30"
+              >
+                <Trophy className="w-4 h-4" /> Explore Hackathons
+              </Link>
+              <Link
+                href="/dashboard/settings"
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold border border-white/10 transition"
+              >
+                Edit Profile
+              </Link>
+            </div>
           </div>
-          <span
-            style={{
-              marginLeft: "auto",
-              fontSize: 11,
-              background: "#312e81",
-              color: "#a5b4fc",
-              padding: "3px 10px",
-              borderRadius: 20,
-              fontWeight: 600,
-              whiteSpace: "nowrap",
-            }}
-          >
-            In Progress
-          </span>
+
+          {/* STATS BAR GRID */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 pt-6 border-t border-white/10">
+            {stats.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="bg-black/30 border border-white/5 rounded-2xl p-4 transition hover:border-white/15">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">{s.label}</span>
+                    <Icon className={`w-4 h-4 ${s.color}`} />
+                  </div>
+                  <p className="text-xl font-extrabold text-white tracking-tight">{s.value}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* ── Profile Hero Card ── */}
-        <div
-          className="fade-up"
-          style={{
-            background: "linear-gradient(160deg, #111827 0%, #0d1320 100%)",
-            border: "1px solid #1f2937",
-            borderRadius: 20,
-            padding: "24px 20px",
-            marginBottom: 16,
-            position: "relative",
-            overflow: "hidden",
-            animationDelay: "0.07s",
-          }}
-        >
-          {/* Glow orb background */}
-          <div
-            style={{
-              position: "absolute",
-              top: -40,
-              right: -40,
-              width: 180,
-              height: 180,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)",
-              pointerEvents: "none",
-            }}
-          />
+        {/* ── TABS NAVIGATION ── */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-2xl border border-white/10 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                activeTab === "all"
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5" />
+              All Activity ({activityList.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("hackathons")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                activeTab === "hackathons"
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              Hackathons & Submissions ({hackathons.length + submissions.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("learning")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                activeTab === "learning"
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              Learning ({enrollments.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("enquiries")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                activeTab === "enquiries"
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Send className="w-3.5 h-3.5" />
+              Enquiries ({enquiries.length})
+            </button>
+          </div>
+        </div>
 
-          {/* Top row: avatar + name + verified */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                  fontWeight: 700,
-                  color: "#fff",
-                  flexShrink: 0,
-                  boxShadow: "0 0 0 3px #1c1a3a",
-                }}
-              >
-                {initials}
-              </div>
-              {user.isEmailVerified && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: 0,
-                    right: 0,
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    background: "#059669",
-                    border: "2px solid #0b0d17",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 10,
-                  }}
+        {/* ── TAB CONTENT ── */}
+
+        {/* TAB 1: ALL ACTIVITY TIMELINE */}
+        {activeTab === "all" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-violet-400" /> Recent User Activity Timeline
+              </h3>
+            </div>
+
+            {activityList.length === 0 ? (
+              <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-12 text-center space-y-3">
+                <Activity className="w-12 h-12 text-slate-600 mx-auto" />
+                <p className="text-base font-semibold text-slate-300">No activity recorded yet</p>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">Apply for hackathons or enroll in learning programs to start building your activity history.</p>
+                <Link
+                  href="/hackathons"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 text-white text-xs font-bold shadow-lg shadow-violet-600/30"
                 >
-                  ✓
+                  Explore Live Events 🚀
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activityList.map((act) => {
+                  const Icon = act.icon;
+                  return (
+                    <div
+                      key={act.id}
+                      className="group bg-slate-900/60 hover:bg-slate-900 border border-white/10 hover:border-violet-500/40 rounded-2xl p-4 sm:p-5 transition-all flex items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-violet-600/15 border border-violet-500/30 text-violet-400 flex items-center justify-center shrink-0">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-white text-sm sm:text-base group-hover:text-violet-300 transition">{act.title}</h4>
+                            {act.status && (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${act.badgeColor || "bg-white/5 text-slate-300 border-white/10"}`}>
+                                {act.status}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-400">{act.subtitle}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-xs text-slate-500 font-mono hidden sm:inline">{act.date}</span>
+                        {act.link && (
+                          <Link
+                            href={act.link}
+                            className="p-2 rounded-xl bg-white/5 hover:bg-violet-600 text-slate-400 hover:text-white transition"
+                            title="Open Details"
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: HACKATHONS & SUBMISSIONS */}
+        {activeTab === "hackathons" && (
+          <div className="space-y-6">
+            {/* Hackathons Joined */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-violet-400" /> My Registered Hackathons ({hackathons.length})
+              </h3>
+
+              {hackathons.length === 0 ? (
+                <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-8 text-center space-y-2">
+                  <p className="text-sm font-semibold text-slate-300">You haven&apos;t registered for any hackathon yet</p>
+                  <Link href="/hackathons" className="inline-block text-xs text-violet-400 font-bold hover:underline">Browse Active Hackathons →</Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {hackathons.map((h) => (
+                    <div key={h._id || h.id} className="bg-slate-900/80 border border-white/10 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">
+                            Registered
+                          </span>
+                          <h4 className="font-bold text-white text-base mt-2">{h.title || h.hackathon?.title}</h4>
+                        </div>
+                        <Trophy className="w-6 h-6 text-amber-400 shrink-0" />
+                      </div>
+
+                      <p className="text-xs text-slate-400 line-clamp-2">{h.shortDescription || h.hackathon?.shortDescription || "Interactive coding competition"}</p>
+
+                      <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                        <Link
+                          href={`/hackathons/${h.slug || h.hackathon?.slug || h._id || h.id || h.hackathon?._id}`}
+                          className="text-xs font-semibold text-slate-400 hover:text-white"
+                        >
+                          View Event →
+                        </Link>
+                        <Link
+                          href={`/hackathons/${h._id || h.id || h.hackathon?._id}/submission`}
+                          className="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold shadow-sm"
+                        >
+                          Submit Project 🚀
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            <div style={{ flex: 1 }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#f9fafb" }}>
-                {user.name}
-              </h2>
-              <p style={{ margin: "3px 0 6px", fontSize: 13, color: "#6b7280" }}>
-                {user.email}
-              </p>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {user.isEmailVerified && (
-                  <span
-                    style={{
-                      fontSize: 11,
-                      background: "#052e16",
-                      color: "#34d399",
-                      padding: "2px 9px",
-                      borderRadius: 20,
-                      fontWeight: 600,
-                      border: "1px solid #065f46",
-                    }}
-                  >
-                    ✓ Verified
-                  </span>
-                )}
-                <span
-                  style={{
-                    fontSize: 11,
-                    background: "#1c1a3a",
-                    color: "#a78bfa",
-                    padding: "2px 9px",
-                    borderRadius: 20,
-                    fontWeight: 600,
-                    border: "1px solid #4f46e5",
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {user.role || "Student"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div style={{ height: 1, background: "#1f2937", marginBottom: 18 }} />
-
-          {/* Stats row */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 10,
-            }}
-          >
-            {stats.map((s) => (
-              <div
-                key={s.label}
-                style={{
-                  background: "#0f1320",
-                  border: "1px solid #1f2937",
-                  borderRadius: 12,
-                  padding: "12px 8px",
-                  textAlign: "center",
-                }}
-              >
-                <p style={{ margin: "0 0 4px", fontSize: 18 }}>{s.icon}</p>
-                <p style={{ margin: "0 0 2px", fontSize: 15, fontWeight: 700, color: "#f3f4f6" }}>
-                  {s.value}
-                </p>
-                <p style={{ margin: 0, fontSize: 11, color: "#6b7280" }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Info Rows ── */}
-        <div
-          className="fade-up"
-          style={{
-            background: "#111827",
-            border: "1px solid #1f2937",
-            borderRadius: 16,
-            padding: "18px 20px",
-            marginBottom: 16,
-            animationDelay: "0.14s",
-          }}
-        >
-          <p
-            style={{
-              margin: "0 0 14px",
-              fontSize: 12,
-              fontWeight: 600,
-              color: "#4b5563",
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-            }}
-          >
-            Account Details
-          </p>
-          {[
-            { label: "Full Name", value: user.name, icon: "👤" },
-            { label: "Email Address", value: user.email, icon: "✉️" },
-            { label: "Role", value: user.role || "Student", icon: "🎓" },
-            { label: "Wallet Balance", value: `₹${user.walletBalance || 0}`, icon: "💰" },
-          ].map(({ label, value, icon }, idx, arr) => (
-            <div
-              key={label}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "11px 0",
-                borderBottom: idx < arr.length - 1 ? "1px solid #1f2937" : "none",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 16 }}>{icon}</span>
-                <span style={{ fontSize: 13, color: "#6b7280" }}>{label}</span>
-              </div>
-              <span
-                style={{
-                  fontSize: 13,
-                  color: "#e5e7eb",
-                  fontWeight: 500,
-                  maxWidth: 220,
-                  textAlign: "right",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {value}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── My Enrolled Learning & Programs ── */}
-        <div
-          className="fade-up"
-          style={{
-            background: "#111827",
-            border: "1px solid #1f2937",
-            borderRadius: 16,
-            padding: "18px 20px",
-            marginBottom: 16,
-            animationDelay: "0.18s",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#9ca3af",
-                textTransform: "uppercase",
-                letterSpacing: "0.07em",
-              }}
-            >
-              My Enrolled Programs &amp; Tracks ({enrollments.length})
-            </p>
-            <a
-              href="/career/learning/programs"
-              style={{ fontSize: 12, fontWeight: 600, color: "#a78bfa", textDecoration: "none" }}
-            >
-              Explore More →
-            </a>
-          </div>
-
-          {enrollments.length === 0 ? (
-            <div style={{ padding: "20px 0", textAlign: "center" }}>
-              <p style={{ margin: "0 0 6px", fontSize: 24 }}>🎓</p>
-              <p style={{ margin: 0, fontSize: 13, color: "#9ca3af" }}>
-                You have not enrolled in any programs yet.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {enrollments.map((en: any) => {
-                const item = en.itemRef || {};
-                const isCareerTrack = en.itemType === "CareerTrack";
-                const isUnlocked = en.unlockedViaCareerTrack;
-                const slug = item.slug || "";
-                const href = isCareerTrack
-                  ? `/career/learning/career-tracks/${slug}`
-                  : `/career/learning/programs/${slug}`;
-
-                return (
-                  <div
-                    key={en._id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      background: "#0f1320",
-                      border: "1px solid #1f2937",
-                      borderRadius: 12,
-                      padding: "12px 14px",
-                    }}
-                  >
-                    <div style={{ flex: 1, paddingRight: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            padding: "2px 8px",
-                            borderRadius: 12,
-                            background: isCareerTrack
-                              ? "#3b0764"
-                              : isUnlocked
-                              ? "#064e3b"
-                              : "#1e1b4b",
-                            color: isCareerTrack
-                              ? "#e9d5ff"
-                              : isUnlocked
-                              ? "#a7f3d0"
-                              : "#c7d2fe",
-                            border: `1px solid ${
-                              isCareerTrack
-                                ? "#6b21a8"
-                                : isUnlocked
-                                ? "#047857"
-                                : "#3730a3"
-                            }`,
-                          }}
-                        >
-                          {isCareerTrack
-                            ? "🎯 Career Track"
-                            : isUnlocked
-                            ? "✨ Unlocked via Career Track"
-                            : "🚀 Program"}
+            {/* Submissions Submitted */}
+            {submissions.length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <Code className="w-4 h-4 text-emerald-400" /> Submitted Projects ({submissions.length})
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {submissions.map((s) => (
+                    <div key={s._id} className="bg-slate-900/80 border border-white/10 rounded-2xl p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase">
+                          {s.status || "Submitted"}
                         </span>
+                        <span className="text-xs text-slate-500 font-mono">{new Date(s.createdAt).toLocaleDateString()}</span>
                       </div>
+                      <h4 className="font-bold text-white text-base">{s.projectTitle}</h4>
+                      <p className="text-xs text-slate-400 line-clamp-2">{s.projectDescription}</p>
 
-                      <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#f9fafb" }}>
-                        {en.itemTitle || item.name || item.title}
-                      </h4>
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {s.githubRepo && (
+                          <a href={s.githubRepo} target="_blank" rel="noreferrer" className="text-[11px] font-semibold text-indigo-400 hover:underline">
+                            🔗 GitHub
+                          </a>
+                        )}
+                        {s.demoVideo && (
+                          <a href={s.demoVideo} target="_blank" rel="noreferrer" className="text-[11px] font-semibold text-indigo-400 hover:underline">
+                            🎥 Demo Video
+                          </a>
+                        )}
+                      </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
-                    <a
-                      href={href}
-                      style={{
-                        padding: "6px 14px",
-                        borderRadius: 8,
-                        background: "#4f46e5",
-                        color: "#fff",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        textDecoration: "none",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Start Learning →
-                    </a>
-                  </div>
-                );
-              })}
+        {/* TAB 3: LEARNING & ENROLLED PROGRAMS */}
+        {activeTab === "learning" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-purple-400" /> My Learning Programs ({enrollments.length})
+              </h3>
+              <a href="/career/learning/programs" className="text-xs font-bold text-violet-400 hover:underline">
+                Explore More Programs →
+              </a>
             </div>
-          )}
-        </div>
 
-        {/* ── Quick Links ── */}
-        <p
-          className="fade-up"
-          style={{
-            margin: "0 0 10px",
-            fontSize: 12,
-            fontWeight: 600,
-            color: "#4b5563",
-            textTransform: "uppercase",
-            letterSpacing: "0.07em",
-            animationDelay: "0.2s",
-          }}
-        >
-          Quick Actions
-        </p>
-
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: 8 }}
-        >
-          {quickLinks.map((item, i) => (
-            <a
-              key={item.title}
-              href={item.href ?? "#"}
-              className="fade-up quick-card"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                background: item.href ? item.bg : "#0f1320",
-                border: `1px solid ${item.href ? item.border : "#1f2937"}`,
-                borderRadius: 14,
-                padding: "14px 16px",
-                textDecoration: "none",
-                animationDelay: `${0.24 + i * 0.06}s`,
-                opacity: item.href ? 1 : 0.7,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
-                  background: item.href ? `${item.color}18` : "#1f2937",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 18,
-                  flexShrink: 0,
-                }}
-              >
-                {item.icon}
+            {enrollments.length === 0 ? (
+              <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-8 text-center space-y-2">
+                <p className="text-sm font-semibold text-slate-300">You are not enrolled in any program yet.</p>
+                <a href="/career/learning/programs" className="inline-block text-xs text-violet-400 font-bold hover:underline">Browse Programs →</a>
               </div>
+            ) : (
+              <div className="space-y-3">
+                {enrollments.map((en: any) => {
+                  const item = en.itemRef || {};
+                  const isCareerTrack = en.itemType === "CareerTrack";
+                  const href = isCareerTrack
+                    ? `/career/learning/career-tracks/${item.slug || ""}`
+                    : `/career/learning/programs/${item.slug || ""}`;
 
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#f3f4f6" }}>
-                  {item.title}
-                </p>
-                <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6b7280" }}>
-                  {item.desc}
-                </p>
+                  return (
+                    <div key={en._id} className="bg-slate-900/80 border border-white/10 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                          {isCareerTrack ? "🎯 Career Track" : "🚀 Program"}
+                        </span>
+                        <h4 className="font-bold text-white text-base">{en.itemTitle || item.name || item.title}</h4>
+                      </div>
+                      <a href={href} className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition shadow-sm">
+                        Start Learning →
+                      </a>
+                    </div>
+                  );
+                })}
               </div>
+            )}
+          </div>
+        )}
 
-              {item.badge ? (
-                <span
-                  style={{
-                    fontSize: 11,
-                    background:
-                      item.badge.includes("New")
-                        ? "#052e16"
-                        : "#1f2937",
-                    color:
-                      item.badge.includes("New")
-                        ? "#34d399"
-                        : "#6b7280",
-                    border: `1px solid ${item.badge.includes("New") ? "#065f46" : "#374151"}`,
-                    padding: "3px 10px",
-                    borderRadius: 20,
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {item.badge}
-                </span>
-              ) : (
-                <span style={{ color: "#4b5563", fontSize: 16 }}>›</span>
-              )}
-            </a>
-          ))}
-        </div>
+        {/* TAB 4: ENQUIRIES */}
+        {activeTab === "enquiries" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Send className="w-4 h-4 text-blue-400" /> My Service Enquiries ({enquiries.length})
+              </h3>
+              <Link href="/contact" className="text-xs font-bold text-violet-400 hover:underline">
+                New Contact Enquiry →
+              </Link>
+            </div>
+
+            {enquiries.length === 0 ? (
+              <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-8 text-center space-y-2">
+                <p className="text-sm font-semibold text-slate-300">No service enquiries found.</p>
+                <Link href="/contact" className="inline-block text-xs text-violet-400 font-bold hover:underline">Contact Us →</Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {enquiries.map((q) => (
+                  <div key={q._id} className="bg-slate-900/80 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-300">{q.serviceName || "Service Enquiry"}</span>
+                      <span className="text-xs text-slate-500 font-mono">{new Date(q.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-xs text-slate-400">{q.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   );

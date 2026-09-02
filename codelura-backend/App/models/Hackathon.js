@@ -1,157 +1,167 @@
 import mongoose from "mongoose";
 
 const hackathonSchema = new mongoose.Schema(
-{
-title: {
-type: String,
-required: true,
-trim: true,
-index: true
-},
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-slug: {
-type: String,
-unique: true,
-index: true
-},
+    slug: {
+      type: String,
+      unique: true,
+    },
 
-shortDescription: {
-type: String,
-required: true,
-maxlength: 200
-},
+    theme: String,
+    mode: {
+      type: String,
+      default: "Online",
+    },
 
-fullDescription: {
-type: String,
-required: true
-},
+    shortDescription: {
+      type: String,
+      required: true,
+    },
 
-bannerImage: {
-type: String,
-required: true
-},
+    fullDescription: {
+      type: String,
+      required: true,
+    },
 
-prizePool: {
-type: String,
-required: true
-},
+    bannerImage: String,
+    bannerImageUrl: String,
 
-prizeDetails: String,
+    prizePool: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
 
-rules: String,
+    prizeDetails: String,
 
-tracks: [
-{
-title: String,
-description: String
-}
-],
+    prizes: [
+      {
+        rank: Number,
+        title: String,
+        cashPrize: Number,
+        benefits: [String],
+      },
+    ],
 
-teamSizeMin: {
-type: Number,
-default: 1
-},
+    rules: {
+      type: mongoose.Schema.Types.Mixed, // Accepts both Array of Strings and String
+    },
 
-teamSizeMax: {
-type: Number,
-default: 4
-},
+    eligibility: [String],
+    submissionRequirements: [String],
+    benefits: [String],
 
-judges: [
-{
-name: String,
-role: String,
-company: String,
-image: String
-}
-],
+    tracks: [
+      {
+        name: String,
+        title: String,
+        slug: String,
+        description: String,
+      },
+    ],
 
-sponsors: [
-{
-name: String,
-logo: String,
-website: String
-}
-],
+    teamSizeMin: {
+      type: Number,
+      default: 1,
+    },
 
-faqs: [
-{
-question: String,
-answer: String
-}
-],
+    teamSizeMax: {
+      type: Number,
+      default: 4,
+    },
 
-judgingCriteria: [
-{
-title: String,
-weightage: Number
-}
-],
+    judges: [
+      {
+        name: String,
+        role: String,
+        company: String,
+        image: String,
+      },
+    ],
 
-discordLink: String,
-websiteLink: String,
+    sponsors: [
+      {
+        name: String,
+        logo: String,
+        website: String,
+      },
+    ],
 
-registrationStart: {
-type: Date,
-required: true
-},
+    faqs: [
+      {
+        question: String,
+        answer: String,
+      },
+    ],
 
-registrationDeadline: {
-type: Date,
-required: true,
-index: true
-},
+    judgingCriteria: [
+      {
+        criteria: String,
+        title: String,
+        weight: Number,
+        weightage: Number,
+      },
+    ],
 
-startDate: {
-type: Date,
-required: true,
-index: true
-},
+    discordLink: String,
+    websiteLink: String,
 
-endDate: {
-type: Date,
-required: true
-},
-participants: {
-  type: [mongoose.Schema.Types.ObjectId],
-  ref: "User",
-  default: []
-},
+    registrationStart: Date,
+    registrationStartDate: Date,
+    registrationDeadline: Date,
+    registrationEndDate: Date,
 
-maxParticipants: {
-type: Number,
-default: 1000
-},
+    startDate: Date,
+    hackathonStartDate: Date,
+    endDate: Date,
+    hackathonEndDate: Date,
 
-participantsCount: {
-type: Number,
-default: 0
-},
+    submissionDeadline: Date,
+    winnerAnnouncementDate: Date,
 
-submissionsCount: {
-type: Number,
-default: 0
-},
+    participants: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
+    },
 
-status: {
-type: String,
-enum: ["draft","upcoming","ongoing","completed"],
-default: "draft",
-index: true
-},
+    maxParticipants: {
+      type: Number,
+      default: 500,
+    },
 
-createdBy: {
-type: mongoose.Schema.Types.ObjectId,
-ref: "User"
-},
+    participantsCount: {
+      type: Number,
+      default: 0,
+    },
 
-isPublished: {
-type: Boolean,
-default: false
-}
+    submissionsCount: {
+      type: Number,
+      default: 0,
+    },
 
-},
-{ timestamps: true }
+    status: {
+      type: String,
+      enum: ["draft", "upcoming", "ongoing", "active", "completed", "ended"],
+      default: "upcoming",
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    isPublished: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { timestamps: true }
 );
 
 export default mongoose.model("Hackathon", hackathonSchema);

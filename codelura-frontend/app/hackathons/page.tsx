@@ -3,17 +3,17 @@ import HackathonTabs from "@/components/hackathon/HackathonTabs";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Hackathons | Codelura",
+  title: "Hackathons & Coding Competitions | Codelura",
   description:
-    "Explore and participate in upcoming, ongoing, and completed hackathons at Codelura.",
+    "Explore and participate in upcoming, ongoing, and completed hackathons at Codelura. Build real-world AI projects, win cash prizes, and earn internship opportunities.",
 };
 
 export default function HackathonsPage() {
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col pt-20 md:pt-0">
+    <main className="min-h-screen bg-[#060713] text-white flex flex-col pt-20 md:pt-0 font-sans selection:bg-violet-600 selection:text-white">
       <HackathonHero />
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-16 md:py-24">
+      <div className="flex-1 max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-10 py-12 sm:py-16">
         <HackathonTabs />
       </div>
     </main>

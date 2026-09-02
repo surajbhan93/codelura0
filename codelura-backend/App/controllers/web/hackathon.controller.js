@@ -131,14 +131,20 @@ export const getHackathons = async (req, res) => {
 export const getHackathonById = async (req, res) => {
   try {
     let hackathon;
+    const identifier = req.params.id;
 
-    if (isDbConnected() && mongoose.Types.ObjectId.isValid(req.params.id)) {
-      hackathon = await Hackathon.findById(req.params.id);
+    if (isDbConnected()) {
+      if (mongoose.Types.ObjectId.isValid(identifier)) {
+        hackathon = await Hackathon.findById(identifier);
+      }
+      if (!hackathon) {
+        hackathon = await Hackathon.findOne({ slug: identifier });
+      }
       if (hackathon) hackathon = hackathon.toObject();
     }
 
     if (!hackathon) {
-      hackathon = mockHackathons.find(h => h.id === req.params.id || h._id === req.params.id);
+      hackathon = mockHackathons.find(h => h.id === identifier || h._id === identifier || h.slug === identifier);
     }
 
     if (!hackathon) {
@@ -208,13 +214,27 @@ export const joinHackathon = async (req, res) => {
     }
 
     const now = new Date();
-    const deadline = new Date(hackathon.registrationDeadline);
+    const startDateStr = hackathon.registrationStartDate || hackathon.registrationStart;
+    const endDateStr = hackathon.registrationEndDate || hackathon.registrationDeadline;
 
-    if (now > deadline) {
-      return res.status(400).json({
-        success: false,
-        message: "Registration has closed"
-      });
+    if (startDateStr) {
+      const regStart = new Date(startDateStr);
+      if (!isNaN(regStart.getTime()) && now < regStart) {
+        return res.status(400).json({
+          success: false,
+          message: `Registration opens on ${regStart.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+        });
+      }
+    }
+
+    if (endDateStr) {
+      const regEnd = new Date(endDateStr);
+      if (!isNaN(regEnd.getTime()) && now > regEnd) {
+        return res.status(400).json({
+          success: false,
+          message: "Registration has closed"
+        });
+      }
     }
 
     // Max participants check

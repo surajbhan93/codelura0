@@ -4,81 +4,94 @@ import Submission from "../../models/Submission.js";
 import Evaluation from "../../models/Evaluation.js";
 export const createHackathon = async (req, res) => {
   try {
-
     const {
       title,
       shortDescription,
       fullDescription,
       bannerImage,
-
+      bannerImageUrl,
+      theme,
+      mode,
       prizePool,
       prizeDetails,
-
+      prizes,
       tracks,
       rules,
+      eligibility,
+      submissionRequirements,
+      benefits,
       judgingCriteria,
-
       teamSizeMin,
       teamSizeMax,
-
+      teamSize,
       registrationStart,
+      registrationStartDate,
       registrationDeadline,
+      registrationEndDate,
       startDate,
+      hackathonStartDate,
       endDate,
-
+      hackathonEndDate,
+      submissionDeadline,
+      winnerAnnouncementDate,
       maxParticipants,
-
       sponsors,
       judges,
       faqs,
-
       discordLink,
-      websiteLink
-
+      websiteLink,
+      status,
+      isPublished
     } = req.body;
 
-    if (!title || !shortDescription || !startDate || !endDate) {
+    if (!title || !shortDescription) {
       return res.status(400).json({
         success: false,
-        message: "Required fields missing"
+        message: "Title and short description are required"
       });
     }
 
-    const slug = slugify(title, { lower: true });
+    const slug = req.body.slug || slugify(title, { lower: true, strict: true });
 
     const hackathon = await Hackathon.create({
       title,
       slug,
+      theme,
+      mode: mode || "Online",
       shortDescription,
-      fullDescription,
-      bannerImage,
-
-      prizePool,
+      fullDescription: fullDescription || shortDescription,
+      bannerImage: bannerImage || bannerImageUrl || "https://images.unsplash.com/photo-1518770660439-4636190af475",
+      bannerImageUrl: bannerImageUrl || bannerImage,
+      prizePool: prizePool || "₹1,00,000",
       prizeDetails,
-
+      prizes,
       tracks,
       rules,
+      eligibility,
+      submissionRequirements,
+      benefits,
       judgingCriteria,
-
-      teamSizeMin,
-      teamSizeMax,
-
-      registrationStart,
-      registrationDeadline,
-      startDate,
-      endDate,
-
-      maxParticipants,
-
+      teamSizeMin: teamSizeMin || teamSize?.min || 1,
+      teamSizeMax: teamSizeMax || teamSize?.max || 4,
+      registrationStart: registrationStart || registrationStartDate || new Date(),
+      registrationStartDate: registrationStartDate || registrationStart || new Date(),
+      registrationDeadline: registrationDeadline || registrationEndDate || new Date(),
+      registrationEndDate: registrationEndDate || registrationDeadline || new Date(),
+      startDate: startDate || hackathonStartDate || new Date(),
+      hackathonStartDate: hackathonStartDate || startDate || new Date(),
+      endDate: endDate || hackathonEndDate || new Date(),
+      hackathonEndDate: hackathonEndDate || endDate || new Date(),
+      submissionDeadline: submissionDeadline ? new Date(submissionDeadline) : undefined,
+      winnerAnnouncementDate: winnerAnnouncementDate ? new Date(winnerAnnouncementDate) : undefined,
+      maxParticipants: maxParticipants || 500,
       sponsors,
       judges,
       faqs,
-
       discordLink,
       websiteLink,
-
-      createdBy: req.user._id,
-      status: "draft"
+      createdBy: req.user?._id,
+      status: status || "upcoming",
+      isPublished: isPublished !== undefined ? isPublished : true
     });
 
     return res.status(201).json({
@@ -88,12 +101,10 @@ export const createHackathon = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.error(error);
-
+    console.error("Hackathon Creation Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Server Error"
+      message: error.message || "Server Error"
     });
   }
 };
@@ -376,27 +387,77 @@ export const saveSubmissionScores = async (req, res) => {
     submission.impactScore = Math.round(judgeFinalScore / 2);
 
     submission.score =
-      submission.innovationScore +
-      submission.technicalScore +
-      submission.impactScore;
+      (submission.innovationScore || 0) +
+      (submission.technicalScore || 0) +
+      (submission.impactScore || 0);
 
     await submission.save();
 
-    res.json({
+    return res.json({
       success: true,
       message: "AI scores saved successfully",
       data: submission
     });
 
   } catch (error) {
-
-    console.error(error);
-
-    res.status(500).json({
+    console.error("Save Submission Scores Error:", error);
+    return res.status(500).json({
       success: false,
       message: "Server error"
     });
-
   }
+};
 
+export const getHackathonParticipantsAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Search by _id or slug
+    let hackathon = await Hackathon.findById(id).populate("participants", "name email role createdAt isEmailVerified");
+    if (!hackathon) {
+      hackathon = await Hackathon.findOne({ slug: id }).populate("participants", "name email role createdAt isEmailVerified");
+    }
+
+    if (!hackathon) {
+      return res.status(404).json({
+        success: false,
+        message: "Hackathon not found"
+      });
+    }
+
+    // Get submissions for these participants to enrich team & track info
+    const submissions = await Submission.find({ hackathon: hackathon._id }).select("user projectTitle status techStack createdAt");
+    const subMap = {};
+    submissions.forEach((s) => {
+      if (s.user) subMap[s.user.toString()] = s;
+    });
+
+    const participantList = (hackathon.participants || []).map((p) => {
+      const sub = subMap[p._id.toString()];
+      return {
+        _id: p._id,
+        name: p.name,
+        email: p.email,
+        role: p.role || "Student",
+        isEmailVerified: p.isEmailVerified || false,
+        joinedAt: p.createdAt,
+        submissionStatus: sub ? sub.status : "No Submission",
+        projectTitle: sub ? sub.projectTitle : null,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: participantList.length,
+      hackathonTitle: hackathon.title,
+      data: participantList
+    });
+
+  } catch (error) {
+    console.error("Get Hackathon Participants Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error"
+    });
+  }
 };

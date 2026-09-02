@@ -232,6 +232,20 @@ export default function AdminHackathonsPage() {
                     </Link>
 
                     <Link
+                      href={`/admin/hackathons/${h._id}/participants`}
+                      className="px-3 py-2 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-500 text-white shadow-sm transition flex items-center gap-1.5"
+                    >
+                      👥 Participants ({h.participantsCount ?? 0})
+                    </Link>
+
+                    <Link
+                      href={`/admin/hackathons/${h._id}/submissions`}
+                      className="px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition flex items-center gap-1.5"
+                    >
+                      📥 Submissions ({h.submissionsCount ?? 0})
+                    </Link>
+
+                    <Link
                       href={`/admin/hackathons/${h._id}/analytics`}
                       className="px-3 py-2 rounded-xl text-xs font-semibold bg-violet-500/10 border border-violet-500/25 text-violet-400 hover:bg-violet-500/20 transition"
                     >

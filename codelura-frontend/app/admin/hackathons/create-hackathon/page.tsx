@@ -3,6 +3,7 @@
 import { useState } from "react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
+import { Code, Sparkles, Check, Plus, Trash2, ArrowRight, ArrowLeft } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Track       { id: string; title: string; description: string }
@@ -19,511 +20,626 @@ const emptySponsor  = (): Sponsor  => ({ id: uid(), name: "", logo: "", website:
 const emptyFaq      = (): Faq      => ({ id: uid(), question: "", answer: "" });
 const emptyCriteria = (): Criteria => ({ id: uid(), title: "", weightage: "" });
 
-// ─── Reusable UI ──────────────────────────────────────────────────────────────
-function Label({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
-      {children}
-    </label>
-  );
-}
-
-function Input({
-  value, onChange, placeholder, type = "text",
-}: {
-  value: string; onChange: (v: string) => void; placeholder?: string; type?: string;
-}) {
-  return (
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
-    />
-  );
-}
-
-function Textarea({
-  value, onChange, placeholder, rows = 3,
-}: {
-  value: string; onChange: (v: string) => void; placeholder?: string; rows?: number;
-}) {
-  return (
-    <textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      rows={rows}
-      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition resize-y"
-    />
-  );
-}
-
-function Card({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
-      <div className="flex items-center gap-3 px-6 py-4 bg-slate-800/80 border-b border-slate-700">
-        <span className="text-xl">{icon}</span>
-        <h2 className="font-bold text-slate-100 text-base">{title}</h2>
-      </div>
-      <div className="p-6 flex flex-col gap-5">{children}</div>
-    </div>
-  );
-}
-
-function FieldRow({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>;
-}
-
-// ─── Repeatable List ──────────────────────────────────────────────────────────
-interface FieldDef {
-  key: string;
-  label: string;
-  placeholder?: string;
-  type?: string;
-  wide?: boolean;
-}
-
-function RepeatableList<T extends { id: string }>({
-  items, onAdd, onRemove, onChange, fields, addLabel,
-}: {
-  items: T[];
-  onAdd: () => void;
-  onRemove: (i: number) => void;
-  onChange: (i: number, key: string, val: string) => void;
-  fields: FieldDef[];
-  addLabel: string;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      {items.map((item, i) => (
-        <div key={item.id} className="flex gap-3 items-start bg-slate-900 border border-slate-700 rounded-xl p-4">
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {fields.map((f) => (
-              <div key={f.key} className={f.wide ? "sm:col-span-2" : ""}>
-                <Label>{f.label}</Label>
-                {f.type === "textarea" ? (
-                  <Textarea
-                    value={(item as Record<string, string>)[f.key]}
-                    onChange={(v) => onChange(i, f.key, v)}
-                    placeholder={f.placeholder}
-                    rows={2}
-                  />
-                ) : (
-                  <Input
-                    type={f.type ?? "text"}
-                    value={(item as Record<string, string>)[f.key]}
-                    onChange={(v) => onChange(i, f.key, v)}
-                    placeholder={f.placeholder}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => onRemove(i)}
-            className="mt-6 flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition text-xs"
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={onAdd}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-violet-500/40 bg-violet-500/5 text-violet-400 text-sm hover:bg-violet-500/10 transition w-fit"
-      >
-        <span className="text-base leading-none">＋</span> {addLabel}
-      </button>
-    </div>
-  );
-}
-
-// ─── Step Indicator ───────────────────────────────────────────────────────────
-const STEPS = ["Basics", "Prizes & Dates", "Rules & Links", "Tracks", "People", "FAQs & Criteria"];
-
-function StepBar({ current }: { current: number }) {
-  return (
-    <div className="flex items-center gap-1 flex-wrap mb-8">
-      {STEPS.map((s, i) => (
-        <div key={i} className="flex items-center gap-1">
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              i === current
-                ? "bg-violet-600 text-white"
-                : i < current
-                ? "bg-emerald-600/20 text-emerald-400"
-                : "bg-slate-700/50 text-slate-500"
-            }`}
-          >
-            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-              i < current ? "bg-emerald-500 text-black" : i === current ? "bg-white text-violet-600" : "bg-slate-600 text-slate-400"
-            }`}>
-              {i < current ? "✓" : i + 1}
-            </span>
-            {s}
-          </div>
-          {i < STEPS.length - 1 && (
-            <div className={`h-px w-4 ${i < current ? "bg-emerald-500" : "bg-slate-700"}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function CreateHackathonPage() {
-  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showJsonModal, setShowJsonModal] = useState(false);
+  const [jsonText, setJsonText] = useState("");
 
-  // Step 0 — Basics
+  // Basics
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
+  const [theme, setTheme] = useState("");
+  const [mode, setMode] = useState("Online");
+  const [status, setStatus] = useState("upcoming");
   const [shortDescription, setShortDescription] = useState("");
   const [fullDescription, setFullDescription] = useState("");
   const [bannerImage, setBannerImage] = useState("");
 
-  // Step 1 — Prizes & Dates
-  const [prizePool, setPrizePool] = useState("");
-  const [prizeDetails, setPrizeDetails] = useState("");
-  const [maxParticipants, setMaxParticipants] = useState("");
+  // Dates & Timeline
   const [registrationStart, setRegistrationStart] = useState("");
   const [registrationDeadline, setRegistrationDeadline] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [submissionDeadline, setSubmissionDeadline] = useState("");
+  const [winnerAnnouncementDate, setWinnerAnnouncementDate] = useState("");
 
-  // Step 2 — Rules & Links
-  const [rules, setRules] = useState("");
+  // Stats & Team
+  const [prizePool, setPrizePool] = useState("");
+  const [prizeDetails, setPrizeDetails] = useState("");
+  const [maxParticipants, setMaxParticipants] = useState("500");
   const [teamSizeMin, setTeamSizeMin] = useState("1");
   const [teamSizeMax, setTeamSizeMax] = useState("4");
+
+  // Lists
+  const [eligibility, setEligibility] = useState("");
+  const [submissionRequirements, setSubmissionRequirements] = useState("");
+  const [benefits, setBenefits] = useState("");
+  const [rules, setRules] = useState("");
   const [discordLink, setDiscordLink] = useState("");
   const [websiteLink, setWebsiteLink] = useState("");
 
-  // Step 3 — Tracks
-  const [tracks, setTracks] = useState<Track[]>([emptyTrack()]);
+  // Array states
+  const [tracks, setTracks] = useState<Track[]>([
+    { id: uid(), title: "Generative AI", description: "Build AI assistants, AI agents, RAG systems, content generation tools." },
+    { id: uid(), title: "Education & EdTech", description: "Build AI-powered tutors, personalized learning platforms." },
+  ]);
+  const [criteria, setCriteria] = useState<Criteria[]>([
+    { id: uid(), title: "Innovation", weightage: "25" },
+    { id: uid(), title: "Problem Impact", weightage: "25" },
+    { id: uid(), title: "AI Implementation", weightage: "20" },
+    { id: uid(), title: "Technical Execution", weightage: "15" },
+    { id: uid(), title: "UI/UX", weightage: "10" },
+    { id: uid(), title: "Scalability", weightage: "5" },
+  ]);
 
-  // Step 4 — Judges & Sponsors
-  const [judges, setJudges] = useState<Judge[]>([emptyJudge()]);
-  const [sponsors, setSponsors] = useState<Sponsor[]>([emptySponsor()]);
+  const [rawJsonData, setRawJsonData] = useState<any>(null);
 
-  // Step 5 — FAQs & Criteria
-  const [faqs, setFaqs] = useState<Faq[]>([emptyFaq()]);
-  const [criteria, setCriteria] = useState<Criteria[]>([emptyCriteria()]);
+  // JSON Import Auto-Fill Function
+  const handleImportJson = () => {
+    try {
+      const data = JSON.parse(jsonText);
+      setRawJsonData(data);
 
-  // ─── Array helpers
-  function arrayHelpers<T extends { id: string }>(setter: React.Dispatch<React.SetStateAction<T[]>>) {
-    return {
-      add:    (fn: () => T) => setter((p) => [...p, fn()]),
-      remove: (i: number)   => setter((p) => p.filter((_, idx) => idx !== i)),
-      change: (i: number, key: string, val: string) =>
-        setter((p) => p.map((item, idx) => idx === i ? { ...item, [key]: val } : item)),
-    };
-  }
+      if (data.title) setTitle(data.title);
+      if (data.slug) setSlug(data.slug);
+      if (data.theme) setTheme(data.theme);
+      if (data.mode) setMode(data.mode);
+      if (data.status) setStatus(data.status);
+      if (data.shortDescription) setShortDescription(data.shortDescription);
+      if (data.fullDescription) setFullDescription(data.fullDescription);
+      if (data.bannerImageUrl || data.bannerImage) setBannerImage(data.bannerImageUrl || data.bannerImage);
 
-  const t  = arrayHelpers(setTracks);
-  const j  = arrayHelpers(setJudges);
-  const sp = arrayHelpers(setSponsors);
-  const f  = arrayHelpers(setFaqs);
-  const c  = arrayHelpers(setCriteria);
+      if (data.prizePool) setPrizePool(String(data.prizePool));
+      if (data.maxParticipants) setMaxParticipants(String(data.maxParticipants));
+      if (data.teamSize?.min) setTeamSizeMin(String(data.teamSize.min));
+      if (data.teamSize?.max) setTeamSizeMax(String(data.teamSize.max));
 
-  // ─── Submit
+      if (data.registrationStartDate) setRegistrationStart(data.registrationStartDate);
+      if (data.registrationEndDate) setRegistrationDeadline(data.registrationEndDate);
+      if (data.hackathonStartDate) setStartDate(data.hackathonStartDate);
+      if (data.hackathonEndDate) setEndDate(data.hackathonEndDate);
+      if (data.submissionDeadline) setSubmissionDeadline(data.submissionDeadline);
+      if (data.winnerAnnouncementDate) setWinnerAnnouncementDate(data.winnerAnnouncementDate);
+
+      // Handle Prizes array formatting
+      if (Array.isArray(data.prizes)) {
+        const prizeText = data.prizes
+          .map((p: any) => `${p.title || `Rank ${p.rank}`}: ₹${p.cashPrize || p.prize} (${p.benefits?.join(", ") || ""})`)
+          .join("\n");
+        setPrizeDetails(prizeText);
+      }
+
+      // Arrays to text
+      if (Array.isArray(data.eligibility)) setEligibility(data.eligibility.join("\n"));
+      if (Array.isArray(data.submissionRequirements)) setSubmissionRequirements(data.submissionRequirements.join("\n"));
+      if (Array.isArray(data.benefits)) setBenefits(data.benefits.join("\n"));
+      if (Array.isArray(data.rules)) setRules(data.rules.join("\n"));
+
+      // Tracks
+      if (Array.isArray(data.tracks)) {
+        setTracks(
+          data.tracks.map((tr: any) => ({
+            id: uid(),
+            title: tr.name || tr.title || "",
+            description: tr.description || "",
+          }))
+        );
+      }
+
+      // Judging Criteria
+      if (Array.isArray(data.judgingCriteria)) {
+        setCriteria(
+          data.judgingCriteria.map((c: any) => ({
+            id: uid(),
+            title: c.criteria || c.title || "",
+            weightage: String(c.weight || c.weightage || 0),
+          }))
+        );
+      }
+
+      toast.success("✨ JSON imported and form auto-filled successfully!");
+      setShowJsonModal(false);
+    } catch (err) {
+      toast.error("Invalid JSON format. Please check your JSON syntax.");
+    }
+  };
+
+  // Submit Handler
   const handleSubmit = async () => {
+    if (!title || !shortDescription) {
+      toast.error("Title and Short Description are required!");
+      return;
+    }
+
     setLoading(true);
     try {
-      await api.post("/admin/hackathons", {
-        title, slug, shortDescription, fullDescription, bannerImage,
-        prizePool, prizeDetails,
-        maxParticipants: Number(maxParticipants),
-        registrationStart: registrationStart ? new Date(registrationStart) : undefined,
-        registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : undefined,
+      const payload = {
+        title,
+        slug: slug || title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+        theme,
+        mode,
+        status,
+        shortDescription,
+        fullDescription,
+        bannerImage: bannerImage || "https://images.unsplash.com/photo-1518770660439-4636190af475",
+        bannerImageUrl: bannerImage || "https://images.unsplash.com/photo-1518770660439-4636190af475",
+        prizePool: typeof prizePool === "number" ? prizePool : (Number(String(prizePool).replace(/[^0-9]/g, "")) || 100000),
+        prizeDetails,
+        prizes: rawJsonData?.prizes || undefined,
+        maxParticipants: Number(maxParticipants) || 500,
+        teamSizeMin: Number(teamSizeMin) || 1,
+        teamSizeMax: Number(teamSizeMax) || 4,
+        teamSize: { min: Number(teamSizeMin) || 1, max: Number(teamSizeMax) || 4 },
+        registrationStart: registrationStart ? new Date(registrationStart) : new Date(),
+        registrationStartDate: registrationStart ? new Date(registrationStart) : new Date(),
+        registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : new Date(),
+        registrationEndDate: registrationDeadline ? new Date(registrationDeadline) : new Date(),
         startDate: startDate ? new Date(startDate) : new Date(),
+        hackathonStartDate: startDate ? new Date(startDate) : new Date(),
         endDate: endDate ? new Date(endDate) : new Date(),
-        rules, discordLink, websiteLink,
-        teamSizeMin: Number(teamSizeMin),
-        teamSizeMax: Number(teamSizeMax),
-        tracks: tracks.map(({ title, description }) => ({ title, description })),
-        judges: judges.map(({ name, role, company, image }) => ({ name, role, company, image })),
-        sponsors: sponsors.map(({ name, logo, website }) => ({ name, logo, website })),
-        faqs: faqs.map(({ question, answer }) => ({ question, answer })),
-        judgingCriteria: criteria.map(({ title, weightage }) => ({ title, weightage: Number(weightage) })),
-      });
+        hackathonEndDate: endDate ? new Date(endDate) : new Date(),
+        submissionDeadline: submissionDeadline ? new Date(submissionDeadline) : new Date(),
+        winnerAnnouncementDate: winnerAnnouncementDate ? new Date(winnerAnnouncementDate) : new Date(),
+        eligibility: typeof eligibility === "string" ? eligibility.split("\n").map((s) => s.trim()).filter(Boolean) : eligibility,
+        submissionRequirements: typeof submissionRequirements === "string" ? submissionRequirements.split("\n").map((s) => s.trim()).filter(Boolean) : submissionRequirements,
+        benefits: typeof benefits === "string" ? benefits.split("\n").map((s) => s.trim()).filter(Boolean) : benefits,
+        rules: typeof rules === "string" ? rules.split("\n").map((s) => s.trim()).filter(Boolean) : rules,
+        discordLink,
+        websiteLink,
+        tracks: rawJsonData?.tracks || tracks.map(({ title, description }) => ({ title, description })),
+        judgingCriteria: rawJsonData?.judgingCriteria || criteria.map(({ title, weightage }) => ({ title, weightage: Number(weightage) })),
+        isPublished: true,
+      };
+
+      await api.post("/admin/hackathons", payload);
       toast.success("Hackathon created successfully! 🚀");
-      setStep(0);
-    } catch {
-      toast.error("Failed to create hackathon");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to create hackathon");
     } finally {
       setLoading(false);
     }
   };
 
-  const totalWeightage = criteria.reduce((sum, c) => sum + (Number(c.weightage) || 0), 0);
-
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Top bar */}
-      <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center gap-4">
-        <span className="text-violet-400 text-xl">⚡</span>
-        <span className="font-bold text-slate-100 text-lg tracking-tight">HackAdmin</span>
-        <span className="text-slate-600">/</span>
-        <span className="text-slate-400 text-sm">Create Hackathon</span>
-      </header>
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8 font-sans">
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-100 tracking-tight flex items-center gap-2">
+              ⚡ Create New Hackathon
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">Configure full hackathon details or auto-fill with JSON</p>
+          </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-10">
-        <StepBar current={step} />
+          <button
+            type="button"
+            onClick={() => setShowJsonModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 border border-violet-500/40 text-xs font-bold transition flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-violet-400" />
+            Paste JSON & Auto-Fill
+          </button>
+        </div>
 
-        {/* ── Step 0: Basics ── */}
-        {step === 0 && (
-          <Card title="Basic Information" icon="📋">
-            <FieldRow>
+        {/* FORM SECTIONS */}
+        <div className="space-y-6">
+
+          {/* SECTION 1: BASICS */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-violet-400">1. Basic Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Title *</Label>
-                <Input
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Title *</label>
+                <input
+                  type="text"
                   value={title}
-                  onChange={(v) => { setTitle(v); setSlug(v.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")); }}
-                  placeholder="AI Innovation Hackathon 2026"
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
+                  }}
+                  placeholder="Codelura AI Innovation Hackathon 2026"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none focus:border-violet-500"
                 />
               </div>
               <div>
-                <Label>Slug</Label>
-                <Input value={slug} onChange={setSlug} placeholder="ai-innovation-hackathon-2026" />
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Slug</label>
+                <input
+                  type="text"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder="codelura-ai-innovation-hackathon-2026"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none focus:border-violet-500"
+                />
               </div>
-            </FieldRow>
-            <div>
-              <Label>Short Description</Label>
-              <Input value={shortDescription} onChange={setShortDescription} placeholder="Build AI tools solving real world problems" />
             </div>
-            <div>
-              <Label>Full Description</Label>
-              <Textarea value={fullDescription} onChange={setFullDescription} rows={5} placeholder="Describe the hackathon in detail…" />
-            </div>
-            <div>
-              <Label>Banner Image URL</Label>
-              <Input value={bannerImage} onChange={setBannerImage} placeholder="https://images.unsplash.com/…" />
-            </div>
-            {bannerImage && (
-              <div className="rounded-xl overflow-hidden border border-slate-700 h-44">
-                <img src={bannerImage} alt="Banner preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
-              </div>
-            )}
-          </Card>
-        )}
 
-        {/* ── Step 1: Prizes & Dates ── */}
-        {step === 1 && (
-          <Card title="Prizes & Dates" icon="🏆">
-            <FieldRow>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Prize Pool</Label>
-                <Input value={prizePool} onChange={setPrizePool} placeholder="₹50,000" />
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Theme Tagline</label>
+                <input
+                  type="text"
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                  placeholder="Build AI. Solve Real Problems. Create Impact."
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
               </div>
               <div>
-                <Label>Max Participants</Label>
-                <Input type="number" value={maxParticipants} onChange={setMaxParticipants} placeholder="2000" />
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Mode</label>
+                <select
+                  value={mode}
+                  onChange={(e) => setMode(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                >
+                  <option value="Online">Online</option>
+                  <option value="Offline / Hybrid">Offline / Hybrid</option>
+                </select>
               </div>
-            </FieldRow>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                >
+                  <option value="upcoming">Upcoming</option>
+                  <option value="active">Active</option>
+                  <option value="ended">Ended</option>
+                </select>
+              </div>
+            </div>
+
             <div>
-              <Label>Prize Breakdown</Label>
-              <Textarea value={prizeDetails} onChange={setPrizeDetails} rows={2} placeholder="1st Prize ₹30,000, 2nd Prize ₹15,000, 3rd Prize ₹5,000" />
-            </div>
-            <div className="border-t border-slate-700 pt-4">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Timeline</p>
-              <FieldRow>
-                <div>
-                  <Label>Registration Start</Label>
-                  <Input type="datetime-local" value={registrationStart} onChange={setRegistrationStart} />
-                </div>
-                <div>
-                  <Label>Registration Deadline</Label>
-                  <Input type="datetime-local" value={registrationDeadline} onChange={setRegistrationDeadline} />
-                </div>
-                <div>
-                  <Label>Hackathon Start</Label>
-                  <Input type="datetime-local" value={startDate} onChange={setStartDate} />
-                </div>
-                <div>
-                  <Label>Hackathon End</Label>
-                  <Input type="datetime-local" value={endDate} onChange={setEndDate} />
-                </div>
-              </FieldRow>
-            </div>
-          </Card>
-        )}
-
-        {/* ── Step 2: Rules & Links ── */}
-        {step === 2 && (
-          <Card title="Rules & Links" icon="📜">
-            <div>
-              <Label>Rules</Label>
-              <Textarea value={rules} onChange={setRules} rows={4} placeholder="Teams can have 1–4 members. All code must be written during the hackathon. Plagiarism will lead to disqualification." />
-            </div>
-            <FieldRow>
-              <div>
-                <Label>Min Team Size</Label>
-                <Input type="number" value={teamSizeMin} onChange={setTeamSizeMin} placeholder="1" />
-              </div>
-              <div>
-                <Label>Max Team Size</Label>
-                <Input type="number" value={teamSizeMax} onChange={setTeamSizeMax} placeholder="4" />
-              </div>
-              <div>
-                <Label>Discord Link</Label>
-                <Input value={discordLink} onChange={setDiscordLink} placeholder="https://discord.gg/…" />
-              </div>
-              <div>
-                <Label>Website Link</Label>
-                <Input value={websiteLink} onChange={setWebsiteLink} placeholder="https://codelura.com" />
-              </div>
-            </FieldRow>
-          </Card>
-        )}
-
-        {/* ── Step 3: Tracks ── */}
-        {step === 3 && (
-          <Card title="Tracks" icon="🛤️">
-            <RepeatableList
-              items={tracks}
-              onAdd={() => t.add(emptyTrack)}
-              onRemove={t.remove}
-              onChange={t.change}
-              addLabel="Add Track"
-              fields={[
-                { key: "title", label: "Track Title", placeholder: "AI for Healthcare" },
-                { key: "description", label: "Description", placeholder: "Build AI tools to improve diagnostics…", type: "textarea", wide: true },
-              ]}
-            />
-          </Card>
-        )}
-
-        {/* ── Step 4: Judges & Sponsors ── */}
-        {step === 4 && (
-          <div className="flex flex-col gap-6">
-            <Card title="Judges" icon="👨‍⚖️">
-              <RepeatableList
-                items={judges}
-                onAdd={() => j.add(emptyJudge)}
-                onRemove={j.remove}
-                onChange={j.change}
-                addLabel="Add Judge"
-                fields={[
-                  { key: "name",    label: "Name",      placeholder: "Rishabh Gupta" },
-                  { key: "role",    label: "Role",      placeholder: "Senior AI Engineer" },
-                  { key: "company", label: "Company",   placeholder: "Google" },
-                  { key: "image",   label: "Image URL", placeholder: "https://…", wide: true },
-                ]}
+              <label className="block text-xs font-semibold text-slate-400 mb-1">Short Summary Description *</label>
+              <input
+                type="text"
+                value={shortDescription}
+                onChange={(e) => setShortDescription(e.target.value)}
+                placeholder="Build AI-powered solutions for real-world problems and compete with innovators."
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
               />
-            </Card>
-            <Card title="Sponsors" icon="🤝">
-              <RepeatableList
-                items={sponsors}
-                onAdd={() => sp.add(emptySponsor)}
-                onRemove={sp.remove}
-                onChange={sp.change}
-                addLabel="Add Sponsor"
-                fields={[
-                  { key: "name",    label: "Name",     placeholder: "AWS" },
-                  { key: "logo",    label: "Logo URL", placeholder: "https://…" },
-                  { key: "website", label: "Website",  placeholder: "https://aws.amazon.com", wide: true },
-                ]}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1">Full Description</label>
+              <textarea
+                value={fullDescription}
+                onChange={(e) => setFullDescription(e.target.value)}
+                placeholder="Complete overview of the hackathon..."
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none h-28"
               />
-            </Card>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1">Banner Image URL</label>
+              <input
+                type="text"
+                value={bannerImage}
+                onChange={(e) => setBannerImage(e.target.value)}
+                placeholder="https://images.unsplash.com/photo-1518770660439-4636190af475"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+              />
+            </div>
           </div>
-        )}
 
-        {/* ── Step 5: FAQs & Criteria ── */}
-        {step === 5 && (
-          <div className="flex flex-col gap-6">
-            <Card title="FAQs" icon="❓">
-              <RepeatableList
-                items={faqs}
-                onAdd={() => f.add(emptyFaq)}
-                onRemove={f.remove}
-                onChange={f.change}
-                addLabel="Add FAQ"
-                fields={[
-                  { key: "question", label: "Question", placeholder: "Who can participate?" },
-                  { key: "answer",   label: "Answer",   placeholder: "Anyone interested in technology…", type: "textarea", wide: true },
-                ]}
-              />
-            </Card>
-            <Card title="Judging Criteria" icon="⚖️">
-              <RepeatableList
-                items={criteria}
-                onAdd={() => c.add(emptyCriteria)}
-                onRemove={c.remove}
-                onChange={c.change}
-                addLabel="Add Criterion"
-                fields={[
-                  { key: "title",     label: "Criterion",    placeholder: "Innovation" },
-                  { key: "weightage", label: "Weightage (%)", placeholder: "40", type: "number" },
-                ]}
-              />
-              {/* Live weightage bar */}
-              {criteria.length > 0 && (
-                <div>
-                  <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-                    <span>Weightage Distribution</span>
-                    <span className={totalWeightage === 100 ? "text-emerald-400" : totalWeightage > 100 ? "text-red-400" : "text-amber-400"}>
-                      {totalWeightage}% {totalWeightage === 100 ? "✓" : totalWeightage > 100 ? "(over 100%)" : "(incomplete)"}
-                    </span>
-                  </div>
-                  <div className="flex h-6 rounded-lg overflow-hidden gap-0.5 bg-slate-900 p-0.5">
-                    {criteria.map((cr, i) => {
-                      const w = Math.min(Number(cr.weightage) || 0, 100);
-                      const colors = ["bg-violet-500","bg-amber-400","bg-emerald-500","bg-pink-500","bg-sky-500"];
-                      return w > 0 ? (
-                        <div
-                          key={cr.id}
-                          className={`${colors[i % colors.length]} rounded flex items-center justify-center text-[9px] font-bold text-black overflow-hidden transition-all`}
-                          style={{ width: `${(w / Math.max(totalWeightage, 100)) * 100}%` }}
-                          title={`${cr.title}: ${cr.weightage}%`}
-                        >
-                          {w > 8 && cr.title.slice(0, 8)}
-                        </div>
-                      ) : null;
-                    })}
-                  </div>
-                </div>
-              )}
-            </Card>
+          {/* SECTION 2: DATES & TIMELINE */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-violet-400">2. Dates & Schedule</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Registration Start</label>
+                <input
+                  type="date"
+                  value={registrationStart}
+                  onChange={(e) => setRegistrationStart(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Registration End</label>
+                <input
+                  type="date"
+                  value={registrationDeadline}
+                  onChange={(e) => setRegistrationDeadline(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Hackathon Start</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Hackathon End</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Submission Deadline</label>
+                <input
+                  type="date"
+                  value={submissionDeadline}
+                  onChange={(e) => setSubmissionDeadline(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Winner Announcement</label>
+                <input
+                  type="date"
+                  value={winnerAnnouncementDate}
+                  onChange={(e) => setWinnerAnnouncementDate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+            </div>
           </div>
-        )}
 
-        {/* ── Navigation ── */}
-        <div className="flex items-center justify-between mt-8">
+          {/* SECTION 3: PRIZES & TEAM */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-violet-400">3. Prize Pool & Team Size</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Total Prize Pool (₹)</label>
+                <input
+                  type="text"
+                  value={prizePool}
+                  onChange={(e) => setPrizePool(e.target.value)}
+                  placeholder="100000"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Max Participants</label>
+                <input
+                  type="number"
+                  value={maxParticipants}
+                  onChange={(e) => setMaxParticipants(e.target.value)}
+                  placeholder="500"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Min Team Size</label>
+                <input
+                  type="number"
+                  value={teamSizeMin}
+                  onChange={(e) => setTeamSizeMin(e.target.value)}
+                  placeholder="1"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Max Team Size</label>
+                <input
+                  type="number"
+                  value={teamSizeMax}
+                  onChange={(e) => setTeamSizeMax(e.target.value)}
+                  placeholder="4"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1">Prize Breakdown Details</label>
+              <textarea
+                value={prizeDetails}
+                onChange={(e) => setPrizeDetails(e.target.value)}
+                placeholder="1st Prize: ₹50,000 + Internship Opportunity&#10;2nd Prize: ₹30,000 + Certificate&#10;3rd Prize: ₹20,000 + Mentorship"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none h-24"
+              />
+            </div>
+          </div>
+
+          {/* SECTION 4: TRACKS */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-violet-400">4. Hackathon Tracks</h2>
+              <button
+                type="button"
+                onClick={() => setTracks([...tracks, emptyTrack()])}
+                className="text-xs font-semibold text-violet-400 hover:underline flex items-center gap-1"
+              >
+                + Add Track
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {tracks.map((tr, i) => (
+                <div key={tr.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex items-start gap-3">
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={tr.title}
+                      onChange={(e) => {
+                        const copy = [...tracks];
+                        copy[i].title = e.target.value;
+                        setTracks(copy);
+                      }}
+                      placeholder="Track Title (e.g. Generative AI)"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={tr.description}
+                      onChange={(e) => {
+                        const copy = [...tracks];
+                        copy[i].description = e.target.value;
+                        setTracks(copy);
+                      }}
+                      placeholder="Track Description"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setTracks(tracks.filter((_, idx) => idx !== i))}
+                    className="text-red-400 hover:text-red-300 p-2 text-sm"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* SECTION 5: JUDGING CRITERIA */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-violet-400">5. Judging Criteria</h2>
+              <button
+                type="button"
+                onClick={() => setCriteria([...criteria, emptyCriteria()])}
+                className="text-xs font-semibold text-violet-400 hover:underline flex items-center gap-1"
+              >
+                + Add Criteria
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {criteria.map((cr, i) => (
+                <div key={cr.id} className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={cr.title}
+                    onChange={(e) => {
+                      const copy = [...criteria];
+                      copy[i].title = e.target.value;
+                      setCriteria(copy);
+                    }}
+                    placeholder="Criteria (e.g. Innovation)"
+                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none"
+                  />
+                  <input
+                    type="number"
+                    value={cr.weightage}
+                    onChange={(e) => {
+                      const copy = [...criteria];
+                      copy[i].weightage = e.target.value;
+                      setCriteria(copy);
+                    }}
+                    placeholder="25%"
+                    className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-center text-slate-100 outline-none font-bold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCriteria(criteria.filter((_, idx) => idx !== i))}
+                    className="text-red-400 p-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* SECTION 6: REQUIREMENTS, RULES & BENEFITS */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-violet-400">6. Requirements, Eligibility & Rules</h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Eligibility (1 per line)</label>
+                <textarea
+                  value={eligibility}
+                  onChange={(e) => setEligibility(e.target.value)}
+                  placeholder="College students&#10;Recent graduates&#10;Developers"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 outline-none h-24"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Submission Requirements (1 per line)</label>
+                <textarea
+                  value={submissionRequirements}
+                  onChange={(e) => setSubmissionRequirements(e.target.value)}
+                  placeholder="Project name&#10;Problem statement&#10;GitHub repository&#10;Live demo URL"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 outline-none h-24"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Benefits & Perks (1 per line)</label>
+                <textarea
+                  value={benefits}
+                  onChange={(e) => setBenefits(e.target.value)}
+                  placeholder="Technical mentorship&#10;Internship opportunities&#10;Participation certificate"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 outline-none h-24"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Official Rules (1 per line)</label>
+                <textarea
+                  value={rules}
+                  onChange={(e) => setRules(e.target.value)}
+                  placeholder="Participants can participate individually or in teams of up to 4 members.&#10;Projects must be built during the hackathon period."
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 outline-none h-24"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SUBMIT BUTTON */}
           <button
             type="button"
-            onClick={() => setStep((s) => s - 1)}
-            disabled={step === 0}
-            className="px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-sm font-semibold hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-4 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-2xl shadow-xl shadow-violet-600/30 transition-all text-base disabled:opacity-50"
           >
-            ← Back
+            {loading ? "Creating Hackathon..." : "🚀 Publish Hackathon"}
           </button>
-
-          <span className="text-xs text-slate-600">{step + 1} / {STEPS.length}</span>
-
-          {step < STEPS.length - 1 ? (
-            <button
-              type="button"
-              onClick={() => setStep((s) => s + 1)}
-              className="px-5 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-500 transition"
-            >
-              Continue →
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-amber-500 text-white text-sm font-bold hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition shadow-lg shadow-violet-900/30"
-            >
-              {loading ? "Creating…" : "🚀 Create Hackathon"}
-            </button>
-          )}
         </div>
       </div>
+
+      {/* JSON AUTO-FILL MODAL */}
+      {showJsonModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl bg-slate-900 border border-violet-500/40 rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-bold text-slate-100 text-base flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-violet-400" /> Paste Hackathon Creation JSON
+              </h3>
+              <button onClick={() => setShowJsonModal(false)} className="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <p className="text-xs text-slate-400">Paste your hackathon JSON payload below to automatically fill all form fields.</p>
+
+            <textarea
+              value={jsonText}
+              onChange={(e) => setJsonText(e.target.value)}
+              placeholder='{\n  "title": "Codelura AI Innovation Hackathon 2026",\n  "slug": "codelura-ai-innovation-hackathon-2026",\n  "prizePool": 100000\n}'
+              className="w-full bg-slate-950 border border-slate-700 rounded-2xl p-4 text-xs font-mono text-slate-200 outline-none h-64"
+            />
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowJsonModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-400 text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleImportJson}
+                className="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold shadow-lg shadow-violet-600/30"
+              >
+                Auto-Fill Form ✨
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

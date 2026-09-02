@@ -7,34 +7,37 @@ import ParticipateButton from "./ParticipateButton";
 interface Hackathon {
   id?: string;
   _id?: string;
+  slug?: string;
   title: string;
   shortDescription: string;
   bannerImage: string;
   startDate: string;
   endDate: string;
   status: "upcoming" | "ongoing" | "active" | "completed" | "draft" | "ended";
-  prizePool: string;
+  prizePool: string | number;
   participantsCount: number;
   maxParticipants?: number;
   submissionsCount?: number;
   teamSizeMin?: number;
   teamSizeMax?: number;
-  tracks?: { _id: string; title: string }[];
+  tracks?: { _id?: string; title?: string; name?: string }[];
   isPublished?: boolean;
   registrationDeadline?: string;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; text: string; bg: string }> = {
-  ongoing:   { label: "Live Now",  dot: "bg-emerald-400", text: "text-emerald-300", bg: "bg-emerald-400/10 border-emerald-400/20" },
-  active:    { label: "Live Now",  dot: "bg-emerald-400", text: "text-emerald-300", bg: "bg-emerald-400/10 border-emerald-400/20" },
-  upcoming:  { label: "Upcoming",  dot: "bg-amber-400",   text: "text-amber-300",   bg: "bg-amber-400/10 border-amber-400/20"   },
-  draft:     { label: "Draft",     dot: "bg-gray-400",    text: "text-gray-400",    bg: "bg-gray-400/10 border-gray-400/20"    },
-  completed: { label: "Ended",     dot: "bg-rose-400",    text: "text-rose-300",    bg: "bg-rose-400/10 border-rose-400/20"    },
-  ended:     { label: "Ended",     dot: "bg-rose-400",    text: "text-rose-300",    bg: "bg-rose-400/10 border-rose-400/20"    },
+  ongoing:   { label: "Live Now",  dot: "bg-emerald-400", text: "text-emerald-300", bg: "bg-emerald-500/20 border-emerald-500/40" },
+  active:    { label: "Live Now",  dot: "bg-emerald-400", text: "text-emerald-300", bg: "bg-emerald-500/20 border-emerald-500/40" },
+  upcoming:  { label: "Upcoming",  dot: "bg-amber-400",   text: "text-amber-300",   bg: "bg-amber-500/20 border-amber-500/40"   },
+  draft:     { label: "Draft",     dot: "bg-slate-400",   text: "text-slate-400",   bg: "bg-slate-500/20 border-slate-500/30"   },
+  completed: { label: "Ended",     dot: "bg-rose-400",    text: "text-rose-300",    bg: "bg-rose-500/20 border-rose-500/30"    },
+  ended:     { label: "Ended",     dot: "bg-rose-400",    text: "text-rose-300",    bg: "bg-rose-500/20 border-rose-500/30"    },
 };
 
 function fmt(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-IN", {
+  if (!dateStr) return "TBA";
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString("en-IN", {
     day: "numeric", month: "short", year: "numeric",
   });
 }
@@ -44,250 +47,135 @@ function daysLeft(dateStr: string): number {
 }
 
 export default function HackathonCard({ hackathon }: { hackathon: Hackathon }) {
-  const id     = hackathon.id || hackathon._id;
-  const cfg    = STATUS_CONFIG[hackathon.status] ?? STATUS_CONFIG.upcoming;
-  const dl     = hackathon.registrationDeadline ? daysLeft(hackathon.registrationDeadline) : null;
-  const pct    = hackathon.maxParticipants
-    ? Math.min(100, Math.round((hackathon.participantsCount / hackathon.maxParticipants) * 100))
-    : null;
+  const targetId = hackathon.slug || hackathon.id || hackathon._id;
+  const cfg = STATUS_CONFIG[hackathon.status] ?? STATUS_CONFIG.upcoming;
+  const dl = hackathon.registrationDeadline ? daysLeft(hackathon.registrationDeadline) : null;
+  const maxP = hackathon.maxParticipants || 500;
+  const currP = hackathon.participantsCount || 0;
+  const pct = Math.min(100, Math.round((currP / maxP) * 100));
+
+  const prizePoolFormatted = typeof hackathon.prizePool === "number"
+    ? `₹${hackathon.prizePool.toLocaleString("en-IN")}`
+    : hackathon.prizePool || "₹1,00,000";
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+    <div className="group relative bg-[#0e1026] hover:bg-[#121430] border border-white/10 hover:border-violet-500/40 rounded-3xl overflow-hidden flex flex-col transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-violet-600/20 hover:-translate-y-1.5">
 
-        .hk-card {
-          font-family: 'Outfit', sans-serif;
-          background: #0e0e16;
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 24px;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.35s ease, border-color 0.3s ease;
-        }
-        .hk-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 24px;
-          background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(124,58,237,0.18) 0%, transparent 70%);
-          pointer-events: none;
-          z-index: 0;
-          transition: opacity 0.4s;
-          opacity: 0;
-        }
-        .hk-card:hover::before { opacity: 1; }
-        .hk-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,92,246,0.25);
-          border-color: rgba(139,92,246,0.3);
-        }
+      {/* Banner Image */}
+      <div className="relative h-48 sm:h-52 w-full overflow-hidden">
+        <Image
+          src={hackathon.bannerImage || "https://images.unsplash.com/photo-1518770660439-4636190af475"}
+          alt={hackathon.title}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0e1026] via-[#0e1026]/40 to-transparent" />
 
-        .hk-img-wrap { position: relative; height: 200px; width: 100%; overflow: hidden; }
-        .hk-img-wrap img { transition: transform 0.6s cubic-bezier(.22,.68,0,1.2) !important; }
-        .hk-card:hover .hk-img-wrap img { transform: scale(1.07) !important; }
-        .hk-img-overlay {
-          position: absolute; inset: 0;
-          background: linear-gradient(to top, #0e0e16 0%, rgba(14,14,22,0.4) 45%, transparent 100%);
-        }
+        {/* Top Badges Overlaid */}
+        <div className="absolute top-3.5 right-3.5 z-10">
+          <span className={`inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border backdrop-blur-md ${cfg.text} ${cfg.bg}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+            {cfg.label}
+          </span>
+        </div>
 
-        .hk-status {
-          display: inline-flex; align-items: center; gap: 6px;
-          font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-          padding: 5px 11px; border-radius: 99px; border: 1px solid;
-        }
-        .hk-status-dot { width: 6px; height: 6px; border-radius: 50%; }
-        .hk-status-dot.live { animation: pulse-dot 1.6s ease-in-out infinite; }
-        @keyframes pulse-dot {
-          0%,100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
-          50%      { opacity: .7; box-shadow: 0 0 0 4px transparent; }
-        }
-
-        .hk-body { padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 16px; flex: 1; position: relative; z-index: 1; }
-
-        .hk-title {
-          font-size: 1.2rem; font-weight: 800; line-height: 1.25; color: #fff;
-          transition: color 0.2s;
-          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-        }
-        .hk-card:hover .hk-title { color: #c4b5fd; }
-
-        .hk-desc {
-          font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.55;
-          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-        }
-
-        .hk-divider { height: 1px; background: rgba(255,255,255,0.06); }
-
-        .hk-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .hk-stat {
-          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-          border-radius: 14px; padding: 12px 14px;
-        }
-        .hk-stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
-        .hk-stat-value { font-size: 1.1rem; font-weight: 800; color: #fff; line-height: 1; }
-
-        .hk-prize { color: #a78bfa; }
-        .hk-participants { color: #38bdf8; }
-
-        .hk-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-        .hk-tag {
-          font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
-          background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
-          color: #c4b5fd; padding: 3px 10px; border-radius: 99px;
-        }
-
-        .hk-date-row {
-          display: flex; align-items: center; gap: 6px;
-          font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.4);
-          font-family: 'Space Mono', monospace;
-        }
-        .hk-date-row svg { flex-shrink: 0; opacity: 0.5; }
-
-        .hk-progress-wrap { display: flex; flex-direction: column; gap: 5px; }
-        .hk-progress-label { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,0.35); }
-        .hk-progress-bar { height: 4px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden; }
-        .hk-progress-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #38bdf8); border-radius: 99px; transition: width 0.6s ease; }
-
-        .hk-deadline-badge {
-          display: inline-flex; align-items: center; gap: 5px;
-          font-size: 11px; font-weight: 700; padding: 4px 11px;
-          background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2);
-          color: #fbbf24; border-radius: 99px; letter-spacing: 0.04em;
-        }
-
-        .hk-footer { margin-top: auto; padding-top: 4px; }
-      `}</style>
-
-      <div className="hk-card">
-        {/* Banner Image */}
-        <div className="hk-img-wrap">
-          <Image
-            src={hackathon.bannerImage}
-            alt={hackathon.title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover"
-          />
-          <div className="hk-img-overlay" />
-
-          {/* Status badge — overlaid on image */}
-          <div style={{ position: "absolute", top: 14, right: 14, zIndex: 2 }}>
-            <span className={`hk-status ${cfg.text} ${cfg.bg}`}>
-              <span className={`hk-status-dot ${cfg.dot} ${hackathon.status === "ongoing" || hackathon.status === "active" ? "live" : ""}`} style={{ background: cfg.dot.replace("bg-", "").replace("-400", ""), backgroundColor: "currentColor", color: "inherit" }} />
-              {cfg.label}
+        {dl !== null && dl > 0 && (
+          <div className="absolute bottom-3.5 left-3.5 z-10">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 backdrop-blur-md">
+              ⏳ {dl}d left to register
             </span>
           </div>
-
-          {/* Days left badge */}
-          {dl !== null && dl > 0 && (
-            <div style={{ position: "absolute", bottom: 14, left: 14, zIndex: 2 }}>
-              <span className="hk-deadline-badge">
-                ⏳ {dl}d to register
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Body */}
-        <div className="hk-body">
-
-          {/* Title + desc */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <Link href={`/hackathons/${id}`}>
-              <div className="hk-title">{hackathon.title}</div>
-            </Link>
-            <div className="hk-desc">{hackathon.shortDescription}</div>
-          </div>
-
-          {/* Tracks */}
-          {hackathon.tracks && hackathon.tracks.length > 0 && (
-            <div className="hk-tags">
-              {hackathon.tracks.slice(0, 3).map((t) => (
-                <span key={t._id} className="hk-tag">{t.title}</span>
-              ))}
-              {hackathon.tracks.length > 3 && (
-                <span className="hk-tag">+{hackathon.tracks.length - 3} more</span>
-              )}
-            </div>
-          )}
-
-          <div className="hk-divider" />
-
-          {/* Stats grid */}
-          <div className="hk-stats">
-            <div className="hk-stat">
-              <div className="hk-stat-label">Prize Pool</div>
-              <div className={`hk-stat-value hk-prize`}>{hackathon.prizePool}</div>
-            </div>
-            <div className="hk-stat">
-              <div className="hk-stat-label">Participants</div>
-              <div className={`hk-stat-value hk-participants`}>
-                {hackathon.participantsCount}
-                {hackathon.maxParticipants ? (
-                  <span style={{ fontSize: "10px", fontWeight: 500, color: "rgba(255,255,255,0.3)", marginLeft: 3 }}>
-                    /{hackathon.maxParticipants}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-            {hackathon.teamSizeMin != null && hackathon.teamSizeMax != null && (
-              <div className="hk-stat">
-                <div className="hk-stat-label">Team Size</div>
-                <div className="hk-stat-value" style={{ color: "#f0abfc" }}>
-                  {hackathon.teamSizeMin}–{hackathon.teamSizeMax}
-                </div>
-              </div>
-            )}
-            {hackathon.submissionsCount != null && (
-              <div className="hk-stat">
-                <div className="hk-stat-label">Submissions</div>
-                <div className="hk-stat-value" style={{ color: "#6ee7b7" }}>
-                  {hackathon.submissionsCount}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Participant progress bar */}
-          {pct !== null && (
-            <div className="hk-progress-wrap">
-              <div className="hk-progress-label">
-                <span>Seats filled</span>
-                <span>{pct}%</span>
-              </div>
-              <div className="hk-progress-bar">
-                <div className="hk-progress-fill" style={{ width: `${pct}%` }} />
-              </div>
-            </div>
-          )}
-
-          {/* Dates */}
-          <div className="hk-date-row">
-            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            {fmt(hackathon.startDate)} → {fmt(hackathon.endDate)}
-          </div>
-
-          {/* CTA */}
-          <div className="hk-footer">
-            {/* <ParticipateButton hackathon={hackathon} /> */}
-            <ParticipateButton
-                  hackathon={{
-                    id: hackathon.id || hackathon._id || "",
-                    registrationClosed: hackathon.registrationDeadline
-                      ? new Date() > new Date(hackathon.registrationDeadline)
-                      : false,
-                    isRegistered: false
-                  }}
-                />
-          </div>
-        </div>
+        )}
       </div>
-    </>
+
+      {/* Card Content Body */}
+      <div className="p-5 sm:p-6 flex flex-col gap-4 flex-1">
+
+        {/* Title & Short Description */}
+        <div className="space-y-1.5">
+          <Link href={`/hackathons/${targetId}`}>
+            <h3 className="text-lg sm:text-xl font-extrabold text-white group-hover:text-violet-300 transition line-clamp-2 leading-snug">
+              {hackathon.title}
+            </h3>
+          </Link>
+          <p className="text-xs sm:text-sm text-slate-400 line-clamp-2 leading-relaxed">
+            {hackathon.shortDescription}
+          </p>
+        </div>
+
+        {/* Tracks Tags */}
+        {hackathon.tracks && hackathon.tracks.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {hackathon.tracks.slice(0, 3).map((t, idx) => (
+              <span key={t._id || idx} className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-violet-500/10 text-violet-300 border border-violet-500/20">
+                {t.title || t.name}
+              </span>
+            ))}
+            {hackathon.tracks.length > 3 && (
+              <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/5 text-slate-400 border border-white/10">
+                +{hackathon.tracks.length - 3} more
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="h-px bg-white/10" />
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="bg-black/30 border border-white/5 rounded-xl p-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Prize Pool</span>
+            <span className="text-sm sm:text-base font-black text-amber-400 block">{prizePoolFormatted}</span>
+          </div>
+
+          <div className="bg-black/30 border border-white/5 rounded-xl p-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Participants</span>
+            <span className="text-sm sm:text-base font-black text-indigo-300 block">
+              {currP} <span className="text-[10px] text-slate-500 font-normal">/ {maxP}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Seat Fill Progress Bar */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-[10px] font-semibold text-slate-400">
+            <span>Slots filled</span>
+            <span className="font-bold text-violet-400">{pct}%</span>
+          </div>
+          <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-gradient-to-r from-violet-600 to-indigo-400 h-full rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+
+        {/* Schedule Date Row */}
+        <div className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5 pt-1">
+          <span>📅</span> {fmt(hackathon.startDate)} → {fmt(hackathon.endDate)}
+        </div>
+
+        {/* Actions Footer */}
+        <div className="pt-2 mt-auto space-y-2">
+          <ParticipateButton
+            hackathon={{
+              id: hackathon.id || hackathon._id || "",
+              title: hackathon.title,
+              tracks: hackathon.tracks?.map((t) => ({ _id: t._id, title: t.title || t.name || "Track" })),
+              registrationClosed: hackathon.registrationDeadline
+                ? new Date() > new Date(hackathon.registrationDeadline)
+                : false,
+              isRegistered: false,
+            }}
+          />
+
+          <Link
+            href={`/hackathons/${targetId}`}
+            className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-xs font-bold transition flex items-center justify-center gap-1.5"
+          >
+            View Event Details →
+          </Link>
+        </div>
+
+      </div>
+    </div>
   );
 }
