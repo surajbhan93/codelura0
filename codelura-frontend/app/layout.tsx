@@ -166,7 +166,7 @@ export default function RootLayout({
             })}
             </Script>
 
-         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "275588978395-7nl48cmb522d2b12ikpnrugakumqb6kp.apps.googleusercontent.com"}>
 
          
          <CursorGlow />

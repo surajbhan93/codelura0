@@ -2,6 +2,7 @@ import express from "express";
 import {
   signup,
   login,
+  googleLogin,
   verifyEmail,
   me,
   resendVerification,
@@ -23,7 +24,8 @@ const router = express.Router();
 
 router.post("/signup", signup);
 router.post("/login", login);
-router.get("/me", me);       // 🔥 YE LINE MISS THI
+router.post("/google", googleLogin);
+router.get("/me", me);
 router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerification);
 

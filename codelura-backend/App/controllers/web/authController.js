@@ -503,21 +503,33 @@ export const changePassword = async (req, res) => {
 
 export const me = async (req, res) => {
   try {
-    const token = req.cookies.token; // 👈 wahi cookie jo login pe set hoti hai
+    let token = null;
+
+    // 1️⃣ Check Bearer header from localStorage
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    }
+
+    // 2️⃣ Fallback to Cookies
+    if (!token && req.cookies) {
+      token = req.cookies.token || req.cookies.auth_token;
+    }
 
     if (!token) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "supersecretjwtkey");
+    const userId = decoded.id || decoded._id;
 
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    return res.json({ user });
+    return res.json({ success: true, user });
   } catch (err) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -571,7 +583,7 @@ export const getAllUsers = async (req, res) => {
     const [users, total] = await Promise.all([
       User.find(query)
         .select("-password -emailVerifyToken -resetPasswordToken -resetPasswordExpire")
-        .sort({ createdAt: -1 })
+        .sort({ _id: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
@@ -647,6 +659,103 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     console.error("DELETE USER ERROR 👉", error);
     res.status(500).json({ message: "Failed to delete user" });
+  }
+};
+
+/* ─────────────────────────────────────────────────
+   ✅ GOOGLE LOGIN / SIGNUP AUTHENTICATION
+───────────────────────────────────────────────── */
+export const googleLogin = async (req, res) => {
+  try {
+    const { token, credential, email: bodyEmail, name: bodyName, picture: bodyPicture } = req.body;
+
+    let email = bodyEmail;
+    let name = bodyName;
+    let avatar = bodyPicture;
+
+    // Decode Google ID Token if passed
+    const idToken = token || credential;
+    if (idToken && typeof idToken === "string") {
+      try {
+        const decoded = jwt.decode(idToken);
+        if (decoded && decoded.email) {
+          email = decoded.email;
+          name = decoded.name || name;
+          avatar = decoded.picture || avatar;
+        }
+      } catch (e) {
+        console.error("JWT Decode error:", e);
+      }
+    }
+
+    if (!email) {
+      return res.status(400).json({ message: "Invalid Google authentication data (email missing)" });
+    }
+
+    email = email.toLowerCase().trim();
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user in MongoDB (Will show in Admin Panel!)
+      const randomPassword = crypto.randomBytes(16).toString("hex");
+      user = await User.create({
+        name: name || email.split("@")[0],
+        email,
+        password: randomPassword,
+        role: "user",
+        isEmailVerified: true,
+      });
+      console.log(`✅ New Google User Created in DB: ${user.email} (${user._id})`);
+    } else {
+      // Ensure email verified flag is set
+      if (!user.isEmailVerified) {
+        user.isEmailVerified = true;
+        await user.save();
+      }
+    }
+
+    // Generate JWT Token for Codelura App
+    const jwtToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || "supersecretjwtkey",
+      { expiresIn: "7d" }
+    );
+
+    // Set Deploy-Safe HTTP-Only Cookie
+    res.cookie("token", jwtToken, {
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    res.cookie("auth_token", jwtToken, {
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged in with Google successfully",
+      token: jwtToken,
+      user: {
+        id: user._id,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+      },
+    });
+  } catch (error) {
+    console.error("GOOGLE LOGIN ERROR 👉", error);
+    return res.status(500).json({ message: error.message || "Google login failed" });
   }
 };
 

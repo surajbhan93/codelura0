@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ limit: "200" });
+      const params = new URLSearchParams({ limit: "500" });
       if (roleFilter !== "all")     params.set("role",     roleFilter);
       if (verifiedFilter !== "all") params.set("verified", verifiedFilter);
       const { data } = await api.get(`/auth/admin/users?${params}`, { headers: getHeaders() });

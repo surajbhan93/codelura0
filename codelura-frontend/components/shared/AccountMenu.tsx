@@ -3,16 +3,40 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { User, ChevronDown, Sparkles } from "lucide-react";
+import api from "@/lib/api";
 
 export default function AccountMenu({ jobsAlertUrl }: { jobsAlertUrl: string }) {
   const [role, setRole] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Reading localStorage only after mount avoids a server/client
-  // hydration mismatch (server always renders "logged out").
   useEffect(() => {
-    setRole(localStorage.getItem("role"));
+    const token = localStorage.getItem("token");
+    const storedRole = localStorage.getItem("role");
+
+    if (token) {
+      setIsLoggedIn(true);
+      setRole(storedRole || "user");
+
+      // Fetch user info dynamically
+      api.get("/auth/me")
+        .then((res) => {
+          if (res?.data?.user) {
+            setUser(res.data.user);
+            setRole(res.data.user.role || storedRole || "user");
+            localStorage.setItem("role", res.data.user.role || storedRole || "user");
+          }
+        })
+        .catch(() => {
+          // Token invalid or expired
+        });
+    } else {
+      setIsLoggedIn(false);
+      setRole(null);
+      setUser(null);
+    }
   }, []);
 
   useEffect(() => {
@@ -36,12 +60,16 @@ export default function AccountMenu({ jobsAlertUrl }: { jobsAlertUrl: string }) 
       window.location.href = "/auth/login";
     } catch (err) {
       console.error("Logout failed", err);
+      localStorage.clear();
+      window.location.href = "/auth/login";
     }
   }
 
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
+
   return (
     <div className="desktop-right" style={{ gap: "12px" }}>
-      {!role ? (
+      {!isLoggedIn ? (
         <>
           <Link href="/auth/login" style={{ textDecoration: "none" }}>
             <button className="btn-login">Login</button>
@@ -55,9 +83,11 @@ export default function AccountMenu({ jobsAlertUrl }: { jobsAlertUrl: string }) 
         <div ref={ref} style={{ position: "relative" }}>
           <button onClick={() => setOpen((p) => !p)} className="user-btn">
             <div className="user-avatar">
-              <User size={14} />
+              {user?.name ? initial : <User size={14} />}
             </div>
-            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "rgba(255, 255, 255, 0.85)" }}>Account</span>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "rgba(255, 255, 255, 0.85)" }}>
+              {user?.name?.split(" ")[0] || "Account"}
+            </span>
             <ChevronDown
               size={14}
               className={`chevron-icon ${open ? "open" : ""}`}

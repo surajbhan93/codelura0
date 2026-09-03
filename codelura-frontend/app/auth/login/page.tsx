@@ -14,7 +14,15 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const redirect = searchParams.get("redirect") || "/";
+  const redirectParam = searchParams.get("redirect");
+  const defaultTarget = (role: string) => {
+    if (role === "admin") return "/admin";
+    if (redirectParam && redirectParam !== "/" && redirectParam !== "/login" && redirectParam !== "/auth/login") {
+      return redirectParam;
+    }
+    return "/dashboard";
+  };
+
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -23,6 +31,7 @@ function LoginForm() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role") || "user";
 
     const isLoggedIn =
       token &&
@@ -31,9 +40,20 @@ function LoginForm() {
       token.trim() !== "";
 
     if (isLoggedIn) {
-      router.push(redirect);
+      const target = defaultTarget(role);
+      if (window.location.pathname !== target && target !== "/auth/login" && target !== "/login") {
+        api.get("/auth/me")
+          .then(() => {
+            window.location.href = target;
+          })
+          .catch(() => {
+            // Token is stale/invalid, clear to stop loop
+            localStorage.removeItem("token");
+            localStorage.removeItem("role");
+          });
+      }
     }
-  }, [redirect, router]);
+  }, []);
 
   const submit = async () => {
     if (!form.email || !form.password) {
@@ -55,13 +75,7 @@ function LoginForm() {
 
       toast.success("Welcome back to Codelura 🚀");
 
-      if (user.role === "admin") {
-        window.location.href = "/admin";
-      } else {
-        // 🔥 redirect back to premium page
-        localStorage.setItem("openBuyModal", "true");
-        router.push(redirect);
-      }
+      window.location.href = defaultTarget(user.role);
 
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Login failed");
@@ -106,23 +120,32 @@ function LoginForm() {
             </div>
 
             {/* GOOGLE LOGIN */}
-            <div className="mb-4">
+            <div className="mb-4 flex justify-center w-full">
               <GoogleLogin
                 onSuccess={async (res) => {
-                  await api.post("/auth/google", {
-                    token: res.credential
-                  });
-                  toast.success("Logged in with Google 🚀");
+                  try {
+                    const response = await api.post("/auth/google", {
+                      token: res.credential
+                    });
+
+                    if (response.data?.token) {
+                      localStorage.setItem("token", response.data.token);
+                      localStorage.setItem("role", response.data.user?.role || "user");
+
+                      toast.success("Logged in with Google 🚀");
+
+                      const targetUrl = defaultTarget(response.data.user?.role || "user");
+                      window.location.href = targetUrl;
+                    }
+                  } catch (err: any) {
+                    console.error(err);
+                    toast.error(err.response?.data?.message || "Google login failed");
+                  }
                 }}
                 onError={() => toast.error("Google login failed")}
-                width="100%"
+                width="350"
               />
             </div>
-
-            {/* login by github */}
-            <a href="http://localhost:3002/api/auth/github">
-              <button>Login with GitHub</button>
-            </a>
 
             {/* DIVIDER */}
             <div className="my-5 flex items-center gap-3">

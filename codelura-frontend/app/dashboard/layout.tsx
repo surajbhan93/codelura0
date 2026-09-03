@@ -38,7 +38,7 @@ export default function DashboardLayout({
       <Sidebar onLogout={handleLogout} />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-gray-100 min-h-screen">
+      <main className="flex-1 bg-[#0b0d17] text-white min-h-screen">
         {children}
       </main>
 

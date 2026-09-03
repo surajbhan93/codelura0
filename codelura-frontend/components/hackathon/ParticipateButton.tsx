@@ -78,7 +78,8 @@ export default function ParticipateButton({ hackathon }: { hackathon: Hackathon 
   if (!hackathon) return null;
 
   const handleOpenModal = () => {
-    if (!user) {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!user && !token) {
       toast.error("Please login first to participate");
       router.push(`/auth/login?redirect=/hackathons/${hackathon.id}`);
       return;

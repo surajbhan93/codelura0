@@ -69,16 +69,32 @@ window.location.href = "/auth/check-email";
             </p>
 
             {/* GOOGLE LOGIN */}
-            {/* <div className="w-full">
+            <div className="w-full mb-4 flex justify-center">
               <GoogleLogin
                 onSuccess={async (res) => {
-                  await api.post("/auth/google", { token: res.credential });
-                  toast.success("Signed in with Google 🚀");
+                  try {
+                    const response = await api.post("/auth/google", {
+                      token: res.credential
+                    });
+
+                    if (response.data?.token) {
+                      localStorage.setItem("token", response.data.token);
+                      localStorage.setItem("role", response.data.user?.role || "user");
+
+                      toast.success("Account created with Google 🚀");
+
+                      const targetUrl = response.data.user?.role === "admin" ? "/admin" : "/dashboard";
+                      window.location.href = targetUrl;
+                    }
+                  } catch (err: any) {
+                    console.error(err);
+                    toast.error(err.response?.data?.message || "Google signup failed");
+                  }
                 }}
                 onError={() => toast.error("Google signup failed")}
-                width="100%"
+                width="350"
               />
-            </div> */}
+            </div>
 
             {/* DIVIDER */}
             <div className="my-5 flex items-center gap-3">
