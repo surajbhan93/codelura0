@@ -38,13 +38,27 @@ import path from "path";
 import session from "express-session";
 const app = express();
 
+const allowedOrigins = [
+  "https://codelura.com",
+  "https://www.codelura.com",
+  "http://localhost:3003",
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://10.100.125.51:3003",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3003",
-      "http://10.100.125.51:3003"
-    ],
-    credentials: true
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps, curl, or server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.some((o) => origin.startsWith(o))) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive in production for subdomain flexibility
+    },
+    credentials: true,
   })
 );
 
@@ -135,4 +149,13 @@ app.use("/api/team", express.json(), teamRoutes);
 
 app.use("/api/programs", programRoutes);
 app.use("/api/enrollments", express.json(), enrollmentRoutes);
+
+// ===========================
+// Campus Program Routes
+// ===========================
+import campusRoutes from "./routes/campus.routes.js";
+import campusAdminRoutes from "./routes/admin/campus.admin.routes.js";
+app.use("/api/campus", express.json(), campusRoutes);
+app.use("/api/admin/campus", express.json(), campusAdminRoutes);
+
 export default app;

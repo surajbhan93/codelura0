@@ -23,6 +23,7 @@ import {
 
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard", badge: null },
+  { title: "Campus Program", icon: GraduationCap, href: "/dashboard/campus", badge: "HOT", badgeColor: "purple" },
   { title: "My Programs & Tracks", icon: GraduationCap, href: "/dashboard/programs", badge: "Active", badgeColor: "purple" },
   { title: "Premium", icon: Crown, href: "/dashboard/premium", badge: "PRO", badgeColor: "gold" },
   { title: "Your Study Material", icon: BookOpen, href: "/dashboard/material", badge: "12", badgeColor: "blue" },

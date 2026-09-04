@@ -27,6 +27,7 @@ const menu = [
   { name: "Dashboard",          href: "/admin",                 icon: HiOutlineViewGrid,          group: "main" },
 
   // Learning & Tracks
+  { name: "Campus Program",     href: "/admin/campus",          icon: HiOutlineAcademicCap,       group: "learning" },
   { name: "Enrollments",        href: "/admin/enrollments",     icon: HiOutlineShoppingBag,       group: "learning" },
   { name: "Career Tracks",      href: "/admin/career-tracks",   icon: HiOutlineTrendingUp,        group: "learning" },
   { name: "Programs",           href: "/admin/programs",        icon: HiOutlineAcademicCap,       group: "learning" },

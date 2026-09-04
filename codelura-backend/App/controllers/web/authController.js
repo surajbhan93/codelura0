@@ -1,4 +1,7 @@
 import User from "../../models/User.js";
+import CampusParticipant from "../../models/CampusParticipant.js";
+import CampusEarning from "../../models/CampusEarning.js";
+import CampusProgramSettings from "../../models/CampusProgramSettings.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -11,7 +14,7 @@ import { sendEmail } from "../../utils/sendEmail.js";
  */
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, role, adminSecret } = req.body;
+    const { name, email, password, role, adminSecret, ref, referralCode } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields required" });
@@ -31,6 +34,36 @@ export const signup = async (req, res) => {
       return res.status(409).json({ message: "User already exists" });
     }
 
+    // Check campus referral code
+    let referredByUser = null;
+    const incomingRef = referralCode || ref;
+    if (incomingRef) {
+      try {
+        const participant = await CampusParticipant.findOne({ referralCode: incomingRef.toUpperCase().trim() });
+        if (participant) {
+          referredByUser = participant.user;
+          // Award referral signup points
+          const settings = await CampusProgramSettings.findOne();
+          const pts = settings?.referralSignupPoints || 10;
+          participant.points = (participant.points || 0) + pts;
+          participant.weeklyPoints = (participant.weeklyPoints || 0) + pts;
+          participant.monthlyPoints = (participant.monthlyPoints || 0) + pts;
+          await participant.save();
+
+          await CampusEarning.create({
+            participant: participant._id,
+            source: "referral_bonus",
+            amount: 0,
+            points: pts,
+            status: "approved",
+            description: `Campus Referral: ${name} signed up`,
+          });
+        }
+      } catch (err) {
+        console.error("Referral process error:", err);
+      }
+    }
+
     // 🔐 Email verify token
     const emailVerifyToken = crypto.randomBytes(32).toString("hex");
 
@@ -40,7 +73,8 @@ export const signup = async (req, res) => {
       password,
       role: finalRole,
       emailVerifyToken,
-      isEmailVerified: false
+      isEmailVerified: false,
+      referredBy: referredByUser,
     });
 
      res.status(201).json({
@@ -698,6 +732,35 @@ export const googleLogin = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
+      // Check campus referral code
+      let referredByUser = null;
+      const incomingRef = req.body.referralCode || req.body.ref;
+      if (incomingRef) {
+        try {
+          const participant = await CampusParticipant.findOne({ referralCode: incomingRef.toUpperCase().trim() });
+          if (participant) {
+            referredByUser = participant.user;
+            const settings = await CampusProgramSettings.findOne();
+            const pts = settings?.referralSignupPoints || 10;
+            participant.points = (participant.points || 0) + pts;
+            participant.weeklyPoints = (participant.weeklyPoints || 0) + pts;
+            participant.monthlyPoints = (participant.monthlyPoints || 0) + pts;
+            await participant.save();
+
+            await CampusEarning.create({
+              participant: participant._id,
+              source: "referral_bonus",
+              amount: 0,
+              points: pts,
+              status: "approved",
+              description: `Campus Referral: ${name || email} registered via Google`,
+            });
+          }
+        } catch (err) {
+          console.error("Google login referral error:", err);
+        }
+      }
+
       // Create new user in MongoDB (Will show in Admin Panel!)
       const randomPassword = crypto.randomBytes(16).toString("hex");
       user = await User.create({
@@ -706,6 +769,7 @@ export const googleLogin = async (req, res) => {
         password: randomPassword,
         role: "user",
         isEmailVerified: true,
+        referredBy: referredByUser,
       });
       console.log(`✅ New Google User Created in DB: ${user.email} (${user._id})`);
     } else {

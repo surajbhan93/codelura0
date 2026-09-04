@@ -3,6 +3,10 @@ import razorpay from "../../config/razorpay.js";
 import Course from "../../models/Course.js";
 import User from "../../models/User.js";
 import Purchase from "../../models/Purchase.js";
+import CampusParticipant from "../../models/CampusParticipant.js";
+import CampusCourseSale from "../../models/CampusCourseSale.js";
+import CampusEarning from "../../models/CampusEarning.js";
+import CampusProgramSettings from "../../models/CampusProgramSettings.js";
 /* =====================================================
    1️⃣ CREATE COURSE ORDER
 ===================================================== */
@@ -105,7 +109,7 @@ await User.findByIdAndUpdate(userId, {
   $addToSet: { purchasedCourses: courseId }
 });
 
-await Purchase.create({
+const purchase = await Purchase.create({
   user: userId,
   course: courseId,
   courseTitle: course.title,
@@ -114,6 +118,59 @@ await Purchase.create({
   razorpay_payment_id,
   razorpay_signature
 });
+
+// ── CAMPUS REFERRAL ATTRIBUTION & 10% COMMISSION ──
+try {
+  const referralCode = req.body.referralCode || req.body.ref;
+  let participant = null;
+
+  if (referralCode) {
+    participant = await CampusParticipant.findOne({ referralCode: referralCode.toUpperCase().trim() });
+  }
+
+  if (!participant && req.user?.referredBy) {
+    participant = await CampusParticipant.findOne({ user: req.user.referredBy });
+  }
+
+  if (participant && course && course.price > 0) {
+    const settings = await CampusProgramSettings.findOne();
+    const commissionPercent = settings?.courseCommissionPercent || 10;
+    const commissionAmount = Number(((course.price * commissionPercent) / 100).toFixed(2));
+
+    await CampusCourseSale.create({
+      purchase: purchase._id,
+      course: courseId,
+      buyer: userId,
+      participant: participant._id,
+      referralCode: participant.referralCode,
+      coursePrice: course.price,
+      commissionRate: commissionPercent,
+      commissionAmount,
+      status: "approved",
+    });
+
+    // Update participant earnings & points
+    participant.approvedEarnings = (participant.approvedEarnings || 0) + commissionAmount;
+    participant.totalEarnings = (participant.totalEarnings || 0) + commissionAmount;
+    participant.points = (participant.points || 0) + 50;
+    participant.weeklyPoints = (participant.weeklyPoints || 0) + 50;
+    participant.monthlyPoints = (participant.monthlyPoints || 0) + 50;
+    await participant.save();
+
+    await CampusEarning.create({
+      participant: participant._id,
+      source: "course_commission",
+      referenceId: purchase._id,
+      referenceModel: "Purchase",
+      amount: commissionAmount,
+      points: 50,
+      status: "approved",
+      description: `Course Sale Commission (${commissionPercent}%): "${course.title.slice(0, 30)}"`,
+    });
+  }
+} catch (refError) {
+  console.error("Campus Commission Attribution Error:", refError);
+}
 
     res.json({
       success: true,
