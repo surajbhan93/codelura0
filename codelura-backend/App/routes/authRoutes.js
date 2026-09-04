@@ -41,24 +41,27 @@ router.get("/admin/users/:id",       authMiddleware, adminOnly, getUserById);
 router.put("/admin/users/:id/role",  authMiddleware, adminOnly, updateUserRole);
 router.delete("/admin/users/:id",    authMiddleware, adminOnly, deleteUser);
 
+const checkGitHubConfigured = (req, res, next) => {
+  if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
+    return res.status(400).json({ success: false, message: "GitHub OAuth is not configured on this server." });
+  }
+  next();
+};
+
 router.get(
   "/github",
+  checkGitHubConfigured,
   passport.authenticate("github", { scope: ["user:email"] })
 );
 
 router.get(
   "/github/callback",
+  checkGitHubConfigured,
   passport.authenticate("github", { session: false, failureRedirect: "/" }),
   (req, res) => {
-    // 👉 yaha JWT banana best hai
     const user = req.user;
-
-    // Example redirect (simple)
-    res.redirect("http://localhost:3003/");
-
-    // 👉 Better approach (JWT)
-    // const token = generateToken(user._id);
-    // res.redirect(`http://localhost:3003?token=${token}`);
+    const clientUrl = process.env.FRONTEND_URL || "http://localhost:3003";
+    res.redirect(clientUrl);
   }
 );
 export default router;
