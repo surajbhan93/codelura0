@@ -59,7 +59,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#070814] text-white flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-hidden font-sans">
+    <div className="relative min-h-screen bg-[#070814] text-white flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans">
       {/* ── AMBIENT AURORA BACKGROUND GLOWS ── */}
       <div className="pointer-events-none absolute -top-40 -left-40 w-96 h-96 bg-violet-600/20 rounded-full blur-[140px]" />
       <div className="pointer-events-none absolute top-1/2 -right-40 w-[30rem] h-[30rem] bg-indigo-600/15 rounded-full blur-[160px]" />
@@ -199,7 +199,7 @@ export default function SignupPage() {
 
                         toast.success("Account created with Google 🚀");
 
-                        const targetUrl = response.data.user?.role === "admin" ? "/admin" : "/dashboard";
+                        const targetUrl = response.data.user?.role === "admin" ? "/admin" : "/dashboard/Portal";
                         window.location.href = targetUrl;
                       }
                     } catch (err: any) {

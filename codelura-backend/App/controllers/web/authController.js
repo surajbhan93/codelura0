@@ -714,7 +714,10 @@ export const googleLogin = async (req, res) => {
         const decoded = jwt.decode(idToken);
         if (decoded && decoded.email) {
           email = decoded.email;
-          name = decoded.name || name;
+          name =
+            decoded.name ||
+            (decoded.given_name ? `${decoded.given_name} ${decoded.family_name || ""}`.trim() : "") ||
+            name;
           avatar = decoded.picture || avatar;
         }
       } catch (e) {
@@ -769,15 +772,21 @@ export const googleLogin = async (req, res) => {
         password: randomPassword,
         role: "user",
         isEmailVerified: true,
+        avatar: avatar || "",
         referredBy: referredByUser,
       });
       console.log(`✅ New Google User Created in DB: ${user.email} (${user._id})`);
     } else {
       // Ensure email verified flag is set
-      if (!user.isEmailVerified) {
-        user.isEmailVerified = true;
-        await user.save();
+      user.isEmailVerified = true;
+      // ✅ Update user name from Google if Google provides a real name
+      if (name && name.trim()) {
+        user.name = name.trim();
       }
+      if (avatar && !user.avatar) {
+        user.avatar = avatar;
+      }
+      await user.save();
     }
 
     // Generate JWT Token for Codelura App
@@ -814,12 +823,51 @@ export const googleLogin = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
         isEmailVerified: user.isEmailVerified,
       },
     });
   } catch (error) {
     console.error("GOOGLE LOGIN ERROR 👉", error);
     return res.status(500).json({ message: error.message || "Google login failed" });
+  }
+};
+
+/* ─────────────────────────────────────────────────
+   ✅ UPDATE CURRENT USER PROFILE
+───────────────────────────────────────────────── */
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const { name, phone, bio } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    if (name && name.trim()) user.name = name.trim();
+    if (typeof phone === "string") user.phone = phone.trim();
+    if (typeof bio === "string") user.bio = bio.trim();
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        isEmailVerified: user.isEmailVerified,
+        phone: user.phone,
+        bio: user.bio,
+      },
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    return res.status(500).json({ success: false, message: "Failed to update profile" });
   }
 };
 

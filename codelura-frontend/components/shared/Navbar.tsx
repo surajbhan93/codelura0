@@ -7,11 +7,11 @@ import HeaderClient from "./HeaderClient";
 const syne = Syne({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-syne" });
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-dm-sans" });
 
-const CAREER_URL = "https://career.codelura.com/career";
+const CAREER_URL = "/career";
 const BUILD_URL = "https://build.codelura.com/";
 
 export const NAV_LINKS = [
-  { label: "Career",     href: CAREER_URL, external: true,  icon: Briefcase, emoji: "💼" },
+  { label: "Career",     href: CAREER_URL, external: false, icon: Briefcase, emoji: "💼" },
   { label: "Services",   href: BUILD_URL,   external: true,  icon: Wrench,    emoji: "🛠️" },
   { label: "Blogs",      href: "/blogs",    external: false, icon: BookOpen,  emoji: "📘" },
   { label: "Hackathons", href: "/hackathons",external: false,icon: Rocket,    emoji: "🚀" },

@@ -77,7 +77,7 @@ export default function HeaderClient({
             <span style={{ color: "#c7d2fe" }}>›</span>
           </Link>
 
-          <Link href="https://career.codelura.com/career" className="mobile-cta">
+          <Link href="/career/jobs/latest" className="mobile-cta">
             ✦ Jobs Alert
           </Link>
         </div>

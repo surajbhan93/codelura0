@@ -13,13 +13,24 @@ export default function LayoutWrapper({
 }) {
   const pathname = usePathname();
 
+  const isAuthPage =
+    pathname.startsWith("/auth") ||
+    pathname === "/login" ||
+    pathname === "/signup";
+  const isDashboardPage = pathname.startsWith("/dashboard");
+  const isAdminPage = pathname.startsWith("/admin");
   const isServicePage = pathname.startsWith("/services");
   const isCareerPage = pathname.startsWith("/career");
   const isLocationPage = pathname.startsWith("/locations");
 
+  // On Auth, Dashboard, and Admin pages, do not render the generic marketing Navbar & Footer
+  if (isAuthPage || isDashboardPage || isAdminPage) {
+    return <>{children}</>;
+  }
+
   return (
     <>
-      {/* Navbar - shows on all pages including location pages */}
+      {/* Navbar - shows on all standard marketing & career pages */}
       {isServicePage ? (
         <ServiceNavbar />
       ) : isCareerPage ? (
@@ -30,7 +41,7 @@ export default function LayoutWrapper({
 
       {children}
 
-      {/* Footer - hidden only on location pages */}
+      {/* Footer - hidden on location pages */}
       {!isLocationPage && <Footer />}
     </>
   );

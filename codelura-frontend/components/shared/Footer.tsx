@@ -123,12 +123,13 @@ export default function Footer(): React.ReactElement {
             </h4>
             <ul className="space-y-2.5 text-sm">
               {[
-                { label: "Job Alerts", href: "https://career.codelura.com/career", external: true },
-                { label: "Study Notes", href: "https://career.codelura.com/career/learning/study-material", external: true },
+                { label: "Job Alerts", href: "/career/jobs/latest" },
+                { label: "Study Notes", href: "/career/learning/study-material" },
                 { label: "Hackathons", href: "/hackathons" },
-                { label: "Career Tracks", href: "https://career.codelura.com/career/learning/career-tracks", external: true },
+                { label: "Career Tracks", href: "/career/learning/career-tracks" },
+                { label: "Campus Program", href: "/dashboard/campus" },
                 { label: "Premium Membership", href: "/premium" },
-              ].map((link) => (
+              ].map((link: any) => (
                 <li key={link.label}>
                   {link.external ? (
                     <a

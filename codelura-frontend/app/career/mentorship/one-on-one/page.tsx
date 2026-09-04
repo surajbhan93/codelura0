@@ -611,8 +611,8 @@ interface PremiumPlan {
 // ============================================
 async function getMentorshipPlans() {
   try {
-    // ✅ Fetch mentorship category plans
-   const res = await fetch("https://career.codelura.com/api/premium/plans", {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
+    const res = await fetch(`${apiUrl}/premium/plans`, {
       next: { revalidate: 3600 },
     });
     const data = await res.json();

@@ -48,9 +48,8 @@ interface PremiumPlan {
 // ============================================
 async function getJobReferralPlans() {
   try {
-    // ✅ Use environment variable for API URL
-    // const apiUrl = L || "https://career.codelura.com";
-const res = await fetch("https://career.codelura.com/api/premium/plans", {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
+    const res = await fetch(`${apiUrl}/premium/plans`, {
       next: { revalidate: 3600 },
     });
     

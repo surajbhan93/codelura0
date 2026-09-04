@@ -46,12 +46,12 @@ interface Blog {
   noIndex?: boolean;           // 👈 NEW
 }
 // ─── API Configuration ───
-const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "https://api.codelura.com/api";
 
 // ─── Server-side fetch with CACHE for instant loading ───
 const getBlog = cache(async (slug: string): Promise<Blog | null> => {
   try {
-    const res = await fetch(`https://career.codelura.com/api/blogs/${slug}`, {
+    const res = await fetch(`${API_URL}/blogs/${slug}`, {
       // ISR: revalidate every 60 seconds
       next: { revalidate: 60 },
       // Add cache control for faster responses
@@ -526,10 +526,8 @@ const breadcrumbJsonLd = {
 
             <div className="grid md:grid-cols-2 gap-4 mt-8">
               <Link
-                href="https://career.codelura.com/career/jobs/latest"
+                href="/career/jobs/latest"
                 className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-5 hover:border-violet-500 transition"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 <div className="flex items-center gap-3">
                   <Briefcase className="text-violet-400" />
@@ -542,10 +540,8 @@ const breadcrumbJsonLd = {
               </Link>
 
               <Link
-                href="https://career.codelura.com/career/tools/ats-resume-checker"
+                href="/career/tools/ats-resume-checker"
                 className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-5 hover:border-violet-500 transition"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 <div className="flex items-center gap-3">
                   <FileSearch className="text-green-400" />
@@ -558,10 +554,8 @@ const breadcrumbJsonLd = {
               </Link>
 
               <Link
-                href="https://career.codelura.com/career/learning/study-material"
+                href="/career/learning/study-material"
                 className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-5 hover:border-violet-500 transition"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 <div className="flex items-center gap-3">
                   <BookOpen className="text-orange-400" />
@@ -574,10 +568,8 @@ const breadcrumbJsonLd = {
               </Link>
 
               <Link
-                href="https://career.codelura.com/career/tools/cover-letter-generator"
+                href="/career/tools/cover-letter-generator"
                 className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-5 hover:border-violet-500 transition"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 <div className="flex items-center gap-3">
                   <FileText className="text-pink-400" />

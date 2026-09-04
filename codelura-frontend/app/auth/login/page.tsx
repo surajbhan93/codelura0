@@ -28,7 +28,7 @@ function LoginForm() {
     if (redirectParam && redirectParam !== "/" && redirectParam !== "/login" && redirectParam !== "/auth/login") {
       return redirectParam;
     }
-    return "/dashboard";
+    return "/dashboard/Portal";
   };
 
   const [form, setForm] = useState({
@@ -96,7 +96,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#070814] text-white flex items-center justify-center p-4 sm:p-6 lg:p-10 overflow-hidden font-sans">
+    <div className="relative min-h-screen bg-[#070814] text-white flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans">
       {/* ── AMBIENT AURORA BACKGROUND GLOWS ── */}
       <div className="pointer-events-none absolute -top-40 -left-40 w-96 h-96 bg-violet-600/20 rounded-full blur-[140px]" />
       <div className="pointer-events-none absolute top-1/2 -right-40 w-[30rem] h-[30rem] bg-indigo-600/15 rounded-full blur-[160px]" />
@@ -111,12 +111,12 @@ function LoginForm() {
         }}
       />
 
-      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-6">
         {/* ── LEFT SHOWCASE COLUMN (DESKTOP) ── */}
         <motion.div
-          initial={{ opacity: 0, x: -30 }}
+          initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.55, ease: "easeOut" }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
           className="hidden lg:flex lg:col-span-7 flex-col justify-between space-y-8 pr-6"
         >
           {/* TOP LOGO */}
@@ -190,12 +190,12 @@ function LoginForm() {
 
         {/* ── RIGHT AUTH CARD ── */}
         <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
-          className="lg:col-span-5 w-full"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="lg:col-span-5 w-full max-w-md mx-auto"
         >
-          <div className="relative rounded-3xl bg-[#0f1123]/90 border border-white/[0.12] p-6 sm:p-9 shadow-[0_0_80px_rgba(99,102,241,0.2)] backdrop-blur-2xl">
+          <div className="relative rounded-3xl bg-[#0f1123]/95 border border-white/[0.12] p-6 sm:p-8 shadow-[0_0_80px_rgba(99,102,241,0.2)] backdrop-blur-2xl">
             {/* Top mobile brand header */}
             <div className="lg:hidden text-center mb-6">
               <Link href="/" className="inline-flex items-center gap-2 mb-2">
@@ -241,7 +241,6 @@ function LoginForm() {
                     }
                   }}
                   onError={() => toast.error("Google login failed")}
-                  width="350"
                   shape="rectangular"
                   theme="filled_black"
                   text="signin_with"
@@ -348,7 +347,7 @@ function LoginForm() {
               <p className="text-xs text-slate-400">
                 Don&apos;t have an account yet?{" "}
                 <Link
-                  href="/auth/signup"
+                  href="/signup"
                   className="font-bold text-violet-400 hover:text-violet-300 hover:underline transition ml-1"
                 >
                   Create one for free →
@@ -375,4 +374,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-

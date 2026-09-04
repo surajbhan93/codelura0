@@ -13,8 +13,8 @@ const categoryLabels: Record<SEOPageData['category'], string> = {
   product: 'AI Software',
 };
 
-// External redirect target
-const CAREER_URL = 'https://career.codelura.com/career';
+// Internal career target
+const CAREER_URL = '/career';
 
 // Visual panel image (Unsplash - free to use)
 const HERO_PANEL_IMAGE =

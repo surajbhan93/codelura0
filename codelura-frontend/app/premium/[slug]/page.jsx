@@ -13,8 +13,9 @@ export const revalidate = 3600;
 // ============================================
 async function getPlan(slug) {
   try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
     const res = await fetch(
-      `https://career.codelura.com/api/premium/plan/${slug}`,
+      `${apiUrl}/premium/plan/${slug}`,
       {
         next: { revalidate: 3600 },
       }

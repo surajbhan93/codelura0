@@ -230,7 +230,7 @@ export default function HowItWorks() {
             Join <span className="text-white/70 font-semibold">10,000+</span> developers already on the platform
           </p>
          <Link
-  href="https://career.codelura.com/"
+  href="/career"
   className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-700/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-violet-700/50 active:scale-[0.97]"
   aria-label="Start your journey on Codelura"
 >

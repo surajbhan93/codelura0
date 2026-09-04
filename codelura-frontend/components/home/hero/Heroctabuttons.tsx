@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-// import Link from "next/link";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Rocket, ChevronRight, Play } from "lucide-react";
 
@@ -60,13 +60,13 @@ export default function HeroCTAButtons() {
       style={{ animationDelay: "0.45s" }}
     >
       <Magnetic>
-        <a href="https://career.codelura.com/career" aria-label="Get started with Codelura">
+        <Link href="/career" aria-label="Get started with Codelura">
           <Button className="group h-13 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 text-base font-semibold text-white shadow-xl shadow-violet-700/40 hover:shadow-violet-700/60 transition-all duration-300 hover:scale-[1.03]">
             <Rocket className="mr-2 h-4 w-4 transition-transform group-hover:-rotate-12" />
-            Get Started career
+            Get Started Career
             <ChevronRight className="ml-1 h-4 w-4 opacity-70" />
           </Button>
-        </a>
+        </Link>
       </Magnetic>
 
       <Magnetic>

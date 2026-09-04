@@ -99,18 +99,24 @@ export default function AccountMenu({ jobsAlertUrl }: { jobsAlertUrl: string }) 
               className="dropdown-panel"
               style={{ position: "absolute", right: 0, marginTop: "10px", minWidth: "180px" }}
             >
-              <Link href={role === "admin" ? "/admin" : "/dashboard"} className="dropdown-item">
-                Dashboard
+              <Link href={role === "admin" ? "/admin" : "/dashboard/Portal"} className="dropdown-item">
+                📊 Dashboard
               </Link>
               <Link href="/dashboard/profile" className="dropdown-item">
-                Profile
+                👤 Profile
+              </Link>
+              <Link href="/dashboard/campus" className="dropdown-item">
+                🎓 Campus Program
+              </Link>
+              <Link href="/dashboard/programs" className="dropdown-item">
+                📚 My Learning
               </Link>
               <Link href="/contact" className="dropdown-item">
-                Contact
+                📩 Contact
               </Link>
               <div style={{ height: "1px", background: "rgba(255, 255, 255, 0.08)", margin: "4px 0" }} />
               <button onClick={handleLogout} className="logout-btn">
-                <span style={{ fontSize: "16px" }}>👋</span> Logout
+                <span style={{ fontSize: "16px" }}>🚪</span> Logout
               </button>
             </div>
           )}

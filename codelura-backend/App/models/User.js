@@ -30,6 +30,18 @@ const userSchema = new mongoose.Schema(
       default: false
     },
     emailVerifyToken: String,
+    phone: {
+      type: String,
+      default: "",
+    },
+    bio: {
+      type: String,
+      default: "",
+    },
+    avatar: {
+      type: String,
+      default: "",
+    },
 
 
     

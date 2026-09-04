@@ -147,9 +147,9 @@ const TOOLS = [
     title: "Study Notes",
     desc: "Ditch boring lectures. Access hand-written DSA sheets, System Design visual blueprints, and interview cheat codes.",
     icon: BookOpen,
-    href: "https://career.codelura.com/career/learning/study-material",
+    href: "/career/learning/study-material",
     cta: "Get Notes →",
-    external: true,
+    external: false,
     backBg: "bg-gradient-to-br from-[#083344] via-[#041a24] to-[#040612] border-cyan-500/40",
     textGrad: "from-cyan-400 to-teal-300",
     badgeColor: "text-cyan-400 border-cyan-500/30 bg-cyan-500/10"

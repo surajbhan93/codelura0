@@ -9,6 +9,7 @@ import {
   forgotPassword,
   resetPassword,
   changePassword,
+  updateProfile,
   logout,
   getAllUsers,
   getUserById,
@@ -26,6 +27,7 @@ router.post("/signup", signup);
 router.post("/login", login);
 router.post("/google", googleLogin);
 router.get("/me", me);
+router.put("/profile", authMiddleware, updateProfile);
 router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerification);
 
