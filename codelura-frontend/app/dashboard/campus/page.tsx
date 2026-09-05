@@ -635,7 +635,7 @@ export default function CampusDashboardPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/10 scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto p-1.5 pb-3 border-b border-white/10 scrollbar-none">
           {[
             { id: "overview", label: "Overview", icon: TrendingUp },
             { id: "courses", label: "Course Sales (10%)", icon: DollarSign },

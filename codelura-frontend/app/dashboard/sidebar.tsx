@@ -63,7 +63,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
       .slice(0, 2) || "U";
 
   return (
-    <aside className="relative h-screen w-64 flex flex-col bg-[#070814] border-r border-white/[0.08] select-none font-sans z-20 shrink-0">
+    <aside className="relative h-screen w-[275px] flex flex-col bg-[#070814] border-r border-white/[0.08] select-none font-sans z-20 shrink-0">
       {/* Background Ambient Glow */}
       <div className="pointer-events-none absolute top-0 left-0 w-48 h-48 bg-violet-600/10 rounded-full blur-3xl" />
       <div className="pointer-events-none absolute bottom-12 right-0 w-48 h-48 bg-indigo-600/10 rounded-full blur-3xl" />

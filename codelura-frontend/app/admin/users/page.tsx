@@ -84,6 +84,7 @@ export default function AdminUsersPage() {
   const [search,        setSearch]        = useState("");
   const [roleFilter,    setRoleFilter]    = useState("all");
   const [verifiedFilter,setVerifiedFilter]= useState("all");
+  const [perPage,       setPerPage]       = useState<number>(10);
   const [page,          setPage]          = useState(1);
   const [spinning,      setSpinning]      = useState(false);
 
@@ -105,7 +106,7 @@ export default function AdminUsersPage() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ limit: "500" });
+      const params = new URLSearchParams({ limit: "all" });
       if (roleFilter !== "all")     params.set("role",     roleFilter);
       if (verifiedFilter !== "all") params.set("verified", verifiedFilter);
       const { data } = await api.get(`/auth/admin/users?${params}`, { headers: getHeaders() });
@@ -135,8 +136,10 @@ export default function AdminUsersPage() {
     const q = search.toLowerCase();
     return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
-  const totalPages = Math.ceil(filtered.length / USERS_PER_PAGE);
-  const paginated  = filtered.slice((page - 1) * USERS_PER_PAGE, page * USERS_PER_PAGE);
+
+  const effectivePerPage = perPage === 0 ? filtered.length || 1 : perPage;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / effectivePerPage));
+  const paginated = perPage === 0 ? filtered : filtered.slice((page - 1) * effectivePerPage, page * effectivePerPage);
 
   /* ── Delete ── */
   const handleDelete = async () => {
@@ -254,10 +257,24 @@ export default function AdminUsersPage() {
             <option value="true">Verified</option>
             <option value="false">Unverified</option>
           </select>
+          <select className="aau-select" value={perPage}
+            onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}>
+            <option value={10}>10 per page</option>
+            <option value={25}>25 per page</option>
+            <option value={50}>50 per page</option>
+            <option value={100}>100 per page</option>
+            <option value={0}>All ({filtered.length})</option>
+          </select>
         </div>
 
         <p className="aau-result-info">
-          Showing <strong>{Math.min((page-1)*USERS_PER_PAGE+1, filtered.length)}–{Math.min(page*USERS_PER_PAGE, filtered.length)}</strong> of <strong>{filtered.length}</strong> users
+          {filtered.length === 0 ? (
+            "No users found"
+          ) : perPage === 0 ? (
+            <>Showing all <strong>{filtered.length}</strong> users</>
+          ) : (
+            <>Showing <strong>{Math.min((page - 1) * perPage + 1, filtered.length)}–{Math.min(page * perPage, filtered.length)}</strong> of <strong>{filtered.length}</strong> users</>
+          )}
         </p>
 
         {/* ── Table ── */}
@@ -293,9 +310,9 @@ export default function AdminUsersPage() {
                     <td>
                       <div className="aau-user-cell">
                         <div className="aau-avatar">
-                          {user.name.charAt(0).toUpperCase()}
+                          {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                         </div>
-                        <span className="aau-user-name">{user.name}</span>
+                        <span className="aau-user-name">{user.name || "Unnamed"}</span>
                       </div>
                     </td>
 
@@ -357,15 +374,29 @@ export default function AdminUsersPage() {
         {/* ── Pagination ── */}
         {totalPages > 1 && (
           <div className="aau-pagination">
-            <button className="aau-pg" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+            <button className="aau-pg" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
               <ChevronLeft size={14} /> Prev
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button key={p} className={`aau-pg${page === p ? " active" : ""}`} onClick={() => setPage(p)}>
-                {p}
-              </button>
-            ))}
-            <button className="aau-pg" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+              .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                if (idx > 0 && typeof arr[idx - 1] === "number" && (p as number) - (arr[idx - 1] as number) > 1) {
+                  acc.push("...");
+                }
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, idx) => (
+                typeof p === "number" ? (
+                  <button key={p} className={`aau-pg${page === p ? " active" : ""}`} onClick={() => setPage(p)}>
+                    {p}
+                  </button>
+                ) : (
+                  <span key={`dots-${idx}`} className="aau-dots">...</span>
+                )
+              ))
+            }
+            <button className="aau-pg" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
               Next <ChevronRight size={14} />
             </button>
           </div>
@@ -522,6 +553,7 @@ const styles = `
   .aau-pg:hover:not(:disabled) { border-color: rgba(139,92,246,0.4); color: #a78bfa; }
   .aau-pg.active { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.5); color: #c4b5fd; }
   .aau-pg:disabled { opacity: 0.35; cursor: not-allowed; }
+  .aau-dots { color: #475569; font-size: 13px; padding: 0 4px; display: inline-flex; align-items: center; }
 
   /* Modal */
   .aau-overlay {

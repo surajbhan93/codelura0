@@ -7,6 +7,7 @@ import Program from "../../models/Program.js";
 import CareerTrack from "../../models/CareerTrack.js";
 import User from "../../models/User.js";
 import Coupon from "../../models/Coupon.js";
+import Purchase from "../../models/Purchase.js";
 
 // Helper to get model by type
 const getItemModel = (itemType) => {
@@ -404,43 +405,199 @@ export const getMyEnrollments = async (req, res) => {
 };
 
 /* =====================================================
+   🔄 HELPER: SYNC LEGACY PURCHASES & USER ARRAYS TO ENROLLMENTS
+===================================================== */
+const syncLegacyEnrollments = async () => {
+  try {
+    // 1. Sync from Purchase collection
+    const purchases = await Purchase.find({}).lean();
+    for (const p of purchases) {
+      if (!p.user || !p.course) continue;
+      const exists = await Enrollment.findOne({
+        user: p.user,
+        itemRef: p.course,
+        itemType: "Course",
+      });
+      if (!exists) {
+        let courseTitle = p.courseTitle;
+        if (!courseTitle) {
+          const c = await Course.findById(p.course).select("title").lean();
+          courseTitle = c?.title || "Course";
+        }
+        await Enrollment.create({
+          user: p.user,
+          itemType: "Course",
+          itemRef: p.course,
+          itemTitle: courseTitle,
+          amount: p.amount || 0,
+          paymentStatus: "completed",
+          enrollmentStatus: "active",
+          razorpayOrderId: p.razorpay_order_id || "",
+          razorpayPaymentId: p.razorpay_payment_id || "",
+          razorpaySignature: p.razorpay_signature || "",
+          enrolledAt: p.createdAt || new Date(),
+        });
+      }
+    }
+
+    // 2. Sync from User document arrays
+    const usersWithEnrolled = await User.find({
+      $or: [
+        { purchasedCourses: { $exists: true, $not: { $size: 0 } } },
+        { enrolledPrograms: { $exists: true, $not: { $size: 0 } } },
+        { enrolledCareerTracks: { $exists: true, $not: { $size: 0 } } },
+      ],
+    }).lean();
+
+    for (const u of usersWithEnrolled) {
+      // Courses
+      if (Array.isArray(u.purchasedCourses)) {
+        for (const courseId of u.purchasedCourses) {
+          if (!courseId) continue;
+          const exists = await Enrollment.findOne({
+            user: u._id,
+            itemRef: courseId,
+            itemType: "Course",
+          });
+          if (!exists) {
+            const c = await Course.findById(courseId).select("title price").lean();
+            if (c) {
+              await Enrollment.create({
+                user: u._id,
+                itemType: "Course",
+                itemRef: courseId,
+                itemTitle: c.title || "Course",
+                amount: c.price || 0,
+                paymentStatus: "completed",
+                enrollmentStatus: "active",
+                enrolledAt: new Date(),
+              });
+            }
+          }
+        }
+      }
+
+      // Programs
+      if (Array.isArray(u.enrolledPrograms)) {
+        for (const progId of u.enrolledPrograms) {
+          if (!progId) continue;
+          const exists = await Enrollment.findOne({
+            user: u._id,
+            itemRef: progId,
+            itemType: "Program",
+          });
+          if (!exists) {
+            const prog = await Program.findById(progId).select("name title price discountPrice").lean();
+            if (prog) {
+              await Enrollment.create({
+                user: u._id,
+                itemType: "Program",
+                itemRef: progId,
+                itemTitle: prog.name || prog.title || "Program",
+                amount: prog.discountPrice || prog.price || 0,
+                paymentStatus: "completed",
+                enrollmentStatus: "active",
+                enrolledAt: new Date(),
+              });
+            }
+          }
+        }
+      }
+
+      // Career Tracks
+      if (Array.isArray(u.enrolledCareerTracks)) {
+        for (const trackId of u.enrolledCareerTracks) {
+          if (!trackId) continue;
+          const exists = await Enrollment.findOne({
+            user: u._id,
+            itemRef: trackId,
+            itemType: "CareerTrack",
+          });
+          if (!exists) {
+            const track = await CareerTrack.findById(trackId).select("title price discountPrice").lean();
+            if (track) {
+              await Enrollment.create({
+                user: u._id,
+                itemType: "CareerTrack",
+                itemRef: trackId,
+                itemTitle: track.title || "Career Track",
+                amount: track.discountPrice || track.price || 0,
+                paymentStatus: "completed",
+                enrollmentStatus: "active",
+                enrolledAt: new Date(),
+              });
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("syncLegacyEnrollments error:", err);
+  }
+};
+
+/* =====================================================
    4️⃣ GET ALL ENROLLMENTS (ADMIN)
 ===================================================== */
 export const getAllEnrollmentsAdmin = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      paymentStatus,
-      itemType,
-      search,
-    } = req.query;
+    // 🔄 Sync any purchases/enrolled arrays that might be missing in Enrollment collection
+    await syncLegacyEnrollments();
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const rawLimit = req.query.limit;
+    let limit = 500; // Default high limit to ensure all records fetch
+
+    if (rawLimit === "all" || rawLimit === "0" || rawLimit === "unlimited") {
+      limit = 0;
+    } else if (rawLimit !== undefined && rawLimit !== null && rawLimit !== "") {
+      const parsed = Number(rawLimit);
+      if (!isNaN(parsed) && parsed >= 0) {
+        limit = parsed;
+      }
+    }
+
+    const { paymentStatus, itemType, search } = req.query;
 
     const query = {};
-
     if (paymentStatus) query.paymentStatus = paymentStatus;
     if (itemType) query.itemType = itemType;
 
-    const skip = (Number(page) - 1) * Number(limit);
+    let enrollments = await Enrollment.find(query)
+      .populate("user", "name email avatar")
+      .populate("itemRef")
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const [enrollments, total] = await Promise.all([
-      Enrollment.find(query)
-        .populate("user", "name email")
-        .populate("itemRef")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Enrollment.countDocuments(query),
-    ]);
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      enrollments = enrollments.filter((en) => {
+        const uName = (en.user?.name || "").toLowerCase();
+        const uEmail = (en.user?.email || "").toLowerCase();
+        const title = (en.itemTitle || en.itemRef?.title || en.itemRef?.name || "").toLowerCase();
+        const orderId = (en.razorpayOrderId || "").toLowerCase();
+        const payId = (en.razorpayPaymentId || "").toLowerCase();
+        return uName.includes(q) || uEmail.includes(q) || title.includes(q) || orderId.includes(q) || payId.includes(q);
+      });
+    }
+
+    const total = enrollments.length;
+    let paginatedData = enrollments;
+
+    if (limit > 0) {
+      const skip = (page - 1) * limit;
+      paginatedData = enrollments.slice(skip, skip + limit);
+    }
 
     return res.status(200).json({
       success: true,
-      data: enrollments,
+      data: paginatedData,
+      total,
       pagination: {
         total,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
+        page,
+        limit: limit > 0 ? limit : total,
+        totalPages: limit > 0 ? Math.ceil(total / limit) : 1,
       },
     });
   } catch (error) {

@@ -155,7 +155,11 @@ app.use("/api/enrollments", express.json(), enrollmentRoutes);
 // ===========================
 import campusRoutes from "./routes/campus.routes.js";
 import campusAdminRoutes from "./routes/admin/campus.admin.routes.js";
+import { getAdminStats } from "./controllers/admin/admin.controller.js";
+import { authMiddleware } from "./middleware/auth.middleware.js";
+
 app.use("/api/campus", express.json(), campusRoutes);
 app.use("/api/admin/campus", express.json(), campusAdminRoutes);
+app.get("/api/admin/stats", express.json(), authMiddleware, getAdminStats);
 
 export default app;

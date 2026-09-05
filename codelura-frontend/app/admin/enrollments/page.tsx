@@ -43,11 +43,18 @@ export default function AdminEnrollmentsPage() {
   const [manualLoading, setManualLoading] = useState(false);
   const [manualMessage, setManualMessage] = useState("");
 
+  const getHeaders = () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : "";
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchEnrollments = async () => {
     setLoading(true);
     try {
       const { data } = await api.get("/enrollments/admin/all", {
+        headers: getHeaders(),
         params: {
+          limit: "all",
           itemType: filterType || undefined,
           paymentStatus: filterStatus || undefined,
         },
@@ -73,11 +80,15 @@ export default function AdminEnrollmentsPage() {
     setManualMessage("");
 
     try {
-      const { data } = await api.post("/enrollments/admin/manual-enroll", {
-        userId: userIdInput.trim(),
-        itemType: manualItemType,
-        itemId: manualItemIdInput.trim(),
-      });
+      const { data } = await api.post(
+        "/enrollments/admin/manual-enroll",
+        {
+          userId: userIdInput.trim(),
+          itemType: manualItemType,
+          itemId: manualItemIdInput.trim(),
+        },
+        { headers: getHeaders() }
+      );
 
       if (data.success) {
         setManualMessage(`✓ ${data.message}`);

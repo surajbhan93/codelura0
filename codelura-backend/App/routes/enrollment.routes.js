@@ -22,6 +22,8 @@ router.get("/my-enrollments", authMiddleware, getMyEnrollments);
 // 👑 ADMIN ENROLLMENT ROUTES (Admin only)
 // ======================================================
 router.get("/admin", authMiddleware, adminOnly, getAllEnrollmentsAdmin);
+router.get("/admin/all", authMiddleware, adminOnly, getAllEnrollmentsAdmin);
 router.post("/admin/manual", authMiddleware, adminOnly, manualAdminEnroll);
+router.post("/admin/manual-enroll", authMiddleware, adminOnly, manualAdminEnroll);
 
 export default router;

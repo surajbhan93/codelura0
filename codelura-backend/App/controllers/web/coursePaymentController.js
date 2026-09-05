@@ -6,7 +6,8 @@ import Purchase from "../../models/Purchase.js";
 import CampusParticipant from "../../models/CampusParticipant.js";
 import CampusCourseSale from "../../models/CampusCourseSale.js";
 import CampusEarning from "../../models/CampusEarning.js";
-import CampusProgramSettings from "../../models/CampusProgramSettings.js";
+import Enrollment from "../../models/Enrollment.js";
+
 /* =====================================================
    1️⃣ CREATE COURSE ORDER
 ===================================================== */
@@ -112,12 +113,30 @@ await User.findByIdAndUpdate(userId, {
 const purchase = await Purchase.create({
   user: userId,
   course: courseId,
-  courseTitle: course.title,
-  amount: course.price,
+  courseTitle: course?.title || "Course",
+  amount: course?.price || 0,
   razorpay_order_id,
   razorpay_payment_id,
   razorpay_signature
 });
+
+try {
+  await Enrollment.create({
+    user: userId,
+    itemType: "Course",
+    itemRef: courseId,
+    itemTitle: course?.title || "Course",
+    amount: course?.price || 0,
+    paymentStatus: "completed",
+    enrollmentStatus: "active",
+    razorpayOrderId: razorpay_order_id,
+    razorpayPaymentId: razorpay_payment_id,
+    razorpaySignature: razorpay_signature,
+    enrolledAt: new Date(),
+  });
+} catch (e) {
+  console.error("Mirror enrollment record creation failed:", e);
+}
 
 // ── CAMPUS REFERRAL ATTRIBUTION & 10% COMMISSION ──
 try {

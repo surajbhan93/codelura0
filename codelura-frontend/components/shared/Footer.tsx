@@ -56,6 +56,17 @@ export default function Footer(): React.ReactElement {
               Codelura is a premium ecosystem for developers, innovators, and businesses. We build cutting-edge software and help developers accelerate their careers.
             </p>
 
+            {/* Official Support Email */}
+            <div className="flex items-center gap-2 pt-1">
+              <a
+                href="mailto:support@codelura.com"
+                className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 hover:text-white transition"
+              >
+                <Mail size={14} className="text-indigo-400" />
+                <span>support@codelura.com</span>
+              </a>
+            </div>
+
             {/* Social Icons */}
             <div className="flex items-center gap-3">
               {[

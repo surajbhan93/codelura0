@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { Course, Testimonial } from "../types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.example.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
 
 // Server-side cached fetch for Courses (Revalidated every 5 mins)
 export const getCourses = cache(async (): Promise<Course[]> => {
@@ -12,7 +12,9 @@ export const getCourses = cache(async (): Promise<Course[]> => {
     });
 
     if (!res.ok) return [];
-    return await res.json();
+    const data = await res.json();
+    if (Array.isArray(data)) return data;
+    return data?.courses || data?.data || [];
   } catch (error) {
     console.error("Error fetching courses on server:", error);
     return [];
@@ -29,7 +31,7 @@ export const getTestimonials = cache(async (): Promise<Testimonial[]> => {
 
     if (!res.ok) return [];
     const data = await res.json();
-    return data?.data || [];
+    return Array.isArray(data) ? data : (data?.data || data?.testimonials || []);
   } catch (error) {
     console.error("Error fetching testimonials on server:", error);
     return [];

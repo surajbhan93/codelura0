@@ -836,7 +836,7 @@ export const getAllSubscriptions = async (req, res) => {
  */
 export const getAllPlans = async (req, res) => {
   try {
-    const plans = await PremiumService.find({ isActive: true });
+    const plans = await PremiumService.find();
     res.json({ success: true, plans });
   } catch (err) {
     sendError(res, err);
@@ -844,11 +844,15 @@ export const getAllPlans = async (req, res) => {
 };
 
 /**
- * Public → Get Plan By Slug (Detail Page)
+ * Public → Get Plan By Slug or ID (Detail Page)
  */
 export const getPlanBySlug = async (req, res) => {
   try {
-    const plan = await PremiumService.findOne({ slug: req.params.slug, isActive: true });
+    const { slug } = req.params;
+    let plan = await PremiumService.findOne({ slug });
+    if (!plan && mongoose.Types.ObjectId.isValid(slug)) {
+      plan = await PremiumService.findById(slug);
+    }
     if (!plan) return res.status(404).json({ message: "Plan not found" });
 
     res.json({ success: true, plan });

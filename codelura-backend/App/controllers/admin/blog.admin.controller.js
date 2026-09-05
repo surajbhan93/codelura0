@@ -68,23 +68,23 @@ export const createBlog = async (req, res) => {
     const turndown = new TurndownService();
     const contentMarkdown = turndown.turndown(content);
 
-    // 🔥 Clean HTML
-const cleanContent = sanitizeHtml(content, {
-  allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-    "img",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6"
-  ]),
-  allowedAttributes: {
-    ...sanitizeHtml.defaults.allowedAttributes,
-    img: ["src", "alt", "width", "height"],
-    a: ["href", "name", "target", "rel"]
-  }
-});
+    // 🔥 Clean HTML (Allow code blocks, styling, pre, code, iframe, images)
+    const cleanContent = sanitizeHtml(content, {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+        "img", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "code", "span", "div", "iframe", "blockquote", "p", "br", "u", "s", "sub", "sup", "section", "article"
+      ]),
+      allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        img: ["src", "alt", "width", "height", "class", "style"],
+        a: ["href", "name", "target", "rel", "class", "style"],
+        code: ["class", "style"],
+        pre: ["class", "style"],
+        span: ["class", "style"],
+        div: ["class", "style"],
+        iframe: ["src", "width", "height", "frameborder", "allow", "allowfullscreen", "class", "style"],
+        "*": ["style", "class", "id"]
+      }
+    });
 
     // 🕒 Publish logic
     const isPublished = publishNow === true;
@@ -177,7 +177,7 @@ export const publishBlog = async (req, res) => {
  */
 export const getPopularBlogs = async (req, res) => {
   try {
-    const blogs = await BlogAnalytics.aggregate([
+    let blogs = await BlogAnalytics.aggregate([
       {
         $group: {
           _id: "$blogId",
@@ -199,14 +199,36 @@ export const getPopularBlogs = async (req, res) => {
           }
         }
       },
-      { $sort: { score: -1 } }
+      { $sort: { score: -1 } },
+      { $limit: 5 }
     ]);
+
+    if (!blogs || blogs.length === 0) {
+      const recentBlogs = await Blog.find().sort({ views: -1, createdAt: -1 }).limit(5);
+      blogs = recentBlogs.map((b) => ({
+        _id: b._id,
+        title: b.title,
+        slug: b.slug,
+        score: b.views || 1,
+      }));
+    } else {
+      blogs = await Promise.all(
+        blogs.map(async (b) => {
+          const blogDoc = await Blog.findById(b._id).select("title slug");
+          return {
+            _id: b._id,
+            title: blogDoc ? blogDoc.title : "Untitled Blog",
+            slug: blogDoc ? blogDoc.slug : "",
+            score: b.score || 0,
+          };
+        })
+      );
+    }
 
     res.json(blogs);
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error"
-    });
+    console.error("GET POPULAR BLOGS ERROR 👉", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 

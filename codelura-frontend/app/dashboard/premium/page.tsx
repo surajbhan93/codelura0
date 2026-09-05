@@ -2,6 +2,20 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import Link from "next/link";
+import {
+  Crown,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Plus,
+  RefreshCw,
+  ShieldCheck,
+  Zap,
+  AlertTriangle,
+  ArrowRight,
+} from "lucide-react";
 
 /* ================= TYPES ================= */
 type Subscription = {
@@ -11,9 +25,9 @@ type Subscription = {
   endDate?: string;
   createdAt: string;
   finalAmount: number;
-  premiumService: {
-    title: string;
-    price: number;
+  premiumService?: {
+    title?: string;
+    price?: number;
     description?: string;
   };
 };
@@ -22,49 +36,49 @@ type Subscription = {
 const STATUS_CONFIG = {
   approved: {
     label: "Active",
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    border: "border-emerald-200",
-    dot: "bg-emerald-500",
+    bg: "bg-emerald-500/15",
+    text: "text-emerald-300",
+    border: "border-emerald-500/30",
+    dot: "bg-emerald-400",
   },
   pending: {
     label: "Pending",
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    border: "border-amber-200",
-    dot: "bg-amber-500",
+    bg: "bg-amber-500/15",
+    text: "text-amber-300",
+    border: "border-amber-500/30",
+    dot: "bg-amber-400",
   },
   rejected: {
     label: "Rejected",
-    bg: "bg-red-50",
-    text: "text-red-600",
-    border: "border-red-200",
-    dot: "bg-red-500",
+    bg: "bg-red-500/15",
+    text: "text-red-300",
+    border: "border-red-500/30",
+    dot: "bg-red-400",
   },
   expired: {
     label: "Expired",
-    bg: "bg-gray-50",
-    text: "text-gray-500",
-    border: "border-gray-200",
-    dot: "bg-gray-400",
+    bg: "bg-slate-500/15",
+    text: "text-slate-400",
+    border: "border-slate-500/30",
+    dot: "bg-slate-400",
   },
   suspended: {
     label: "Suspended",
-    bg: "bg-orange-50",
-    text: "text-orange-600",
-    border: "border-orange-200",
-    dot: "bg-orange-500",
+    bg: "bg-orange-500/15",
+    text: "text-orange-300",
+    border: "border-orange-500/30",
+    dot: "bg-orange-400",
   },
 };
 
 /* ================= BADGE COMPONENT ================= */
 function StatusBadge({ status }: { status: Subscription["status"] }) {
-  const cfg = STATUS_CONFIG[status];
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.expired;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${cfg.bg} ${cfg.text} ${cfg.border}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border backdrop-blur-md ${cfg.bg} ${cfg.text} ${cfg.border}`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} animate-pulse`} />
       {cfg.label}
     </span>
   );
@@ -83,14 +97,14 @@ function StatCard({
   accent?: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+    <div className="rounded-2xl border border-white/10 bg-[#12152d]/90 p-5 shadow-xl backdrop-blur-md transition-all duration-200 hover:border-violet-500/30 hover:bg-[#151936]">
+      <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1 font-mono">
         {label}
       </p>
-      <p className={`text-2xl font-semibold ${accent ?? "text-gray-800"}`}>
+      <p className={`text-2xl sm:text-3xl font-black tracking-tight ${accent ?? "text-white"}`}>
         {value}
       </p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-slate-400 mt-1 font-medium">{sub}</p>}
     </div>
   );
 }
@@ -102,17 +116,20 @@ export default function PremiumPage() {
   const [error, setError] = useState<string | null>(null);
 
   /* ── FETCH ── */
+  const fetchSubs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await api.get("/premium/my-subscriptions");
+      setSubs(res.data.subs || []);
+    } catch {
+      setError("Unable to load subscriptions. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchSubs = async () => {
-      try {
-        const res = await api.get("/premium/my-subscriptions");
-        setSubs(res.data.subs || []);
-      } catch {
-        setError("Subscriptions load nahi ho sakin. Dobara try karein.");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchSubs();
   }, []);
 
@@ -121,7 +138,7 @@ export default function PremiumPage() {
   const pending = subs.filter((s) => s.status === "pending");
   const totalSpent = subs
     .filter((s) => s.status === "approved")
-    .reduce((acc, s) => acc + s.finalAmount, 0);
+    .reduce((acc, s) => acc + (s.finalAmount || 0), 0);
 
   let daysLeft: number | null = null;
   if (active?.endDate) {
@@ -140,10 +157,12 @@ export default function PremiumPage() {
   /* ── LOADING STATE ── */
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading your subscriptions…</p>
+      <div className="min-h-[70vh] flex items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="w-10 h-10 border-3 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold text-slate-400 tracking-wider uppercase font-mono">
+            Loading Premium Subscriptions...
+          </p>
         </div>
       </div>
     );
@@ -152,21 +171,17 @@ export default function PremiumPage() {
   /* ── ERROR STATE ── */
   if (error) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center p-6">
-        <div className="text-center max-w-sm">
-          <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-              />
-            </svg>
+      <div className="min-h-[70vh] flex items-center justify-center p-6">
+        <div className="text-center max-w-sm rounded-3xl border border-red-500/20 bg-[#12152d] p-8 shadow-2xl">
+          <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+            <AlertTriangle className="w-7 h-7 text-red-400" />
           </div>
-          <p className="text-gray-700 font-medium">{error}</p>
+          <p className="text-white font-bold text-sm mb-2">{error}</p>
           <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-5 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700 transition-colors"
+            onClick={fetchSubs}
+            className="mt-4 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-violet-600/30"
           >
-            Retry
+            Retry Connection
           </button>
         </div>
       </div>
@@ -174,241 +189,268 @@ export default function PremiumPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+    <div className="min-h-screen bg-[#070814] text-white p-4 sm:p-8 font-sans relative overflow-hidden">
+      {/* Premium ambient glows */}
+      <div className="pointer-events-none absolute -top-48 left-1/4 h-96 w-96 rounded-full bg-violet-600/10 blur-[120px]" />
+      <div className="pointer-events-none absolute -bottom-48 right-1/4 h-96 w-96 rounded-full bg-indigo-600/10 blur-[120px]" />
 
-      {/* ── HEADER ── */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-            Premium Dashboard
-            <span className="text-yellow-400 text-xl">👑</span>
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Apne premium plans aur history dekhen
-          </p>
-        </div>
-        <button
-          onClick={() => (window.location.href = "/premium")}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Plan
-        </button>
-      </div>
+      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
 
-      {/* ── STATS ROW ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Total Subscriptions"
-          value={String(subs.length)}
-          sub="All time"
-        />
-        <StatCard
-          label="Total Spent"
-          value={`₹${totalSpent.toLocaleString("en-IN")}`}
-          sub="Approved plans"
-          accent="text-indigo-600"
-        />
-        <StatCard
-          label="Pending"
-          value={String(pending.length)}
-          sub="Awaiting approval"
-          accent={pending.length > 0 ? "text-amber-600" : "text-gray-800"}
-        />
-      </div>
-
-      {/* ── ACTIVE PLAN CARD ── */}
-      {active ? (
-        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-lg">
-          {/* Decorative ring */}
-          <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/10" />
-          <div className="absolute -bottom-10 -left-6 w-24 h-24 rounded-full bg-white/5" />
-
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-indigo-200 text-xs font-medium uppercase tracking-widest">
-                Current Plan
-              </span>
-              <span className="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-medium backdrop-blur-sm border border-white/20">
-                Active ✓
-              </span>
+        {/* ── HEADER ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+          <div>
+            <div className="flex items-center gap-2 text-amber-400 text-xs font-extrabold uppercase tracking-wider mb-1 font-mono">
+              <Crown size={15} className="text-amber-400 fill-amber-400" />
+              MEMBERSHIP HUB
             </div>
-
-            <h2 className="text-xl font-semibold mb-1">
-              {active.premiumService?.title}
-            </h2>
-
-            <p className="text-2xl font-bold mt-2">
-              ₹{active.finalAmount.toLocaleString("en-IN")}
-              <span className="text-sm font-normal text-indigo-200 ml-1">paid</span>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Premium <span className="bg-gradient-to-r from-amber-300 via-violet-300 to-indigo-300 bg-clip-text text-transparent">Dashboard</span>
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              Manage your active premium membership, unlock benefits, and view billing history.
             </p>
-
-            {/* Expiry & days left */}
-            <div className="mt-4 flex items-center gap-4 flex-wrap">
-              {active.startDate && (
-                <div>
-                  <p className="text-indigo-200 text-xs">Start</p>
-                  <p className="text-sm font-medium">
-                    {new Date(active.startDate).toLocaleDateString("en-IN", {
-                      day: "numeric", month: "short", year: "numeric",
-                    })}
-                  </p>
-                </div>
-              )}
-              {active.endDate && (
-                <div>
-                  <p className="text-indigo-200 text-xs">Expiry</p>
-                  <p className="text-sm font-medium">
-                    {new Date(active.endDate).toLocaleDateString("en-IN", {
-                      day: "numeric", month: "short", year: "numeric",
-                    })}
-                  </p>
-                </div>
-              )}
-
-              {daysLeft !== null && (
-                <div
-                  className={`px-3 py-1.5 rounded-xl text-sm font-semibold ${
-                    urgency === "critical"
-                      ? "bg-red-400/30 text-red-100"
-                      : urgency === "warning"
-                      ? "bg-yellow-400/30 text-yellow-100"
-                      : "bg-white/20 text-white"
-                  }`}
-                >
-                  {daysLeft > 0 ? `${daysLeft} days left` : "Expired"}
-                </div>
-              )}
-            </div>
-
-            {/* Progress bar for days remaining */}
-            {active.startDate && active.endDate && daysLeft !== null && (
-              <div className="mt-5">
-                <div className="w-full bg-white/20 rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all ${
-                      urgency === "critical"
-                        ? "bg-red-300"
-                        : urgency === "warning"
-                        ? "bg-yellow-300"
-                        : "bg-white"
-                    }`}
-                    style={{
-                      width: `${Math.max(
-                        0,
-                        Math.min(
-                          100,
-                          (daysLeft /
-                            Math.ceil(
-                              (new Date(active.endDate).getTime() -
-                                new Date(active.startDate).getTime()) /
-                                86_400_000
-                            )) *
-                            100
-                        )
-                      )}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="mt-5 flex gap-3 flex-wrap">
-              {daysLeft !== null && daysLeft > 0 && daysLeft <= 5 && (
-                <button
-                  onClick={() => (window.location.href = "/premium")}
-                  className="inline-flex items-center gap-2 bg-white text-indigo-700 hover:bg-indigo-50 px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm"
-                >
-                  🔄 Renew Plan
-                </button>
-              )}
-              <button
-                onClick={() => (window.location.href = "/premium")}
-                className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm"
-              >
-                🚀 Upgrade
-              </button>
-            </div>
           </div>
-        </div>
-      ) : (
-        /* ── NO ACTIVE PLAN ── */
-        <div className="bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-8 text-center">
-          <div className="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.040.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-              />
-            </svg>
-          </div>
-          <h3 className="text-gray-700 font-semibold text-lg mb-1">
-            Koi Active Plan Nahi
-          </h3>
-          <p className="text-gray-400 text-sm mb-5">
-            Premium benefits unlock karein — aaj hi plan lein
-          </p>
-          <button
-            onClick={() => (window.location.href = "/premium")}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm"
+
+          <Link
+            href="/premium"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-xs font-extrabold rounded-xl transition shadow-lg shadow-violet-600/30 border border-violet-400/30 shrink-0"
           >
-            🚀 Premium Lein
-          </button>
+            <Plus size={16} />
+            Explore Premium Plans
+          </Link>
         </div>
-      )}
 
-      {/* ── SUBSCRIPTION HISTORY ── */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Subscription History
-        </h2>
+        {/* ── STATS ROW ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            label="Total Subscriptions"
+            value={String(subs.length)}
+            sub="All-time membership records"
+          />
+          <StatCard
+            label="Total Invested"
+            value={`₹${totalSpent.toLocaleString("en-IN")}`}
+            sub="Approved membership payments"
+            accent="text-emerald-400"
+          />
+          <StatCard
+            label="Pending Approvals"
+            value={String(pending.length)}
+            sub="Subscriptions awaiting activation"
+            accent={pending.length > 0 ? "text-amber-400" : "text-slate-300"}
+          />
+        </div>
 
-        {subs.length === 0 ? (
-          <div className="text-center py-10 text-gray-400 text-sm">
-            Abhi tak koi subscription nahi hai.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {subs.map((sub) => (
-              <div
-                key={sub._id}
-                className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm hover:shadow-md hover:border-gray-200 transition-all"
-              >
-                {/* Left */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-                    <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 010 3.204 3.745 3.745 0 01-3.204 3.204 3.745 3.745 0 01-3.068 1.593 3.745 3.745 0 01-3.068-1.593 3.746 3.746 0 01-3.204-3.204 3.745 3.745 0 01-1.593-3.068 3.745 3.745 0 011.593-3.068 3.745 3.745 0 013.204-3.204 3.745 3.745 0 013.068-1.593 3.745 3.745 0 013.068 1.593A3.745 3.745 0 0121 12z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-gray-800 text-sm truncate">
-                      {sub.premiumService?.title}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {new Date(sub.createdAt).toLocaleDateString("en-IN", {
+        {/* ── ACTIVE PLAN CARD ── */}
+        {active ? (
+          <div className="relative overflow-hidden rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-950/80 via-indigo-950/90 to-[#0c0e24] p-6 sm:p-8 text-white shadow-2xl backdrop-blur-xl">
+            {/* Ambient decorative glow circles */}
+            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-violet-500/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 space-y-5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-violet-500/20 text-violet-300 border border-violet-500/30 font-mono">
+                  <Zap size={13} className="text-yellow-400 fill-yellow-400" /> Current Active Plan
+                </span>
+                <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 text-xs px-3.5 py-1 rounded-full font-bold border border-emerald-500/30">
+                  <CheckCircle2 size={13} /> Active &amp; Verified
+                </span>
+              </div>
+
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  {active.premiumService?.title || "Codelura Premium Access"}
+                </h2>
+                {active.premiumService?.description && (
+                  <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
+                    {active.premiumService.description}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-baseline gap-2 pt-1">
+                <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                  ₹{active.finalAmount.toLocaleString("en-IN")}
+                </span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  / Full Term Paid
+                </span>
+              </div>
+
+              {/* Expiry & Duration Details */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-white/10">
+                {active.startDate && (
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Activated On</p>
+                    <p className="text-xs font-extrabold text-slate-200 mt-0.5">
+                      {new Date(active.startDate).toLocaleDateString("en-IN", {
                         day: "numeric", month: "short", year: "numeric",
                       })}
                     </p>
                   </div>
-                </div>
+                )}
+                {active.endDate && (
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Valid Until</p>
+                    <p className="text-xs font-extrabold text-slate-200 mt-0.5">
+                      {new Date(active.endDate).toLocaleDateString("en-IN", {
+                        day: "numeric", month: "short", year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
 
-                {/* Right */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <p className="font-semibold text-gray-800 text-sm">
-                    ₹{sub.finalAmount.toLocaleString("en-IN")}
-                  </p>
-                  <StatusBadge status={sub.status} />
-                </div>
+                {daysLeft !== null && (
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Remaining Days</p>
+                    <div
+                      className={`inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-lg text-xs font-black ${
+                        urgency === "critical"
+                          ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                          : urgency === "warning"
+                          ? "bg-amber-500/20 text-yellow-300 border border-amber-500/30"
+                          : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                      }`}
+                    >
+                      <Clock size={12} />
+                      {daysLeft > 0 ? `${daysLeft} Days Remaining` : "Expired Today"}
+                    </div>
+                  </div>
+                )}
               </div>
-            ))}
+
+              {/* Days Progress Bar */}
+              {active.startDate && active.endDate && daysLeft !== null && (
+                <div className="space-y-1.5 pt-2">
+                  <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden p-0.5 border border-white/5">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        urgency === "critical"
+                          ? "bg-gradient-to-r from-red-500 to-orange-500"
+                          : urgency === "warning"
+                          ? "bg-gradient-to-r from-amber-500 to-yellow-400"
+                          : "bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400"
+                      }`}
+                      style={{
+                        width: `${Math.max(
+                          0,
+                          Math.min(
+                            100,
+                            (daysLeft /
+                              Math.ceil(
+                                (new Date(active.endDate).getTime() -
+                                  new Date(active.startDate).getTime()) /
+                                  86_400_000
+                              )) *
+                              100
+                          )
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-2 flex-wrap">
+                {daysLeft !== null && daysLeft > 0 && daysLeft <= 7 && (
+                  <Link
+                    href="/premium"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white px-5 py-2.5 rounded-xl text-xs font-black transition shadow-lg shadow-amber-500/20"
+                  >
+                    <RefreshCw size={14} /> Renew Plan Now
+                  </Link>
+                )}
+                <Link
+                  href="/premium"
+                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition backdrop-blur-md"
+                >
+                  <Sparkles size={14} className="text-yellow-400" /> Upgrade Membership
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* ── NO ACTIVE PLAN CARD ── */
+          <div className="rounded-3xl border border-dashed border-violet-500/30 bg-[#111428]/80 p-8 sm:p-12 text-center shadow-xl relative overflow-hidden backdrop-blur-md">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-violet-600/20 to-indigo-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-amber-400 shadow-lg shadow-violet-600/20">
+              <Crown size={32} className="fill-amber-400/20" />
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2">
+              No Active Premium Plan
+            </h3>
+
+            <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto mb-6 leading-relaxed">
+              Unlock 1-on-1 mentorship, exclusive study tracks, priority code reviews, and premium campus ambassador perks today.
+            </p>
+
+            <Link
+              href="/premium"
+              className="inline-flex items-center gap-2.5 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white px-7 py-3 rounded-2xl text-xs font-extrabold transition-all shadow-xl shadow-violet-600/30 border border-violet-400/30 hover:scale-105"
+            >
+              <Zap size={16} className="text-yellow-400 fill-yellow-400" />
+              Explore Premium Plans
+              <ArrowRight size={14} />
+            </Link>
           </div>
         )}
-      </section>
+
+        {/* ── SUBSCRIPTION HISTORY ── */}
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black text-white tracking-tight flex items-center gap-2">
+              <ShieldCheck size={18} className="text-violet-400" />
+              Subscription History
+            </h2>
+            <span className="text-xs text-slate-400 font-mono">
+              Total {subs.length} Record{subs.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          {subs.length === 0 ? (
+            <div className="rounded-2xl border border-white/5 bg-[#111428]/60 p-10 text-center text-slate-400 text-xs font-medium">
+              No past subscription records found.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {subs.map((sub) => (
+                <div
+                  key={sub._id}
+                  className="rounded-2xl border border-white/10 bg-[#12152d] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg transition-all duration-200 hover:border-violet-500/30 hover:bg-[#151936]"
+                >
+                  {/* Left info */}
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
+                      <Crown size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-white text-sm truncate">
+                        {sub.premiumService?.title || "Codelura Premium Service"}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                        Requested: {new Date(sub.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right info */}
+                  <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0">
+                    <p className="font-black text-emerald-400 text-base">
+                      ₹{(sub.finalAmount || 0).toLocaleString("en-IN")}
+                    </p>
+                    <StatusBadge status={sub.status} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 }

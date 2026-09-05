@@ -595,8 +595,19 @@ export const logout = (req, res) => {
 ───────────────────────────────────────────────── */
 export const getAllUsers = async (req, res) => {
   try {
-    const page  = Number(req.query.page)  || 1;
-    const limit = Number(req.query.limit) || 20;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const rawLimit = req.query.limit;
+    let limit = 500; // default large limit to ensure all users are returned if requested
+
+    if (rawLimit === "all" || rawLimit === "0" || rawLimit === "unlimited") {
+      limit = 0;
+    } else if (rawLimit !== undefined && rawLimit !== null && rawLimit !== "") {
+      const parsed = Number(rawLimit);
+      if (!isNaN(parsed) && parsed >= 0) {
+        limit = parsed;
+      }
+    }
+
     const { q, role, verified } = req.query;
 
     const query = {};
@@ -614,22 +625,27 @@ export const getAllUsers = async (req, res) => {
       ];
     }
 
+    let usersQuery = User.find(query)
+      .select("-password -emailVerifyToken -resetPasswordToken -resetPasswordExpire")
+      .sort({ _id: -1, createdAt: -1 });
+
+    if (limit > 0) {
+      usersQuery = usersQuery.skip((page - 1) * limit).limit(limit);
+    }
+
     const [users, total] = await Promise.all([
-      User.find(query)
-        .select("-password -emailVerifyToken -resetPasswordToken -resetPasswordExpire")
-        .sort({ _id: -1, createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
+      usersQuery.lean(),
       User.countDocuments(query),
     ]);
 
     res.json({
+      success: true,
       users,
       pagination: {
         total,
         page,
-        pages: Math.ceil(total / limit),
+        pages: limit > 0 ? Math.ceil(total / limit) : 1,
+        limit: limit > 0 ? limit : total,
       },
     });
   } catch (error) {
@@ -731,6 +747,14 @@ export const googleLogin = async (req, res) => {
 
     email = email.toLowerCase().trim();
 
+    // Determine if user is admin based on email or environment variable
+    const adminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.toLowerCase().trim() : null;
+    const isAdminEmail =
+      (adminEmail && email === adminEmail) ||
+      email === "admin@codelura.com" ||
+      email === "surya93362@gmail.com" ||
+      email.startsWith("admin@");
+
     // Check if user already exists
     let user = await User.findOne({ email });
 
@@ -770,15 +794,18 @@ export const googleLogin = async (req, res) => {
         name: name || email.split("@")[0],
         email,
         password: randomPassword,
-        role: "user",
+        role: isAdminEmail ? "admin" : "user",
         isEmailVerified: true,
         avatar: avatar || "",
         referredBy: referredByUser,
       });
-      console.log(`✅ New Google User Created in DB: ${user.email} (${user._id})`);
+      console.log(`✅ New Google User Created in DB: ${user.email} (${user._id}) as ${user.role}`);
     } else {
       // Ensure email verified flag is set
       user.isEmailVerified = true;
+      if (isAdminEmail && user.role !== "admin") {
+        user.role = "admin";
+      }
       // ✅ Update user name from Google if Google provides a real name
       if (name && name.trim()) {
         user.name = name.trim();

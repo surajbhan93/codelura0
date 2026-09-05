@@ -19,13 +19,13 @@ export const metadata: Metadata = {
     "Codelura membership help",
   ],
   alternates: {
-    canonical: "https://www.codelura.in/contact", // update to your real domain
+    canonical: "https://www.codelura.com/contact",
   },
   openGraph: {
     title: "Contact Codelura",
     description:
       "Reach out to the Codelura team for hackathons, membership, notes, and collaboration. We reply within 24 hours.",
-    url: "https://www.codelura.in/contact",
+    url: "https://www.codelura.com/contact",
     siteName: "Codelura",
     type: "website",
   },
@@ -58,17 +58,17 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
   name: "Contact Codelura",
-  url: "https://www.codelura.in/contact",
+  url: "https://www.codelura.com/contact",
   mainEntity: {
     "@type": "Organization",
     name: "Codelura",
-    email: "codelura@gmail.com",
+    email: "contact@codelura.com",
     telephone: "+91-9336289192",
     contactPoint: [
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: "shubham@codelura.in",
+        email: "support@codelura.com",
         telephone: "+91-9336289192",
         areaServed: "IN",
         availableLanguage: ["English", "Hindi"],
@@ -136,23 +136,23 @@ export default function GeneralContactPage() {
               <h2 className="text-lg font-semibold">📧 Email Us</h2>
               <div className="mt-3 space-y-2 text-sm">
                 <a
-                  href="mailto:shubham@codelura.in"
+                  href="mailto:support@codelura.com"
                   className="block text-[#8FA3C7] transition hover:text-[#5FB0FF]"
                 >
-                  shubham@codelura.in
+                  support@codelura.com
                 </a>
                 <a
-                  href="mailto:codelura@gmail.com"
+                  href="mailto:contact@codelura.com"
                   className="block text-[#8FA3C7] transition hover:text-[#5FB0FF]"
                 >
-                  codelura@gmail.com
+                  contact@codelura.com
                 </a>
-                {/* <a
-                  href="tel:+919336289192"
-                  className="block pt-1 text-base font-semibold text-white transition hover:text-[#5FB0FF]"
+                <a
+                  href="mailto:info@codelura.com"
+                  className="block text-[#8FA3C7] transition hover:text-[#5FB0FF]"
                 >
-                  📞 +91-9336289192
-                </a> */}
+                  info@codelura.com
+                </a>
               </div>
             </div>
 
@@ -193,6 +193,57 @@ export default function GeneralContactPage() {
               Tell us what&apos;s on your mind — we&apos;re here to help.
             </p>
             <ContactForm />
+          </div>
+        </div>
+
+        {/* OFFICIAL DEPARTMENT EMAIL DIRECTORY */}
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 mt-14 pt-10 border-t border-white/10">
+          <div className="text-center mb-8">
+            <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-xs text-violet-300 font-bold uppercase tracking-wider">
+              Official Directory
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-3">
+              Department Direct Contacts
+            </h2>
+            <p className="text-slate-400 text-sm mt-1 max-w-xl mx-auto">
+              Reach out directly to the dedicated Codelura team responsible for your inquiry.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {[
+              { dept: "Support", email: "support@codelura.com" },
+              { dept: "HR & People", email: "hr@codelura.com" },
+              { dept: "Administration", email: "admin@codelura.com" },
+              { dept: "General Info", email: "info@codelura.com" },
+              { dept: "Contact & Desk", email: "contact@codelura.com" },
+              { dept: "Sales & Deals", email: "sales@codelura.com" },
+              { dept: "Marketing & PR", email: "marketing@codelura.com" },
+              { dept: "Careers & Jobs", email: "careers@codelura.com" },
+              { dept: "Accounts", email: "accounts@codelura.com" },
+              { dept: "Billing & Invoices", email: "billing@codelura.com" },
+              { dept: "Finance", email: "finance@codelura.com" },
+              { dept: "Operations", email: "operations@codelura.com" },
+              { dept: "Business & Growth", email: "business@codelura.com" },
+              { dept: "Engineering & Dev", email: "developer@codelura.com" },
+              { dept: "Team Desk", email: "team@codelura.com" },
+              { dept: "Hello & Welcome", email: "hello@codelura.com" },
+              { dept: "Legal & Compliance", email: "legal@codelura.com" },
+              { dept: "Data Protection", email: "dpo@codelura.com" },
+            ].map((item) => (
+              <a
+                key={item.email}
+                href={`mailto:${item.email}`}
+                className="group flex flex-col p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-violet-500/40 hover:bg-violet-500/10 transition text-left"
+              >
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-violet-300">
+                  {item.dept}
+                </span>
+                <span className="text-xs font-semibold text-white truncate mt-1 group-hover:text-violet-200">
+                  {item.email}
+                </span>
+              </a>
+            ))}
           </div>
         </div>
       </section>
