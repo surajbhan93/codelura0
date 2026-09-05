@@ -62,13 +62,22 @@ async function getJobReferralPlans() {
     const data = await res.json();
     const plans: PremiumPlan[] = data.plans || [];
 
-    // ✅ Filter for referral AND other categories
-    return plans.filter(
+    // ✅ Filter for referral AND other categories with fallbacks
+    const filtered = plans.filter(
       (plan: PremiumPlan) => {
         const category = plan.category?.toLowerCase() || "";
-        return category === "referral" || category === "other";
+        return (
+          category === "referral" ||
+          category === "job" ||
+          category === "jobs" ||
+          category === "other" ||
+          category.includes("referral") ||
+          category.includes("job")
+        );
       }
     );
+
+    return filtered.length > 0 ? filtered : plans;
   } catch (error) {
     console.error("Error fetching job referral plans:", error);
     return [];

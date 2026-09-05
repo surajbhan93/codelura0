@@ -617,14 +617,23 @@ async function getMentorshipPlans() {
     });
     const data = await res.json();
     
-    // const plans = data.plans || [];
     const plans: PremiumPlan[] = data.plans || [];
-    // ✅ Filter for mentorship category
-    return plans.filter((plan: PremiumPlan) =>
-      plan.category === "mentorship" || 
-      plan.category === "mentorship" ||
-      plan.category === "mentor"
-    );
+    // ✅ Filter for mentorship categories with fallbacks
+    const filtered = plans.filter((plan: PremiumPlan) => {
+      const category = plan.category?.toLowerCase() || "";
+      return (
+        category === "mentorship" || 
+        category === "mentor" ||
+        category === "career-guidance" ||
+        category === "mock-interview" ||
+        category === "resume" ||
+        category === "linkedin" ||
+        category.includes("mentor") ||
+        category.includes("guidance")
+      );
+    });
+
+    return filtered.length > 0 ? filtered : plans;
   } catch (error) {
     console.error('Error fetching mentorship plans:', error);
     return [];

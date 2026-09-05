@@ -50,7 +50,7 @@ async function fetchPdfBytes(course) {
    LIST COURSES
 =============================== */
 export const listCourses = async (req, res) => {
-  const courses = await Course.find({ isPublished: true })
+  const courses = await Course.find({ isPublished: { $ne: false } })
     .select("-pdf.filePath -attachments")
     .sort({ createdAt: -1 });
 
