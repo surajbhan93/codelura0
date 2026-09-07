@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./premium.module.css";
 import CareerPromo from "@/components/career/CareerPromo";
-// ✅ ISR - Revalidate every 1 hour
-export const revalidate = 3600;
+// ✅ ISR - Revalidate every 5 minutes (300 seconds)
+export const revalidate = 300;
 interface PremiumPlan {
   _id: string;
   title: string;
@@ -223,7 +223,7 @@ async function getMockInterviewPlans() {
   try {
     const apiUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
     const res = await fetch(`${apiUrl}/premium/plans?category=mock-interview`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 300 },
     });
     const data = await res.json();
 

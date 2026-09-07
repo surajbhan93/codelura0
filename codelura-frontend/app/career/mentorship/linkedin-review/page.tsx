@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-// ✅ ISR - Revalidate every 1 hour
-export const revalidate = 60;
+// ✅ ISR - Revalidate every 5 minutes (300 seconds)
+export const revalidate = 300;
 
 interface PremiumPlan {
   _id: string;
@@ -48,7 +48,7 @@ async function getLinkedInReviewPlans() {
   try {
     const apiUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
     const res = await fetch(`${apiUrl}/premium/plans`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 300 },
     });
     const data = await res.json();
 

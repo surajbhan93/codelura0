@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 // ✅ ISR - Revalidate every 1 hour
-export const revalidate = 3600;
+export const revalidate = 300;
 
 interface PremiumPlan {
   _id: string;

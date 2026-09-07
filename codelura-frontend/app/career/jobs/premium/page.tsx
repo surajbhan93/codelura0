@@ -25,8 +25,10 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-// ✅ ISR - Revalidate every 1 hour
-export const revalidate = 3600;
+import api from "@/lib/api";
+
+// ✅ ISR - Revalidate every 5 minutes (300 seconds)
+export const revalidate = 300;
 
 interface PremiumPlan {
   _id: string;
@@ -48,9 +50,9 @@ interface PremiumPlan {
 // ============================================
 async function getJobReferralPlans() {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
+    const apiUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
     const res = await fetch(`${apiUrl}/premium/plans`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 300 },
     });
     
     // ✅ Error handling for fetch

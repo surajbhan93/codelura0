@@ -38,7 +38,7 @@ interface PremiumPlan {
   isRecommended?: boolean;
 }
 // ✅ ISR - Revalidate every 1 hour
-export const revalidate = 3600;
+export const revalidate = 300;
 import type { LucideIcon } from "lucide-react";
 import api from "@/lib/api";
 

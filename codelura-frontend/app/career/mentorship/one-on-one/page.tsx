@@ -589,7 +589,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 // ✅ ISR - Revalidate every 1 hour
-export const revalidate = 3600;
+export const revalidate = 300;
 interface PremiumPlan {
   _id: string;
   title: string;
@@ -606,12 +606,14 @@ interface PremiumPlan {
   isRecommended?: boolean;
 }
 
+import api from "@/lib/api";
+
 // ============================================
 // DATA FETCHING (Server Side)
 // ============================================
 async function getMentorshipPlans() {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
+    const apiUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
     const res = await fetch(`${apiUrl}/premium/plans`, {
       next: { revalidate: 3600 },
     });

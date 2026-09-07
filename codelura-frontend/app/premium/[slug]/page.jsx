@@ -5,19 +5,21 @@ import Link from "next/link";
 import BuyButton from './BuyButton';
 import styles from "./page.module.css";
 
-// ✅ ISR - Revalidate every 1 hour
-export const revalidate = 3600;
+// ✅ ISR - Revalidate every 5 minutes (300 seconds)
+export const revalidate = 300;
+
+import api from "@/lib/api";
 
 // ============================================
 // DATA FETCHING
 // ============================================
 async function getPlan(slug) {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
+    const apiUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
     const res = await fetch(
       `${apiUrl}/premium/plan/${slug}`,
       {
-        next: { revalidate: 3600 },
+        next: { revalidate: 300 },
       }
     );
 
