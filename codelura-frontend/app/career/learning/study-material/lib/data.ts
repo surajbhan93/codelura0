@@ -1,9 +1,9 @@
 import { cache } from "react";
+import api from "@/lib/api";
 import { Course, Testimonial } from "../types";
 
 const getApiBaseUrl = () => {
-  const url = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
-  return url.replace(/\/$/, "");
+  return (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
 };
 
 // Server-side cached fetch for Courses (Revalidated every 60s for freshness)

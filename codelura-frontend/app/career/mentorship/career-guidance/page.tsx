@@ -39,12 +39,14 @@ interface PremiumPlan {
   isRecommended?: boolean;
 }
 
+import api from "@/lib/api";
+
 // ============================================
 // DATA FETCHING (Server Side)
 // ============================================
 async function getCareerGuidancePlans() {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.codelura.com/api";
+    const apiUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
     const res = await fetch(`${apiUrl}/premium/plans`, {
       next: { revalidate: 3600 },
     });

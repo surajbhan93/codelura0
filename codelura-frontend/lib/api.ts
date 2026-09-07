@@ -2,10 +2,18 @@ import axios from "axios";
 
 const isServer = typeof window === "undefined";
 
+const getBaseURL = () => {
+  const envUrl = isServer
+    ? process.env.API_URL || process.env.NEXT_PUBLIC_API_URL
+    : process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.replace(/\/$/, "");
+  }
+  return "https://api.codelura.com/api";
+};
+
 const api = axios.create({
-  baseURL: isServer
-    ? process.env.API_URL
-    : process.env.NEXT_PUBLIC_API_URL,
+  baseURL: getBaseURL(),
   withCredentials: true,
 });
 

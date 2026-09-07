@@ -14,7 +14,7 @@ import { TextInput, Textarea, ToggleSwitch } from "flowbite-react";
 import {
   Briefcase, 
   ImagePlus, Loader2, X, CheckCircle2,
-  Upload,
+  Upload, Sparkles, Copy, Share2, Check
 } from "lucide-react";
 import type Quill from "quill";
 
@@ -82,6 +82,14 @@ export default function AdminJobForm({
   const [uploading, setUploading] = useState(false);
   const [dragOver,  setDragOver]  = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [aiJobUrl, setAiJobUrl] = useState("");
+  const [aiJobDescription, setAiJobDescription] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiGenerated, setAiGenerated] = useState(false);
+  const [applyOption, setApplyOption] = useState<"comment_dm" | "codelura_link" | "career_url">("comment_dm");
+  const [customSocialPost, setCustomSocialPost] = useState<string | null>(null);
+  const [copiedPost, setCopiedPost] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -236,6 +244,93 @@ seoNoIndex: false,
     };
   });
 
+  const autoSocialPost = useMemo(() => {
+    const comp = form.company?.trim() || "Company";
+    const title = form.title?.trim() || "Software Engineer";
+    const loc = form.location?.trim() || "India";
+    const sal = form.salary?.trim() || "As per Industry Standards";
+    
+    const matchedType = JOB_TYPES.find((t) => t.value === form.type);
+    const typeLabel = matchedType ? matchedType.label.replace(/^[\u2600-\u27BF\u1F300-\u1F9FF]\s*/, "") : (form.type || "Intern / Full-time");
+    
+    const rawTags = form.tags ? form.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+    const skillsText = rawTags.length > 0 ? rawTags.join(", ") : "Conversational AI, Prompt Engineering, NLP, LLMs, Problem Solving";
+    
+    const tagHashtags = rawTags.map(t => `#${t.replace(/[^a-zA-Z0-9]/g, "")}`);
+    const compHashtag = `#${comp.replace(/[^a-zA-Z0-9]/g, "")}`;
+
+    const defaultHashtags = Array.from(new Set([
+      "#Hiring",
+      compHashtag !== "#" ? compHashtag : "#TechJobs",
+      ...tagHashtags,
+      "#AIJobs",
+      "#AIInternship",
+      "#Freshers",
+      "#Internship",
+      "#FullTimeJobs",
+      "#Careers",
+      "#TechJobs"
+    ])).filter(Boolean).slice(0, 10).join(" ");
+
+    const catSegment = (() => {
+      const lower = (form.type || "").toLowerCase().trim();
+      if (lower.includes("intern")) return "internships";
+      if (lower.includes("full")) return "full-time";
+      if (lower.includes("off") || lower.includes("campus")) return "off-campus-drives";
+      if (lower.includes("walk")) return "walk-in-drives";
+      if (lower.includes("codelura")) return "codelura-hiring";
+      return "latest";
+    })();
+
+    const jobFullUrl = form.slug
+      ? `https://codelura.com/career/jobs/${catSegment}/${form.slug}`
+      : `https://codelura.com/career/jobs/${catSegment}`;
+
+    let applyText = "📩 Apply: drop your mail in the comment section or DM\n🔗 Application: Apply through the form provided above.";
+    if (applyOption === "codelura_link") {
+      applyText = `📩 Apply: ${jobFullUrl}\n🔗 Application: Apply through the form provided above.`;
+    } else if (applyOption === "career_url") {
+      const link = form.careerPageUrl || jobFullUrl;
+      applyText = `📩 Apply: ${link}\n🔗 Application: Apply directly via official portal.`;
+    }
+
+    const shortDescText = form.description
+      ? form.description.trim()
+      : "Work on cutting-edge products and collaborate with AI researchers & product teams.";
+
+    const communityLinks = `👉 Apply Now & Kickstart Your Tech Journey:
+Follow me and drop your email in the comments section — or join our community to apply directly! 🚀
+
+📲 WhatsApp Channel (More Career & Direct Link Jobs): https://acesse.one/ms74xyi
+
+💬 Join our Community (Most recent jobs posted): https://tinyurl.com/Mentorsetu
+
+💼 1750+ HR contacts with full LinkedIn & company details: https://tinyurl.com/3dxxsu63
+
+📋 1800+ HR contacts with full company details: https://l1nq.com/mentorsetu
+
+📂 500+ HR contacts with full company details: https://l1nq.com/1agpgwd`;
+
+    return `🚀 ${comp} is Hiring | ${title}
+
+🏢 Company: ${comp}
+💼 Role: ${title} — ${typeLabel}
+📍 Location: ${loc}
+🎓 Batch: Students / Recent Graduates
+💰 Expected Salary: ${sal}
+🤖 Skills: ${skillsText}
+
+🔥 ${shortDescText}
+
+${communityLinks}
+
+${applyText}
+
+${defaultHashtags}`;
+  }, [form, applyOption, JOB_TYPES]);
+
+  const socialPostContent = customSocialPost !== null ? customSocialPost : autoSocialPost;
+
   // ─── Auto-Save Function (Debounced) ───
   const autoSave = useCallback((data: JobFormData) => {
     if (saveTimeoutRef.current) {
@@ -278,6 +373,77 @@ seoNoIndex: false,
       return newForm;
     });
   }, [autoSave]);
+
+  // ─── AI Auto-Fill Generator ───
+  const handleAiGenerate = useCallback(async (overwriteAll = true) => {
+    if (!aiJobUrl.trim() && !aiJobDescription.trim()) {
+      toast.error("Please provide either a Job URL or a Job Description");
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      setAiError(null);
+
+      const res = await api.post("/jobs/auto-fill", {
+        jobUrl: aiJobUrl.trim(),
+        jobDescription: aiJobDescription.trim(),
+      });
+
+      if (!res.data || !res.data.success || !res.data.job) {
+        throw new Error(res.data?.message || "Unable to generate job details.");
+      }
+
+      const aiData = res.data.job;
+      setAiGenerated(true);
+
+      setForm((prev) => {
+        const updated = { ...prev };
+
+        const applyVal = (key: keyof JobFormData, val: any) => {
+          if (val === undefined || val === null || val === "") return;
+          if (overwriteAll || !prev[key] || prev[key] === today) {
+            (updated as any)[key] = val;
+          }
+        };
+
+        if (aiData.jobTitle) applyVal("title", aiData.jobTitle);
+        if (aiData.slug) applyVal("slug", aiData.slug);
+        if (aiData.companyName) applyVal("company", aiData.companyName);
+        if (aiData.bannerImageUrl) applyVal("bannerImage", aiData.bannerImageUrl);
+        if (aiData.location) applyVal("location", aiData.location);
+        if (aiData.jobType) applyVal("type", aiData.jobType);
+        if (aiData.salary) applyVal("salary", aiData.salary);
+        if (aiData.shortDescription) applyVal("description", aiData.shortDescription);
+        if (aiData.fullDescription) applyVal("content", aiData.fullDescription);
+        if (aiData.careerUrl) applyVal("careerPageUrl", aiData.careerUrl);
+        if (aiData.postedDate) applyVal("postedAt", aiData.postedDate);
+        if (aiData.applicationDeadline) applyVal("deadline", aiData.applicationDeadline);
+
+        if (aiData.skillTags) {
+          const tagStr = Array.isArray(aiData.skillTags) ? aiData.skillTags.join(", ") : aiData.skillTags;
+          applyVal("tags", tagStr);
+        }
+
+        if (aiData.seoMetaTitle) applyVal("seoMetaTitle", aiData.seoMetaTitle);
+        if (aiData.seoMetaDescription) applyVal("seoMetaDescription", aiData.seoMetaDescription);
+        if (aiData.seoKeywords) applyVal("seoKeywords", aiData.seoKeywords);
+        if (aiData.canonicalUrl) applyVal("seoCanonicalUrl", aiData.canonicalUrl);
+        if (aiData.socialOgImageUrl) applyVal("seoOgImage", aiData.socialOgImageUrl);
+
+        autoSave(updated);
+        return updated;
+      });
+
+      toast.success("Job details generated successfully. Please review before publishing.");
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || "Unable to generate job details. Please check the URL/content and try again.";
+      setAiError(msg);
+      toast.error(msg);
+    } finally {
+      setAiLoading(false);
+    }
+  }, [aiJobUrl, aiJobDescription, today, autoSave]);
 
   /* ── Live code preview highlight ── */
   // ─── FIX: Use proper hljs import ───
@@ -464,6 +630,75 @@ isFeatured: false, isExpired: false,
               </div>
             </div>
           </div>
+
+          {/* ══ AI AUTO-FILL SECTION ══ */}
+          <Card title="✨ AI Job Auto-Fill" delay={0.02}>
+            <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.5, marginBottom: 16 }}>
+              Paste a job URL or job description and let Grok AI automatically fill the job listing fields.
+            </p>
+
+            <div className="ajf-grid-2" style={{ marginBottom: 14 }}>
+              <Field label="Job URL">
+                <TextInput
+                  placeholder="https://careers.company.com/job/123"
+                  value={aiJobUrl}
+                  onChange={(e) => setAiJobUrl(e.target.value)}
+                  disabled={aiLoading}
+                />
+              </Field>
+              <Field label="OR Job Description">
+                <Textarea
+                  rows={3}
+                  placeholder="Paste complete job details here..."
+                  value={aiJobDescription}
+                  onChange={(e) => setAiJobDescription(e.target.value)}
+                  disabled={aiLoading}
+                />
+              </Field>
+            </div>
+
+            {aiError && (
+              <div style={{
+                marginBottom: 14,
+                padding: "10px 14px",
+                borderRadius: 8,
+                background: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                color: "#f87171",
+                fontSize: 13
+              }}>
+                ⚠️ {aiError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="ajf-btn-ai"
+                onClick={() => handleAiGenerate(true)}
+                disabled={aiLoading || (!aiJobUrl.trim() && !aiJobDescription.trim())}
+              >
+                {aiLoading ? (
+                  <><Loader2 size={14} className="animate-spin" /> Generating Job Details...</>
+                ) : aiGenerated ? (
+                  <><Sparkles size={14} /> Regenerate Job Details</>
+                ) : (
+                  <><Sparkles size={14} /> Generate Job Details</>
+                )}
+              </button>
+
+              {aiGenerated && (
+                <button
+                  type="button"
+                  className="ajf-btn-ai-secondary"
+                  onClick={() => handleAiGenerate(true)}
+                  disabled={aiLoading}
+                >
+                  Replace with AI Generated Data
+                </button>
+              )}
+            </div>
+          </Card>
 
           {/* ══ SECTION 1 — BASIC INFO ══ */}
           <Card title="📌 Basic Information" delay={0.05}>
@@ -712,7 +947,7 @@ isFeatured: false, isExpired: false,
     <Field label="Canonical URL (Optional)">
 
       <TextInput
-        placeholder={`https://codelura.com/jobs-Alerts/${form.slug || "job-slug"}`}
+        placeholder={`https://codelura.com/career/jobs/${form.type ? (form.type.includes("intern") ? "internships" : form.type) : "internships"}/${form.slug || "job-slug"}`}
         value={form.seoCanonicalUrl}
         onChange={(e) =>
           handleFormChange(
@@ -781,7 +1016,83 @@ isFeatured: false, isExpired: false,
   </div>
 
 </Card>
-          {/* ══ SECTION 7 — SETTINGS ══ */}
+
+          {/* ══ SECTION 7 — SOCIAL SHARING POST (LinkedIn / Telegram) ══ */}
+          <Card title="📱 Social Media Sharing Post (LinkedIn / Telegram / WhatsApp)" delay={0.34}>
+            <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 14 }}>
+              Auto-generated short hiring post with emojis & hashtags ready to circulate on LinkedIn, Telegram, WhatsApp & Instagram!
+            </p>
+
+            {/* Apply Action Selector */}
+            <div style={{ marginBottom: 14 }}>
+              <label className="ajf-label" style={{ marginBottom: 6, display: "block" }}>Application Call-To-Action:</label>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <div
+                  className={`ajf-chip-type ${applyOption === "comment_dm" ? "sel-intern" : ""}`}
+                  onClick={() => setApplyOption("comment_dm")}
+                >
+                  📩 Comment Section / DM
+                </div>
+                <div
+                  className={`ajf-chip-type ${applyOption === "codelura_link" ? "sel-full" : ""}`}
+                  onClick={() => setApplyOption("codelura_link")}
+                >
+                  🔗 Codelura Job Link
+                </div>
+                <div
+                  className={`ajf-chip-type ${applyOption === "career_url" ? "sel-codelura" : ""}`}
+                  onClick={() => setApplyOption("career_url")}
+                >
+                  🌐 Direct Career Page URL
+                </div>
+              </div>
+            </div>
+
+            <Textarea
+              rows={12}
+              value={socialPostContent}
+              onChange={(e) => setCustomSocialPost(e.target.value)}
+              style={{
+                fontFamily: "monospace",
+                fontSize: 13,
+                lineHeight: 1.6,
+                background: "rgba(15, 23, 42, 0.7)",
+                borderColor: "rgba(139, 92, 246, 0.3)",
+                color: "#e2e8f0",
+                borderRadius: 10
+              }}
+            />
+
+            <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="ajf-btn-ai"
+                onClick={() => {
+                  navigator.clipboard.writeText(socialPostContent);
+                  setCopiedPost(true);
+                  toast.success("📋 Social Post copied to clipboard!");
+                  setTimeout(() => setCopiedPost(false), 2500);
+                }}
+              >
+                {copiedPost ? <><Check size={14} /> Copied to Clipboard!</> : <><Copy size={14} /> Copy LinkedIn / Telegram Post</>}
+              </button>
+
+              {customSocialPost !== null && (
+                <button
+                  type="button"
+                  className="ajf-btn-ai-secondary"
+                  onClick={() => {
+                    setCustomSocialPost(null);
+                    toast.success("🔄 Reset to auto-generated post!");
+                  }}
+                >
+                  Reset Template
+                </button>
+              )}
+            </div>
+          </Card>
+
+          {/* ══ SECTION 8 — SETTINGS ══ */}
           <Card title="⚙️ Settings" delay={0.35}>
             {TOGGLE_ITEMS.map((item) => (
               <div className="ajf-toggle-row" key={item.key}>
@@ -1123,6 +1434,30 @@ const styles = `
   }
   .ajf-btn-submit:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
   .ajf-btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* AI Auto-Fill Buttons */
+  .ajf-btn-ai {
+    padding: 10px 22px; border-radius: 10px;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    border: none; color: #fff; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 14px rgba(168,85,247,0.35);
+    transition: all 0.18s ease; font-family: 'DM Sans', sans-serif;
+  }
+  .ajf-btn-ai:hover:not(:disabled) {
+    opacity: 0.92; transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(168,85,247,0.45);
+  }
+  .ajf-btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ajf-btn-ai-secondary {
+    padding: 9px 18px; border-radius: 10px;
+    background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3);
+    color: #c084fc; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s ease; font-family: 'DM Sans', sans-serif;
+  }
+  .ajf-btn-ai-secondary:hover:not(:disabled) {
+    background: rgba(168,85,247,0.2); color: #e9d5ff;
+  }
 
   .animate-spin { animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }

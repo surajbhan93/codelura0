@@ -1,6 +1,5 @@
-// import { Request, Response } from "express";
 import Job from "../../models/Job.model.js";
-// import Job from "../../models/Job.js";
+import { generateJobAutoFill } from "../../services/ai.service.js";
 
 export const getAllJobs = async (req, res) => {
   try {
@@ -307,5 +306,34 @@ console.log("CANDIDATES:", candidates.length);
   } catch (error) {
     console.error("RELATED JOB ERROR 👉", error);
     res.status(500).json({ message: "Failed to fetch related jobs" });
+  }
+};
+
+/* ─────────────────────────────────────────────────
+   ✅ AUTO-FILL JOB VIA GROK AI (Admin)
+───────────────────────────────────────────────── */
+export const autoFillJob = async (req, res) => {
+  try {
+    const { jobUrl, jobDescription } = req.body;
+
+    if (!jobUrl?.trim() && !jobDescription?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide either a Job URL or a Job Description.",
+      });
+    }
+
+    const jobData = await generateJobAutoFill({ jobUrl, jobDescription });
+
+    return res.status(200).json({
+      success: true,
+      job: jobData,
+    });
+  } catch (error) {
+    console.error("AUTO-FILL JOB ERROR 👉", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Unable to generate job details. Please check the URL/content and try again.",
+    });
   }
 };

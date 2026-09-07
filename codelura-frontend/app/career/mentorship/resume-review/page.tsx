@@ -40,15 +40,16 @@ interface PremiumPlan {
 // ✅ ISR - Revalidate every 1 hour
 export const revalidate = 3600;
 import type { LucideIcon } from "lucide-react";
+import api from "@/lib/api";
+
 // ============================================
 // DATA FETCHING (Server Side)
 // ============================================
 async function getResumeReviewPlans() {
   try {
-    // ✅ Fetch resume-review category plans
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/premium/plans?category=resume-review`, {
+    const apiUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
+    const res = await fetch(`${apiUrl}/premium/plans?category=resume-review`, {
       next: { revalidate: 3600 },
-      // cache: 'force-cache'
     });
     const data = await res.json();
     

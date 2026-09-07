@@ -32,15 +32,15 @@ interface PremiumPlan {
   isRecommended?: boolean;
 }
 
+import api from "@/lib/api";
+
 // ============================================
 // DATA FETCHING (Server Side)
 // ============================================
 async function getPortfolioReviewPlans() {
   try {
-    const res =
-     await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/premium/plans`,{
-    
+    const apiUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
+    const res = await fetch(`${apiUrl}/premium/plans`, {
       next: { revalidate: 3600 },
     });
     const data = await res.json();

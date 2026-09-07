@@ -1039,7 +1039,8 @@ export default function CourseDetailPage() {
   // Fetch total page count via HEAD request
   useEffect(() => {
     if (!course?._id) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/courses/${course._id}/preview`, { method: "HEAD" })
+    const baseUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
+    fetch(`${baseUrl}/courses/${course._id}/preview`, { method: "HEAD" })
       .then((res) => {
         const total = res.headers.get("x-total-pages");
         if (total) setTotalPages(Number(total));
@@ -1077,7 +1078,8 @@ export default function CourseDetailPage() {
     if (typeof document !== "undefined") {
       token = document.cookie.split("; ").find((row) => row.startsWith("token="))?.split("=")[1] || "";
     }
-    return `${process.env.NEXT_PUBLIC_API_URL}/courses/${course._id}/preview?token=${token}&t=${accessLevel}`;
+    const baseUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
+    return `${baseUrl}/courses/${course._id}/preview?token=${token}&t=${accessLevel}`;
   }, [course?._id, accessLevel]);
 
   // Fetch Course details
