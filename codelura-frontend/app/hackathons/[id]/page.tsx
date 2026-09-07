@@ -1,6 +1,7 @@
 import ParticipateButton from "@/components/hackathon/ParticipateButton";
 import JudgeCard from "@/components/hackathon/JudgeCard";
 import SponsorChip from "@/components/hackathon/SponsorChip";
+import api from "@/lib/api";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -124,7 +125,7 @@ interface Hackathon {
 // ── Data Fetching ───────────────────────────────────────────────────────────
 async function getHackathon(id: string): Promise<Hackathon | "NOT_FOUND" | "ERROR"> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002/api";
+    const baseUrl = (api.defaults.baseURL || "https://api.codelura.com/api").replace(/\/$/, "");
     const res = await fetch(`${baseUrl}/hackathons/${id}`, {
       cache: "no-store",
       next: { revalidate: 0 },
