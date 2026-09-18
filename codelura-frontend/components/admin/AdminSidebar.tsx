@@ -20,11 +20,19 @@ import {
   HiOutlineQuestionMarkCircle,
   HiOutlineUsers,
   HiOutlineShoppingBag,
+  HiOutlineGlobeAlt,
+  HiOutlineLocationMarker,
 } from "react-icons/hi";
 import { useState } from "react";
 
 const menu = [
   { name: "Dashboard",          href: "/admin",                 icon: HiOutlineViewGrid,          group: "main" },
+
+  // Google Business Profile & Local SEO
+  { name: "Google Business (GBP)", href: "/google-business-profile", icon: HiOutlineGlobeAlt,   group: "gbp" },
+  { name: "GBP Locations",      href: "/google-business-profile/locations", icon: HiOutlineLocationMarker, group: "gbp" },
+  { name: "Local SEO Audit",    href: "/google-business-profile/audit", icon: HiOutlineChartBar, group: "gbp" },
+  { name: "Competitor Rank",    href: "/google-business-profile/competitors", icon: HiOutlineTrendingUp, group: "gbp" },
 
   // Learning & Tracks
   { name: "Campus Program",     href: "/admin/campus",          icon: HiOutlineAcademicCap,       group: "learning" },
@@ -58,6 +66,7 @@ const menu = [
 
 const groups: Record<string, string> = {
   main: "",
+  gbp: "Google Business & SEO",
   learning: "Learning & Tracks",
   content: "Content & Jobs",
   manage: "Services & Sales",
@@ -127,7 +136,7 @@ export default function AdminSidebar() {
                 {groupKey !== "main" && <div className="sb-divider" />}
                 {groupLabel && <span className="sb-group-label">{groupLabel}</span>}
                 {items.map((item) => {
-                  const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                  const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
                   return (
                     <Link
                       key={item.name}

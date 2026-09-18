@@ -4,6 +4,9 @@ import app from "./App/app.js";
 import connectDB from "./App/config/db.js";
 import cors from "cors";
 import { startAutoGBP } from "./App/cron/autogbp.cron.js";
+import { startGbpPostScheduler } from "./App/cron/gbpPostScheduler.cron.js";
+import { startGbpTokenRefresh } from "./App/cron/gbpTokenRefresh.cron.js";
+import { startReviewAutoReplyCron } from "./App/cron/reviewAutoReply.cron.js";
 import path from "path";
 // github
 import passport from "./App/config/passport.js";
@@ -20,6 +23,9 @@ dotenv.config({
 console.log("CLOUD NAME:", process.env.CLOUDINARY_CLOUD_NAME); // 👈 debug
 connectDB();
 startAutoGBP();
+startGbpPostScheduler();
+startGbpTokenRefresh();
+startReviewAutoReplyCron();
 const PORT = process.env.PORT || 3002;
 
 app.listen(PORT, () => {

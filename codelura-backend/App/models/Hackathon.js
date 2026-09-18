@@ -130,6 +130,20 @@ const hackathonSchema = new mongoose.Schema(
       default: [],
     },
 
+    registrations: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        teamName: { type: String, default: "Solo Innovator" },
+        track: { type: String, default: "General" },
+        contactPhone: { type: String, default: "" },
+        projectIdea: { type: String, default: "" },
+        registeredAt: { type: Date, default: Date.now },
+      },
+    ],
+
     maxParticipants: {
       type: Number,
       default: 500,

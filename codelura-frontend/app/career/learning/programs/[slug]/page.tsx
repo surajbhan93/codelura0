@@ -342,10 +342,105 @@ export default function ProgramDetailPage() {
       ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100)
       : 41;
 
+  const generateDynamicSections = (prog: any): Section[] => {
+    const name = prog?.name || prog?.title || "Course";
+    const nameLower = name.toLowerCase();
+
+    if (nameLower.includes("ai") || nameLower.includes("automation") || nameLower.includes("llm") || nameLower.includes("prompt")) {
+      return [
+        {
+          title: "Module 1: Orientation & AI Fundamentals",
+          lessons: [
+            { title: "Course Overview & Learning Objectives" },
+            { title: "Introduction to Large Language Models (LLMs)" },
+            { title: "Prompt Engineering Principles & Frameworks" },
+            { title: "Zero-Shot, Few-Shot & Chain-of-Thought Prompting" },
+          ],
+        },
+        {
+          title: "Module 2: Business & Workflow Automation",
+          lessons: [
+            { title: "Make.com & Zapier Architecture Setup" },
+            { title: "Webhook Trigger Integration & Payload Formatting" },
+            { title: "Automating Email, CRM & Slack Workflows" },
+            { title: "Error Handling & Retries in Automation Pipelines" },
+          ],
+        },
+        {
+          title: "Module 3: Custom Agents & Capstone Project",
+          lessons: [
+            { title: "Designing Autonomous AI Agents" },
+            { title: "Vector DB & RAG Integration" },
+            { title: "Deploying Enterprise AI Assistants" },
+            { title: "Capstone Project & Course Certification" },
+          ],
+        },
+      ];
+    }
+
+    if (nameLower.includes("video") || nameLower.includes("edit") || nameLower.includes("media")) {
+      return [
+        {
+          title: "Module 1: Video Editing Essentials",
+          lessons: [
+            { title: "Software Suite & Workspace Setup" },
+            { title: "Timeline Editing, Rough Cuts & Pacing" },
+            { title: "Keyboard Shortcuts & Editing Efficiency" },
+            { title: "Transitions, Lower Thirds & Text Overlays" },
+          ],
+        },
+        {
+          title: "Module 2: Motion Graphics & Sound Design",
+          lessons: [
+            { title: "After Effects Animation & Keyframing" },
+            { title: "Audio Ducking, SFX & Noise Cleanup" },
+            { title: "Color Correction & Cinematic Color Grading" },
+          ],
+        },
+        {
+          title: "Module 3: Production & Showreel",
+          lessons: [
+            { title: "Editing High-Retention Short-Form Reels" },
+            { title: "Optimal Export Settings for YouTube & Socials" },
+            { title: "Building a High-Converting Editor Showreel" },
+          ],
+        },
+      ];
+    }
+
+    // Generic Dynamic Fallback
+    return [
+      {
+        title: `Module 1: Foundations of ${name}`,
+        lessons: [
+          { title: `Introduction to ${name}` },
+          { title: "Setting Up Development & Working Environment" },
+          { title: "Core Concepts & Industry Standard Tools" },
+        ],
+      },
+      {
+        title: `Module 2: Practical Application & Best Practices`,
+        lessons: [
+          { title: "Deep Dive into Applied Workflows" },
+          { title: "Hands-on Exercises & Real-World Scenarios" },
+          { title: "Optimization & Quality Assurance" },
+        ],
+      },
+      {
+        title: `Module 3: Production Implementation & Certification`,
+        lessons: [
+          { title: "Building the Capstone Portfolio Project" },
+          { title: "Performance Tuning & Final Delivery" },
+          { title: "Course Summary, Certificate & Career Guidance" },
+        ],
+      },
+    ];
+  };
+
   const displaySections =
     program.sections && program.sections.length > 0
       ? program.sections
-      : DEFAULT_SECTIONS;
+      : generateDynamicSections(program);
 
   const displayInstructors =
     program.instructors && program.instructors.length > 0

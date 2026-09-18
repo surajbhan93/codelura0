@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import compression from "compression";
 import premiumRoutes from "./routes/premium.routes.js";
 import blogRoutes from "./routes/blog.routes.js";
 import jobsRoutes from "./routes/Job.routes.js";
@@ -47,6 +48,18 @@ const allowedOrigins = [
   "http://10.100.125.51:3003",
   process.env.CLIENT_URL,
 ].filter(Boolean);
+
+// Enable gzip compression for all responses
+app.use(compression({
+  threshold: 1024, // Only compress responses above 1KB
+  level: 6, // Compression level (0-9, 6 is balanced)
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false; // Don't compress if client sends this header
+    }
+    return compression.filter(req, res); // Use default filter
+  }
+}));
 
 app.use(
   cors({
@@ -162,4 +175,8 @@ app.use("/api/campus", express.json(), campusRoutes);
 app.use("/api/admin/campus", express.json(), campusAdminRoutes);
 app.get("/api/admin/stats", express.json(), authMiddleware, getAdminStats);
 
+
+// Google Business Profile Module
+import gbpRoutes from "./routes/gbp/gbp.routes.js";
+app.use("/api/google-business-profile", gbpRoutes);
 export default app;

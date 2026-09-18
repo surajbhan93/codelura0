@@ -358,6 +358,8 @@ export default function AdminCampusPage() {
     const searchMatch =
       p.user?.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
       p.user?.email?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+      (p.user?.phone && p.user.phone.toLowerCase().includes(participantSearch.toLowerCase())) ||
+      (p.phone && p.phone.toLowerCase().includes(participantSearch.toLowerCase())) ||
       p.collegeName?.toLowerCase().includes(participantSearch.toLowerCase()) ||
       p.referralCode?.toLowerCase().includes(participantSearch.toLowerCase());
     const statusMatch = participantStatusFilter === "all" || p.status === participantStatusFilter;
@@ -594,6 +596,11 @@ export default function AdminCampusPage() {
                         <td className="p-3">
                           <p className="font-semibold text-white">{p.user?.name || "Ambassador"}</p>
                           <p className="text-[10px] text-slate-400">{p.user?.email}</p>
+                          {(p.phone || p.user?.phone) && (
+                            <p className="text-[10px] text-emerald-400 font-mono flex items-center gap-1 mt-0.5">
+                              <span className="text-slate-500">📞</span> {p.phone || p.user?.phone}
+                            </p>
+                          )}
                         </td>
                         <td className="p-3">
                           <p className="text-white">{p.collegeName}</p>

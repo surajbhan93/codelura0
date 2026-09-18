@@ -213,65 +213,168 @@ export default function CareerTrackDetailPage() {
       ? track.hiringPartners
       : ["Amazon", "Microsoft", "Adobe", "Flipkart", "Swiggy", "Uber"];
 
-  const defaultRoadmapSteps = [
-    {
-      phase: "PHASE 01 • MONTH 1",
-      title: "Foundations & Core Programming Mastery",
-      duration: "4 Weeks (60+ Hours)",
-      description:
-        "Build rock-solid fundamentals in memory management, object-oriented concepts, time & space complexity, and problem-solving basics.",
-      skills: ["Language Syntax", "Pointers & Memory", "Time/Space Complexity", "Recursion"],
-      project: "Mini Algorithmic Benchmarking Suite",
-    },
-    {
-      phase: "PHASE 02 • MONTH 2",
-      title: "Advanced Data Structures & Algorithms",
-      duration: "5 Weeks (90+ Hours)",
-      description:
-        "Master Linked Lists, Stacks, Queues, Binary Search Trees, Graphs, Dynamic Programming, and Competitive Programming interview techniques.",
-      skills: ["Trees & Graphs", "Dynamic Programming", "Tries & Segment Trees", "Greedy"],
-      project: "High-Performance Search & Indexing Engine",
-    },
-    {
-      phase: "PHASE 03 • MONTH 3",
-      title: "Production Web & System Architecture",
-      duration: "6 Weeks (120+ Hours)",
-      description:
-        "Architect scalable backend services, reactive frontend UIs, RESTful & GraphQL APIs, database modeling, authentication, and caching.",
-      skills: ["Frontend Frameworks", "Node/Backend APIs", "SQL & NoSQL DBs", "Redis & Caching"],
-      project: "Production Enterprise SaaS Application",
-    },
-    {
-      phase: "PHASE 04 • MONTH 4",
-      title: "Cloud Infrastructure, DevOps & Microservices",
-      duration: "4 Weeks (80+ Hours)",
-      description:
-        "Containerize applications with Docker, deploy to AWS cloud services, setup automated CI/CD pipelines, load balancing, and monitoring.",
-      skills: ["Docker & Containers", "AWS Cloud Services", "CI/CD Pipelines", "System Monitoring"],
-      project: "Multi-Region Distributed Cloud Microservice",
-    },
-    {
-      phase: "PHASE 05 • MONTH 5",
-      title: "Placement Acceleration & 1:1 Mentorship",
-      duration: "3 Weeks (50+ Hours)",
-      description:
-        "Undergo 1:1 mock technical interviews, resume & LinkedIn profile reviews, and receive direct hiring referrals to 100+ partner tech firms.",
-      skills: ["1:1 Mock Interviews", "Resume Optimization", "Portfolio Review", "Direct Referrals"],
-      project: "Verified Career Track Certificate & Hiring Referrals",
-    },
-  ];
+  const generateDynamicRoadmap = (trackData: any) => {
+    const title = trackData?.title || "Career Track";
+    const titleLower = title.toLowerCase();
+    const skillsList = (trackData?.skills && trackData.skills.length > 0)
+      ? trackData.skills
+      : (trackData?.technologies && trackData.technologies.length > 0)
+      ? trackData.technologies
+      : [];
+
+    // 1. AI Automation & Prompt Engineering Track
+    if (titleLower.includes("ai") || titleLower.includes("automation") || titleLower.includes("llm") || titleLower.includes("prompt")) {
+      return [
+        {
+          phase: "PHASE 01 • MONTH 1",
+          title: "AI Fundamentals & Prompt Engineering Mastery",
+          duration: "4 Weeks (60+ Hours)",
+          description: "Master LLM mechanics, prompt design patterns, system instructions, and zero/few-shot prompting techniques.",
+          skills: skillsList.length >= 4 ? skillsList.slice(0, 4) : ["Prompt Engineering", "LLMs", "ChatGPT API", "Context Framing"],
+          project: "Production AI Agent Prompt Suite",
+        },
+        {
+          phase: "PHASE 02 • MONTH 2",
+          title: "No-Code & Low-Code Workflow Automation",
+          duration: "5 Weeks (90+ Hours)",
+          description: "Build autonomous business workflows using Make.com, Zapier, n8n, and webhooks to automate multi-step operations.",
+          skills: skillsList.length >= 8 ? skillsList.slice(4, 8) : ["Make.com", "Zapier", "n8n Automation", "REST Webhooks"],
+          project: "Enterprise Multi-App Automated Workflow Pipeline",
+        },
+        {
+          phase: "PHASE 03 • MONTH 3",
+          title: "Custom GPTs, Vector DBs & RAG Architecture",
+          duration: "6 Weeks (120+ Hours)",
+          description: "Connect proprietary data to AI models using LangChain, LlamaIndex, Vector Databases (Pinecone/Weaviate), and Retrieval Augmented Generation.",
+          skills: skillsList.length >= 12 ? skillsList.slice(8, 12) : ["LangChain", "Vector Databases", "RAG Pipeline", "Custom GPTs"],
+          project: "Enterprise Knowledge Base RAG Assistant",
+        },
+        {
+          phase: "PHASE 04 • MONTH 4",
+          title: "Autonomous AI Agents & API Integrations",
+          duration: "4 Weeks (80+ Hours)",
+          description: "Develop autonomous AI agents capable of function calling, tool use, multi-agent collaboration, and CRM/ERP integrations.",
+          skills: ["OpenAI Function Calling", "AutoGPT / CrewAI", "API Integrations", "Agentic Workflows"],
+          project: "Multi-Agent Business Automation Engine",
+        },
+        {
+          phase: "PHASE 05 • MONTH 5",
+          title: "Client Deployment & Career Placement",
+          duration: "3 Weeks (50+ Hours)",
+          description: "Package automation solutions for clients or employers, optimize system reliability, and receive 1:1 career placement support.",
+          skills: ["Client Handover", "SLA & Reliability", "1:1 Career Mentorship", "Direct Hiring Referrals"],
+          project: "Verified AI Automation Certification & Hiring Referrals",
+        },
+      ];
+    }
+
+    // 2. Video Editing & Motion Graphics Track
+    if (titleLower.includes("video") || titleLower.includes("edit") || titleLower.includes("media") || titleLower.includes("animation")) {
+      return [
+        {
+          phase: "PHASE 01 • MONTH 1",
+          title: "Video Editing Suite & Timeline Mastery",
+          duration: "4 Weeks (60+ Hours)",
+          description: "Master Premiere Pro / DaVinci Resolve interfaces, cutting techniques, storytelling pacing, transitions, and keyboard shortcuts.",
+          skills: skillsList.length >= 4 ? skillsList.slice(0, 4) : ["Adobe Premiere Pro", "Timeline Editing", "Rough & Fine Cuts", "Storyboarding"],
+          project: "High-Paced Commercial Promo Edit",
+        },
+        {
+          phase: "PHASE 02 • MONTH 2",
+          title: "Motion Graphics & After Effects Animation",
+          duration: "5 Weeks (90+ Hours)",
+          description: "Create kinetic typography, animated logos, lower thirds, smooth keyframing, and visual titles with After Effects.",
+          skills: skillsList.length >= 8 ? skillsList.slice(4, 8) : ["Adobe After Effects", "Kinetic Typography", "Logo Animation", "Keyframing"],
+          project: "Brand Motion Graphics Package",
+        },
+        {
+          phase: "PHASE 03 • MONTH 3",
+          title: "Cinematic Color Grading & Audio Engineering",
+          duration: "6 Weeks (120+ Hours)",
+          description: "Understand color spaces, LUTs, skin tone correction, sound design, background score ducking, and noise reduction.",
+          skills: skillsList.length >= 12 ? skillsList.slice(8, 12) : ["Color Grading / LUTs", "DaVinci Color Wheels", "Audio Noise Reduction", "Sound Design"],
+          project: "Short Film / Documentary Mastered Cut",
+        },
+        {
+          phase: "PHASE 04 • MONTH 4",
+          title: "Short-Form Reel/TikTok & YouTube Production",
+          duration: "4 Weeks (80+ Hours)",
+          description: "Edit viral short-form content, retention hooks, captioning, sound effects (SFX), and multi-camera YouTube edits.",
+          skills: ["Short-Form Hooks", "Dynamic Subtitles", "Multi-Cam Editing", "Thumbnail & Intro Sync"],
+          project: "Viral Short-Form Content Suite",
+        },
+        {
+          phase: "PHASE 05 • MONTH 5",
+          title: "Portfolio Showcase & Freelance / Job Referrals",
+          duration: "3 Weeks (50+ Hours)",
+          description: "Build an impressive Video Editing Showreel, pitch to agencies/clients, and get direct hiring referrals.",
+          skills: ["Showreel Curation", "Client Pitching", "Freelance Pricing", "Direct Hiring Referrals"],
+          project: "Professional Video Editor Showreel & Client Referrals",
+        },
+      ];
+    }
+
+    // 3. General Dynamic Fallback based on Track Title & Skills
+    const s1 = skillsList.slice(0, 3).length > 0 ? skillsList.slice(0, 3) : ["Foundations", "Core Tools", "Basic Concepts"];
+    const s2 = skillsList.slice(3, 6).length > 0 ? skillsList.slice(3, 6) : ["Intermediate Tools", "Applied Logic", "Workflow Optimization"];
+    const s3 = skillsList.slice(6, 9).length > 0 ? skillsList.slice(6, 9) : ["Advanced Architecture", "System Design", "Complex Integration"];
+    const s4 = skillsList.slice(9, 12).length > 0 ? skillsList.slice(9, 12) : ["Production Deployment", "Best Practices", "Performance Tuning"];
+
+    return [
+      {
+        phase: "PHASE 01 • MONTH 1",
+        title: `Fundamentals of ${title}`,
+        duration: "4 Weeks (60+ Hours)",
+        description: `Build rock-solid core knowledge and basic concepts essential for ${title}.`,
+        skills: s1,
+        project: `Basic ${title} Practice Project`,
+      },
+      {
+        phase: "PHASE 02 • MONTH 2",
+        title: `Intermediate ${title} & Applied Workflows`,
+        duration: "5 Weeks (90+ Hours)",
+        description: `Deep-dive into practical techniques, industry standards, and hands-on tools for ${title}.`,
+        skills: s2,
+        project: `Production-Ready ${title} Module`,
+      },
+      {
+        phase: "PHASE 03 • MONTH 3",
+        title: `Advanced ${title} Architecture & Mastery`,
+        duration: "6 Weeks (120+ Hours)",
+        description: `Master complex use cases, scalability, optimizations, and professional standards in ${title}.`,
+        skills: s3,
+        project: `Full-Scale Enterprise ${title} Application`,
+      },
+      {
+        phase: "PHASE 04 • MONTH 4",
+        title: "Real-World Projects & Capstone Implementation",
+        duration: "4 Weeks (80+ Hours)",
+        description: "Build and deploy an end-to-end production project for your portfolio.",
+        skills: s4,
+        project: `Capstone ${title} Portfolio Project`,
+      },
+      {
+        phase: "PHASE 05 • MONTH 5",
+        title: "Placement Acceleration & 1:1 Mentorship",
+        duration: "3 Weeks (50+ Hours)",
+        description: "Resume optimization, portfolio review, mock interviews, and direct hiring referrals.",
+        skills: ["Mock Interviews", "Portfolio Review", "Resume Polish", "Direct Referrals"],
+        project: `Verified ${title} Certificate & Hiring Referrals`,
+      },
+    ];
+  };
 
   const displayRoadmapSteps =
     track.roadmap && track.roadmap.length > 0
-      ? track.roadmap.map((step, idx) => ({
-          phase: `PHASE 0${idx + 1}`,
+      ? track.roadmap.map((step: any, idx: number) => ({
+          phase: step.phase || `PHASE 0${idx + 1} • MONTH ${idx + 1}`,
           title: step.title,
-          duration: step.duration || "3-4 Weeks",
+          duration: step.duration || "4 Weeks",
           description: step.description,
-          skills: [],
-          project: undefined,
+          skills: step.skills && step.skills.length > 0 ? step.skills : (step.topics ? step.topics : (track.skills ? track.skills.slice(idx * 2, idx * 2 + 3) : [])),
+          project: step.project || step.milestoneProject,
         }))
-      : defaultRoadmapSteps;
+      : generateDynamicRoadmap(track);
 
   return (
     <div className="min-h-screen bg-[#050714] text-white">

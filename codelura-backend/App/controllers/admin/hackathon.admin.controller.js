@@ -413,9 +413,9 @@ export const getHackathonParticipantsAdmin = async (req, res) => {
     const { id } = req.params;
 
     // Search by _id or slug
-    let hackathon = await Hackathon.findById(id).populate("participants", "name email role createdAt isEmailVerified");
+    let hackathon = await Hackathon.findById(id).populate("participants", "name email role phone createdAt isEmailVerified");
     if (!hackathon) {
-      hackathon = await Hackathon.findOne({ slug: id }).populate("participants", "name email role createdAt isEmailVerified");
+      hackathon = await Hackathon.findOne({ slug: id }).populate("participants", "name email role phone createdAt isEmailVerified");
     }
 
     if (!hackathon) {
@@ -425,7 +425,15 @@ export const getHackathonParticipantsAdmin = async (req, res) => {
       });
     }
 
-    // Get submissions for these participants to enrich team & track info
+    // Map registration details (teamName, track, contactPhone, projectIdea)
+    const regMap = {};
+    if (hackathon.registrations) {
+      hackathon.registrations.forEach((r) => {
+        if (r.user) regMap[r.user.toString()] = r;
+      });
+    }
+
+    // Get submissions for these participants to enrich status & project title
     const submissions = await Submission.find({ hackathon: hackathon._id }).select("user projectTitle status techStack createdAt");
     const subMap = {};
     submissions.forEach((s) => {
@@ -434,14 +442,20 @@ export const getHackathonParticipantsAdmin = async (req, res) => {
 
     const participantList = (hackathon.participants || []).map((p) => {
       const sub = subMap[p._id.toString()];
+      const reg = regMap[p._id.toString()];
+
       return {
         _id: p._id,
         name: p.name,
         email: p.email,
+        mobile: reg?.contactPhone || p.phone || "—",
+        teamName: reg?.teamName || "Solo Innovator",
+        track: reg?.track || "General",
+        projectIdea: reg?.projectIdea || "—",
         role: p.role || "Student",
         isEmailVerified: p.isEmailVerified || false,
-        joinedAt: p.createdAt,
-        submissionStatus: sub ? sub.status : "No Submission",
+        joinedAt: reg?.registeredAt || p.createdAt,
+        submissionStatus: sub ? sub.status : "Registered",
         projectTitle: sub ? sub.projectTitle : null,
       };
     });

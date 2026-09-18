@@ -153,7 +153,8 @@ Required JSON structure:
 Rules:
 
 1. jobTitle:
-   Extract the exact job title from the source.
+   Extract ONLY the clean job title from the source.
+   DO NOT include emojis (🚀, 🏢, 💼, etc.), site prefixes like "Careers is Hiring |", "Company:", "Role:", or suffixes like "— Full-Time".
 
 2. slug:
    Generate a clean SEO-friendly slug using the job title and company name.
@@ -161,7 +162,10 @@ Rules:
    software-development-engineer-sde-1-company-name
 
 3. companyName:
-   Extract the company name from the source.
+   Extract the true employer / hiring company name from the source.
+   CRITICAL RULE: Generic terms like "Careers", "Career", "Jobs", "Job", "Workday", "Greenhouse", "Lever", "Company", "Featured Employer" MUST NEVER be returned as the companyName.
+   Look for the actual company name after words like "at", "Technology at", "Careers at", "Hiring at", "Company:".
+   For example, in "Technology at Franklin Templeton", the companyName is "Franklin Templeton".
 
 4. location:
    Extract the job location exactly from the source.
@@ -414,14 +418,21 @@ export function estimateStipendOrSalary(companyName, jobType, text = "") {
   const lowerText = text.toLowerCase();
   const isIntern = (jobType === "internship" || lowerText.includes("intern"));
 
+  const isSenior = lowerText.includes("6-15 years") || lowerText.includes("6–15 years") || lowerText.includes("5+ years") || lowerText.includes("6+ years") || lowerText.includes("senior") || lowerText.includes("lead") || lowerText.includes("staff");
+  const isGenAI = lowerText.includes("gen ai") || lowerText.includes("generative ai") || lowerText.includes("llm") || lowerText.includes("rag") || lowerText.includes("agentic");
+
   const isTopTier = ["rubrik", "google", "amazon", "microsoft", "uber", "atlassian", "salesforce", "apple", "meta", "facebook", "goldman", "de shaw", "tower research", "nvidia", "adobe", "stripe"].some(c => lowerCompany.includes(c) || lowerText.includes(c));
-  const isMidTier = ["zomato", "swiggy", "flipkart", "phonepe", "paytm", "cred", "razorpay", "meesho", "ola", "curefit", "delhivery", "juspay"].some(c => lowerCompany.includes(c) || lowerText.includes(c));
+  const isMidTier = ["zomato", "swiggy", "flipkart", "phonepe", "paytm", "cred", "razorpay", "meesho", "ola", "curefit", "delhivery", "juspay", "evnek"].some(c => lowerCompany.includes(c) || lowerText.includes(c));
 
   if (isIntern) {
     if (isTopTier) return "₹80,000 – ₹1,20,000 / month";
     if (isMidTier) return "₹40,000 – ₹70,000 / month";
     return "₹20,000 – ₹35,000 / month";
   } else {
+    if (isSenior || isGenAI) {
+      if (isTopTier) return "₹25 – ₹45 LPA";
+      return "₹16 – ₹32 LPA";
+    }
     if (isTopTier) return "₹18 – ₹35 LPA";
     if (isMidTier) return "₹10 – ₹18 LPA";
     return "₹6 – ₹10 LPA";
@@ -484,16 +495,107 @@ export function getJobCategoryPath(jobType) {
   return "latest";
 }
 
+const GENERIC_COMPANY_NAMES = [
+  "careers", "career", "jobs", "job", "company", "featured employer",
+  "top company", "codelura", "hiring", "workday", "myworkdayjobs",
+  "greenhouse", "lever", "workable", "smartrecruiters", "bamboohr"
+];
+
+const KNOWN_TECH_COMPANIES = [
+  "Franklin Templeton", "Google", "Amazon", "Microsoft", "Meta", "Facebook",
+  "Apple", "Netflix", "Uber", "Rubrik", "Adobe", "Flipkart", "Swiggy",
+  "Zomato", "Goldman Sachs", "JPMorgan", "Morgan Stanley", "Salesforce",
+  "Oracle", "Cisco", "IBM", "Intel", "AMD", "Nvidia", "TCS", "Infosys",
+  "Wipro", "Accenture", "Cognizant", "Capgemini", "Deloitte", "Paytm",
+  "PhonePe", "Razorpay", "Cred", "Meesho", "Juspay", "Groww", "Atlassian",
+  "De Shaw", "Tower Research", "Stripe", "PayPal", "LinkedIn", "Twitter"
+];
+
+export function extractCleanCompanyName(companyName, sourceText = "", jobUrl = "") {
+  let cleaned = (companyName || "")
+    .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/gu, "")
+    .replace(/[^a-zA-Z0-9\s&.-]/g, "")
+    .replace(/^(?:Company|Employer|Organization):\s*/i, "")
+    .trim();
+
+  const lower = cleaned.toLowerCase();
+
+  // If valid non-generic company name, return it!
+  if (cleaned.length >= 2 && !GENERIC_COMPANY_NAMES.includes(lower)) {
+    return cleaned;
+  }
+
+  // 1. Check known tech companies in source text
+  for (const knownComp of KNOWN_TECH_COMPANIES) {
+    if (sourceText.toLowerCase().includes(knownComp.toLowerCase())) {
+      return knownComp;
+    }
+  }
+
+  // 2. Search for "at [Company]" or "Technology at [Company]" in source text
+  const match = sourceText.match(/(?:technology at|hiring at|careers at|jobs at|position at|company:\s*|employer:\s*|join)\s+([A-Z][A-Za-z0-9\s&.-]{2,35})/i) ||
+                sourceText.match(/\bat\s+([A-Z][A-Za-z0-9\s&.-]{2,30})\b/i);
+
+  if (match && match[1]) {
+    let candidate = match[1].trim()
+      .replace(/\s+(?:Job|Jobs|Careers|Hyderabad|India|Remote|Full-Time|Internship).*$/i, "")
+      .trim();
+    if (candidate.length >= 2 && !GENERIC_COMPANY_NAMES.includes(candidate.toLowerCase())) {
+      return candidate;
+    }
+  }
+
+  // 3. Fallback to URL domain if jobUrl exists
+  if (jobUrl) {
+    try {
+      const hostname = new URL(jobUrl).hostname.replace(/^www\./, "");
+      const domainParts = hostname.split(".");
+      if (domainParts.length >= 2) {
+        const name = domainParts[0];
+        if (!GENERIC_COMPANY_NAMES.includes(name.toLowerCase())) {
+          return name.charAt(0).toUpperCase() + name.slice(1);
+        }
+      }
+    } catch (e) {}
+  }
+
+  return cleaned && !GENERIC_COMPANY_NAMES.includes(lower) ? cleaned : "Top Tech Company";
+}
+
+export function extractCleanJobTitle(jobTitle, sourceText = "") {
+  let cleaned = (jobTitle || "")
+    .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/gu, "")
+    .replace(/^(?:🚀|🏢|💼|📍|🎓|💰|🤖|🔥|📩|🔗|👉|📲|💬|📋|📂|\s)*/g, "")
+    .replace(/^(?:.*(?:is Hiring\s*\|?|Company:|Role:|Job Title:|Position:|Title:))\s*/gi, "")
+    .replace(/\s*(?:—|-|\|)\s*(?:💼\s*)?(?:Full-Time|Full Time|Internship|Part-Time|Contract|Off-Campus|Walk-In).*$/gi, "")
+    .replace(/\s*\|\s*.*$/gi, "")
+    .trim();
+
+  // If clean valid title, return it!
+  if (cleaned.length >= 3 && !cleaned.toLowerCase().includes("hiring")) {
+    return cleaned;
+  }
+
+  // Search sourceText for standard job titles
+  const match = sourceText.match(/\b(Software (?:Development )?Engineer(?: -? [I|II|III|1|2|3])?|Associate Software Engineer|Frontend (?:Developer|Engineer)|Backend (?:Developer|Engineer)|Full Stack (?:Developer|Engineer)|Data Scientist|DevOps Engineer|QA Engineer|Product Manager|AI \/ ML Engineer|Cloud Engineer|System Engineer|Mobile App Developer|iOS Developer|Android Developer)\b/i);
+
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
+  return cleaned || "Software Development Engineer";
+}
+
 /**
  * Sanitize AI returned object
  */
 function sanitizeAiJobData(parsed, fallbackUrl = "", sourceText = "") {
-  let jobTitle = cleanStr(parsed.jobTitle || "");
-  let companyName = cleanStr(parsed.companyName || "");
+  let jobTitle = extractCleanJobTitle(parsed.jobTitle || "", sourceText);
+  let companyName = extractCleanCompanyName(parsed.companyName || "", sourceText, fallbackUrl);
 
   // Create clean slug if missing or default
   let slug = (parsed.slug || "").toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-");
-  if (!slug && jobTitle) {
+  if (!slug || slug.includes("careers") || slug.length < 5) {
     const combined = `${jobTitle} ${companyName}`.trim();
     slug = combined.toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-");
   }
@@ -600,24 +702,19 @@ Follow me and drop your email in the comments section — or join our community 
  * Intelligent local fallback job extractor when Groq API key is invalid/401/rate-limited
  */
 function fallbackLocalJobExtractor(text, jobUrl = "") {
-  let companyName = "";
-  if (jobUrl) {
-    try {
-      const hostname = new URL(jobUrl).hostname.replace(/^www\./, "");
-      const domainParts = hostname.split(".");
-      if (domainParts.length >= 2) {
-        const name = domainParts[0];
-        companyName = name.charAt(0).toUpperCase() + name.slice(1);
-      }
-    } catch (e) {}
-  }
+  let companyName = extractCleanCompanyName("", text, jobUrl);
 
   const SKILL_KEYWORDS = [
-    "React", "React.js", "Node.js", "Node", "TypeScript", "JavaScript", "Python",
-    "Java", "C++", "C#", "Go", "Golang", "Ruby", "PHP", "Swift", "Kotlin",
-    "SQL", "MongoDB", "PostgreSQL", "MySQL", "Redis", "AWS", "Azure", "GCP",
-    "Docker", "Kubernetes", "Git", "GitHub", "CI/CD", "REST API", "GraphQL",
-    "DSA", "Data Structures", "Algorithms", "System Design", "HTML", "CSS", "Tailwind"
+    "Gen AI", "Generative AI", "LLMs", "RAG", "Agentic AI", "AI Agents",
+    "Prompt Engineering", "Embeddings", "Semantic Search", "Vector Databases",
+    "LangChain", "LangGraph", "LlamaIndex", "Pinecone", "FAISS", "Chroma",
+    "Weaviate", "Milvus", "OpenAI", "Claude", "Gemini", "Python", "FastAPI",
+    "PyTorch", "TensorFlow", "React", "React.js", "Node.js", "Node", "TypeScript",
+    "JavaScript", "Java", "C++", "C#", "Go", "Golang", "Ruby", "PHP", "Swift",
+    "Kotlin", "SQL", "MongoDB", "PostgreSQL", "MySQL", "Redis", "AWS", "AWS Bedrock",
+    "Azure", "Azure OpenAI", "GCP", "Google Vertex AI", "Docker", "Kubernetes",
+    "Git", "GitHub", "CI/CD", "REST API", "GraphQL", "DSA", "Data Structures",
+    "Algorithms", "System Design", "HTML", "CSS", "Tailwind"
   ];
 
   const foundSkills = [];
@@ -642,15 +739,15 @@ function fallbackLocalJobExtractor(text, jobUrl = "") {
   else if (lowerText.includes("part-time") || lowerText.includes("part time")) jobType = "Part-Time";
   else if (lowerText.includes("contract")) jobType = "Contract";
 
-  let jobTitle = "";
+  let rawTitle = "";
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   for (const line of lines) {
-    if (line.length > 5 && line.length < 90 && !line.startsWith("http") && !line.includes("CONTENT EXTRACTED") && !line.includes("JOB SOURCE")) {
-      jobTitle = cleanStr(line);
+    if (line.length > 5 && line.length < 120 && !line.startsWith("http") && !line.includes("CONTENT EXTRACTED") && !line.includes("JOB SOURCE")) {
+      rawTitle = line;
       break;
     }
   }
-  if (!jobTitle || jobTitle.length < 3) jobTitle = "Software Development Engineer";
+  let jobTitle = extractCleanJobTitle(rawTitle, text);
 
   const cleanDesc = cleanStr(text);
   const shortDescription = cleanDesc.substring(0, 180).trim() + "...";
@@ -758,4 +855,142 @@ export const generateJobAutoFill = async ({ jobUrl, jobDescription }) => {
   }
 
   return sanitizeAiJobData(parsed, jobUrl ? jobUrl.trim() : "", sourceText);
-};
+};
+
+
+
+/**
+ * Generate AI Review Reply with SEO optimization
+ */
+export const generateAIReviewReply = async (context) => {
+  const {
+    businessName,
+    category,
+    city,
+    description,
+    reviewText,
+    rating,
+    reviewerName,
+    tone = 'professional',
+    seoEnabled = true,
+    keywords = [],
+  } = context;
+
+  // Build context-aware prompt
+  const toneMap = {
+    professional: 'professional and courteous',
+    friendly: 'warm and friendly',
+    casual: 'casual and conversational',
+  };
+
+  const ratingContext = {
+    5: 'extremely positive 5-star',
+    4: 'positive 4-star',
+    3: 'neutral 3-star',
+    2: 'negative 2-star',
+    1: 'very negative 1-star',
+  };
+
+  // SEO keywords (subtle, only if enabled and relevant)
+  let seoGuidance = '';
+  if (seoEnabled && keywords.length > 0) {
+    seoGuidance = `If contextually appropriate, you may naturally mention relevant terms like: ${keywords.slice(0, 2).join(', ')}. IMPORTANT: Only use if it fits naturally - do NOT force keywords.`;
+  }
+
+  const prompt = `You are a helpful AI assistant generating Google Business Profile review replies for ${businessName}${city ? ` in ${city}` : ''}.
+
+Business Context:
+- Name: ${businessName}
+- Category: ${category || 'Service provider'}
+- Location: ${city || 'Not specified'}
+${description ? `- Description: ${description}` : ''}
+
+Review Details:
+- Rating: ${rating} stars (${ratingContext[rating] || 'review'})
+- Review Text: "${reviewText || '(No text - rating only)'}"
+- Reviewer: ${reviewerName || 'Customer'}
+
+Instructions:
+1. Write a ${toneMap[tone] || 'professional'} reply in 2-3 short sentences
+2. Make it sound natural and human-written
+3. Keep it brief and genuine
+4. ${rating >= 4 ? 'Thank the customer warmly' : rating === 3 ? 'Acknowledge their feedback professionally' : 'Respond carefully - acknowledge concern, avoid arguing, invite direct contact if appropriate'}
+5. ${reviewText ? 'Reference their specific feedback if meaningful' : 'Keep it short since they only left a rating'}
+6. Do NOT use excessive emojis (maximum 1-2 appropriate ones like 🙏 or ⭐)
+7. Do NOT make fake promises or guarantees
+8. Do NOT reveal private customer information
+9. Do NOT keyword stuff
+10. ${seoGuidance}
+11. Make each reply unique - avoid repetitive phrases
+12. End with gratitude or invitation as appropriate
+
+${rating <= 2 ? 'IMPORTANT FOR NEGATIVE REVIEWS: Be empathetic, professional, do not admit fault broadly, invite them to contact you privately to resolve.' : ''}
+
+Generate ONLY the reply text (no quotes, no labels, no explanations):`;
+
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      model: "llama3-70b-8192",
+      temperature: 0.7, // Higher temp for more variation
+      max_tokens: 200,
+    });
+
+    let reply = chatCompletion.choices[0]?.message?.content || '';
+
+    // Clean up the reply
+    reply = reply.trim();
+    reply = reply.replace(/^["']|["']$/g, ''); // Remove quotes if AI added them
+    reply = reply.replace(/^Reply:\s*/i, ''); // Remove "Reply:" prefix if added
+
+    // Validation
+    if (!reply || reply.length < 10) {
+      throw new Error('Generated reply too short');
+    }
+
+    if (reply.length > 500) {
+      reply = reply.substring(0, 500); // Truncate if too long
+    }
+
+    return reply;
+
+  } catch (error) {
+    console.error('[AI Review Reply] Error:', error);
+    
+    // Fallback: Generate simple template-based reply
+    return generateFallbackReply(context);
+  }
+};
+
+/**
+ * Fallback template-based reply generation
+ */
+function generateFallbackReply({ businessName, rating, reviewText, reviewerName, city }) {
+  const name = reviewerName || 'there';
+  
+  if (rating === 5) {
+    if (reviewText && reviewText.length > 5) {
+      return `Thank you so much for your wonderful 5-star review, ${name}! We're thrilled you had a great experience with ${businessName}${city ? ` in ${city}` : ''}. We look forward to serving you again! 🙏`;
+    }
+    return `Thank you for your 5-star rating, ${name}! We truly appreciate your support. 🙏`;
+  }
+  
+  if (rating === 4) {
+    return `Thank you for your positive feedback, ${name}! We're glad you had a good experience with ${businessName}. We appreciate your support! 🙏`;
+  }
+  
+  if (rating === 3) {
+    return `Thank you for your feedback, ${name}. We appreciate you taking the time to share your experience. If you have any specific concerns, please feel free to contact us directly.`;
+  }
+  
+  if (rating === 2 || rating === 1) {
+    return `Thank you for your feedback, ${name}. We're sorry to hear your experience didn't meet expectations. We'd like to make this right - please contact us directly so we can address your concerns.`;
+  }
+  
+  return `Thank you for your review, ${name}! We appreciate your feedback. 🙏`;
+}

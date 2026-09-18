@@ -114,7 +114,7 @@ export const getAllParticipantsAdmin = async (req, res) => {
     if (college && college !== "all") query.collegeName = new RegExp(college, "i");
 
     let participants = await CampusParticipant.find(query)
-      .populate("user", "name email isEmailVerified")
+      .populate("user", "name email phone isEmailVerified")
       .sort({ points: -1, createdAt: -1 })
       .lean();
 
@@ -124,6 +124,8 @@ export const getAllParticipantsAdmin = async (req, res) => {
         (p) =>
           p.user?.name?.toLowerCase().includes(term) ||
           p.user?.email?.toLowerCase().includes(term) ||
+          p.user?.phone?.toLowerCase().includes(term) ||
+          p.phone?.toLowerCase().includes(term) ||
           p.collegeName?.toLowerCase().includes(term) ||
           p.referralCode?.toLowerCase().includes(term) ||
           p.campusId?.toLowerCase().includes(term)

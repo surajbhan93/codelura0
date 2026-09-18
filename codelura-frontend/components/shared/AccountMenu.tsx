@@ -102,6 +102,11 @@ export default function AccountMenu({ jobsAlertUrl }: { jobsAlertUrl: string }) 
               <Link href={role === "admin" ? "/admin" : "/dashboard/Portal"} className="dropdown-item">
                 📊 Dashboard
               </Link>
+              {role === "admin" && (
+                <Link href="/google-business-profile" className="dropdown-item">
+                  🌐 Google Business (GBP)
+                </Link>
+              )}
               <Link href="/dashboard/profile" className="dropdown-item">
                 👤 Profile
               </Link>

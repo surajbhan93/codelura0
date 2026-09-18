@@ -22,9 +22,10 @@ export default function LayoutWrapper({
   const isServicePage = pathname.startsWith("/services");
   const isCareerPage = pathname.startsWith("/career");
   const isLocationPage = pathname.startsWith("/locations");
+  const isGbpPage = pathname.startsWith("/google-business-profile");
 
-  // On Auth, Dashboard, and Admin pages, do not render the generic marketing Navbar & Footer
-  if (isAuthPage || isDashboardPage || isAdminPage) {
+  // On Auth, Dashboard, Admin, and GBP pages, do not render the generic marketing Navbar & Footer
+  if (isAuthPage || isDashboardPage || isAdminPage || isGbpPage) {
     return <>{children}</>;
   }
 

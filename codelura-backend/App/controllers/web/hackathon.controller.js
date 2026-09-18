@@ -208,9 +208,14 @@ export const joinHackathon = async (req, res) => {
       });
     }
 
-    // Ensure participants array exists
+    const { teamName, track, contactPhone, projectIdea } = req.body;
+
+    // Ensure participants & registrations arrays exist
     if (!hackathon.participants) {
       hackathon.participants = [];
+    }
+    if (!hackathon.registrations) {
+      hackathon.registrations = [];
     }
 
     const now = new Date();
@@ -251,14 +256,33 @@ export const joinHackathon = async (req, res) => {
     );
 
     if (alreadyJoined) {
+      // Update registration details if user re-submits join form
+      const existingReg = hackathon.registrations.find(r => r.user && r.user.toString() === userId);
+      if (existingReg) {
+        if (teamName) existingReg.teamName = teamName;
+        if (track) existingReg.track = track;
+        if (contactPhone) existingReg.contactPhone = contactPhone;
+        if (projectIdea) existingReg.projectIdea = projectIdea;
+        await hackathon.save();
+      }
       return res.status(409).json({
         success: false,
         message: "You have already joined this hackathon"
       });
     }
 
-    // Add participant
+    // Add participant ID
     hackathon.participants.push(userId);
+
+    // Save registration team details
+    hackathon.registrations.push({
+      user: userId,
+      teamName: teamName || "Solo Innovator",
+      track: track || "General",
+      contactPhone: contactPhone || "",
+      projectIdea: projectIdea || "",
+      registeredAt: new Date(),
+    });
 
     // Update counter
     hackathon.participantsCount += 1;

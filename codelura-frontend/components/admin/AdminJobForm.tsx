@@ -254,7 +254,11 @@ seoNoIndex: false,
     const typeLabel = matchedType ? matchedType.label.replace(/^[\u2600-\u27BF\u1F300-\u1F9FF]\s*/, "") : (form.type || "Intern / Full-time");
     
     const rawTags = form.tags ? form.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
-    const skillsText = rawTags.length > 0 ? rawTags.join(", ") : "Conversational AI, Prompt Engineering, NLP, LLMs, Problem Solving";
+    const skillsText = rawTags.length > 0
+      ? rawTags.join(", ")
+      : (form.title?.toLowerCase().includes("ai") || form.description?.toLowerCase().includes("ai"))
+      ? "Generative AI, LLMs, RAG, Python, Prompt Engineering"
+      : "Software Development, Problem Solving, Data Structures";
     
     const tagHashtags = rawTags.map(t => `#${t.replace(/[^a-zA-Z0-9]/g, "")}`);
     const compHashtag = `#${comp.replace(/[^a-zA-Z0-9]/g, "")}`;

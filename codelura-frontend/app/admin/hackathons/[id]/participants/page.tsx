@@ -5,12 +5,16 @@ import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { Users, ArrowLeft, Download, ShieldCheck, Mail, Calendar, Search } from "lucide-react";
+import { Users, ArrowLeft, Download, Search, Phone, Mail, Sparkles, Layers } from "lucide-react";
 
 interface Participant {
   _id: string;
   name: string;
   email: string;
+  mobile: string;
+  teamName: string;
+  track: string;
+  projectIdea: string;
   role: string;
   isEmailVerified: boolean;
   joinedAt: string;
@@ -46,6 +50,10 @@ export default function AdminHackathonParticipantsPage() {
               _id: p._id || p.id,
               name: p.name || "Participant",
               email: p.email || "No email",
+              mobile: p.mobile || p.phone || "—",
+              teamName: p.teamName || "Solo Innovator",
+              track: p.track || "General",
+              projectIdea: p.projectIdea || "—",
               role: p.role || "Student",
               isEmailVerified: p.isEmailVerified || false,
               joinedAt: p.joinedAt || p.createdAt || Date.now(),
@@ -72,13 +80,17 @@ export default function AdminHackathonParticipantsPage() {
       return;
     }
 
-    const headers = ["Name", "Email", "Role", "Submission Status", "Project Title", "Joined Date"];
+    const headers = ["Name", "Team Name", "Track", "Mobile", "Email", "Role", "Project Idea", "Submission Status", "Project Title", "Joined Date"];
     const rows = participants.map((p) => [
-      `"${p.name}"`,
-      `"${p.email}"`,
-      `"${p.role}"`,
-      `"${p.submissionStatus}"`,
-      `"${p.projectTitle || "N/A"}"`,
+      `"${p.name.replace(/"/g, '""')}"`,
+      `"${p.teamName.replace(/"/g, '""')}"`,
+      `"${p.track.replace(/"/g, '""')}"`,
+      `"${p.mobile.replace(/"/g, '""')}"`,
+      `"${p.email.replace(/"/g, '""')}"`,
+      `"${p.role.replace(/"/g, '""')}"`,
+      `"${p.projectIdea.replace(/"/g, '""')}"`,
+      `"${p.submissionStatus.replace(/"/g, '""')}"`,
+      `"${(p.projectTitle || "N/A").replace(/"/g, '""')}"`,
       `"${new Date(p.joinedAt).toLocaleDateString()}"`,
     ]);
 
@@ -86,7 +98,7 @@ export default function AdminHackathonParticipantsPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `participants_${hackathonId}.csv`);
+    link.setAttribute("download", `hackathon_participants_${hackathonId}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -97,6 +109,10 @@ export default function AdminHackathonParticipantsPage() {
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.email.toLowerCase().includes(search.toLowerCase()) ||
+      p.mobile.toLowerCase().includes(search.toLowerCase()) ||
+      p.teamName.toLowerCase().includes(search.toLowerCase()) ||
+      p.track.toLowerCase().includes(search.toLowerCase()) ||
+      p.projectIdea.toLowerCase().includes(search.toLowerCase()) ||
       (p.projectTitle && p.projectTitle.toLowerCase().includes(search.toLowerCase()))
   );
 
@@ -111,7 +127,7 @@ export default function AdminHackathonParticipantsPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8 font-sans">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Back Link */}
         <Link href="/admin/hackathons" className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition">
@@ -150,7 +166,7 @@ export default function AdminHackathonParticipantsPage() {
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
-            placeholder="Search participants by name, email, or project..."
+            placeholder="Search by participant name, team, track, mobile, email, or project idea..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-100 outline-none focus:border-violet-500 transition"
@@ -171,46 +187,88 @@ export default function AdminHackathonParticipantsPage() {
                 <thead className="bg-slate-950 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
                   <tr>
                     <th className="py-3.5 px-4">Participant Name</th>
-                    <th className="py-3.5 px-4">Email Contact</th>
-                    <th className="py-3.5 px-4">Role</th>
+                    <th className="py-3.5 px-4">Team Name</th>
+                    <th className="py-3.5 px-4">Track</th>
+                    <th className="py-3.5 px-4">Contact Info</th>
+                    <th className="py-3.5 px-4">Project Idea / Proposal</th>
                     <th className="py-3.5 px-4">Submission Status</th>
-                    <th className="py-3.5 px-4">Project</th>
                     <th className="py-3.5 px-4 text-right">Joined Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/80">
                   {filtered.map((p) => (
                     <tr key={p._id} className="hover:bg-slate-800/50 transition">
+                      {/* Name & Role */}
                       <td className="py-4 px-4 font-bold text-white flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-violet-600/20 text-violet-300 font-bold flex items-center justify-center text-xs border border-violet-500/30">
+                        <div className="w-8 h-8 rounded-full bg-violet-600/20 text-violet-300 font-bold flex items-center justify-center text-xs border border-violet-500/30 shrink-0">
                           {p.name[0]?.toUpperCase() || "U"}
                         </div>
                         <div>
-                          <span>{p.name}</span>
-                          {p.isEmailVerified && (
-                            <span className="text-[10px] text-emerald-400 ml-1.5 font-semibold">✓ Verified</span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            <span>{p.name}</span>
+                            {p.isEmailVerified && (
+                              <span className="text-[10px] text-emerald-400 font-semibold">✓</span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-500 font-normal capitalize">{p.role}</span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 font-mono text-slate-400">{p.email}</td>
-                      <td className="py-4 px-4">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 capitalize">
-                          {p.role}
+
+                      {/* Team Name */}
+                      <td className="py-4 px-4 font-semibold text-slate-200">
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700/80 text-violet-300 text-[11px] inline-flex items-center gap-1">
+                          <Users className="w-3 h-3 text-violet-400" />
+                          {p.teamName}
                         </span>
                       </td>
+
+                      {/* Track */}
+                      <td className="py-4 px-4">
+                        <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-medium text-[11px] inline-flex items-center gap-1">
+                          <Layers className="w-3 h-3 text-indigo-400" />
+                          {p.track}
+                        </span>
+                      </td>
+
+                      {/* Contact Info (Mobile & Email) */}
+                      <td className="py-4 px-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-slate-300 font-mono text-[11px]">
+                            <Phone className="w-3 h-3 text-emerald-400 shrink-0" />
+                            {p.mobile}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
+                            <Mail className="w-3 h-3 text-slate-500 shrink-0" />
+                            {p.email}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Project Idea / Proposal */}
+                      <td className="py-4 px-4 max-w-xs">
+                        <div className="text-slate-300 line-clamp-2 text-[11px]" title={p.projectIdea}>
+                          {p.projectIdea}
+                        </div>
+                        {p.projectTitle && (
+                          <div className="mt-1 text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" /> Submitted: {p.projectTitle}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Submission Status */}
                       <td className="py-4 px-4">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                          p.submissionStatus === "No Submission"
+                          p.submissionStatus === "No Submission" || p.submissionStatus === "Registered"
                             ? "bg-slate-800 text-slate-400 border border-slate-700"
                             : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                         }`}>
                           {p.submissionStatus}
                         </span>
                       </td>
-                      <td className="py-4 px-4 font-medium text-slate-200">
-                        {p.projectTitle || "—"}
-                      </td>
-                      <td className="py-4 px-4 text-right font-mono text-slate-500">
+
+                      {/* Joined Date */}
+                      <td className="py-4 px-4 text-right font-mono text-slate-400">
                         {new Date(p.joinedAt).toLocaleDateString()}
                       </td>
                     </tr>

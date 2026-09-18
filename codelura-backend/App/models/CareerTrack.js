@@ -126,9 +126,12 @@ const CareerTrackSchema = new mongoose.Schema(
 
     roadmap: [
       {
+        phase: String,
         title: String,
         description: String,
         duration: String,
+        skills: [{ type: String }],
+        project: String,
         order: Number,
       },
     ],
