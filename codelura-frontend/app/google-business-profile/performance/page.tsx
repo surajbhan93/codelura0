@@ -198,7 +198,7 @@ export default function PerformanceDashboardPage() {
           results.forEach((result, index) => {
             const key = keys[index];
             if (result.status === "fulfilled") {
-              const data = result.value?.data;
+              const data = (result.value as any)?.data;
               
               switch (key) {
                 case "quickStats":
@@ -219,7 +219,7 @@ export default function PerformanceDashboardPage() {
                   break;
               }
             } else {
-              console.warn(`[Performance] ${key} failed:`, result.reason);
+              console.warn(`[Performance] ${key} failed:`, (result as PromiseRejectedResult).reason);
             }
           });
         } else {
