@@ -1,0 +1,10 @@
+ Google API Enablement (Action Required - 1 Click)
+Google Cloud Console me project 628783532736 par Google Business APIs abhi disabled hain. Unhe enable karne ke liye niche diye gaye 2 links par click karke "ENABLE" button dabayein:
+
+👉 Enable My Business Account Management API
+https://console.cloud.google.com/apis/api/mybusinessaccountmanagement.googleapis.com/quotas?project=tutvex-gbp-seo
+👉 Enable Google Business Information API
+https://console.cloud.google.com/apis/api/mybusinessbusinessinformation.googleapis.com/quotas?project=tutvex-gbp-seo
+
+Ek baar apne GCP Console me My Business API (v4) enable kar lein: 👉 Enable Google My Business API v4
+https://console.cloud.google.com/apis/api/mybusiness.googleapis.com/quotas?project=tutvex-gbp-seo

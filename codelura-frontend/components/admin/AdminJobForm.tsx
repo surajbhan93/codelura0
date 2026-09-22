@@ -703,15 +703,15 @@ ${defaultHashtags}`;
           try {
             const linkedInPayload = {
               jobId: createdJobId,
-              linkedInPageId: linkedInSelectedPage || null,
-              linkedInPageName: linkedInPages.find(p => p.id === linkedInSelectedPage)?.name || null,
+              linkedInPageId: linkedInSelectedPage || undefined,
+              linkedInPageName: linkedInPages.find(p => p.id === linkedInSelectedPage)?.name,
               postContent: linkedInPost,
-              mediaUrl: linkedInMediaUrl || null,
+              mediaUrl: linkedInMediaUrl || undefined,
               hashtags: linkedInHashtags,
               publishMode: linkedInPublishMode,
               scheduledAt: linkedInPublishMode === "scheduled" 
                 ? new Date(`${linkedInScheduledDate}T${linkedInScheduledTime}`).toISOString()
-                : null,
+                : undefined,
               aiAutoReply: {
                 enabled: linkedInAutoReply,
                 mode: linkedInAutoReplyMode,
