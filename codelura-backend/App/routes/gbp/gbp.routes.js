@@ -19,6 +19,7 @@ import { aiReviewReply, aiPost, aiDescription, aiSEORecommendations, ai30DayPlan
 import { getNotifications, markRead, markAllRead } from "../../controllers/gbp/gbpNotification.controller.js";
 import { listCompetitors, addCompetitor, updateCompetitor, deleteCompetitor, autoDiscoverCompetitorsController } from "../../controllers/gbp/gbpCompetitor.controller.js";
 import { triggerSync, getSyncStatus } from "../../controllers/gbp/gbpSync.controller.js";
+import { getDashboardData } from "../../controllers/gbp/gbpDashboard.controller.js";
 
 const router = express.Router();
 router.use(express.json());
@@ -51,6 +52,38 @@ router.post("/locations/:locationId/posts", authMiddleware, createNewPost);
 router.patch("/locations/:locationId/posts/:postId", authMiddleware, updateExistingPost);
 router.delete("/locations/:locationId/posts/:postId", authMiddleware, removePost);
 router.post("/locations/:locationId/posts/:postId/publish", authMiddleware, publishExistingPost);
+
+// AI Media Manager
+import {
+  listLocationMedia,
+  syncMedia,
+  uploadMedia,
+  replaceProfilePhoto,
+  replaceCoverPhoto,
+  removeMedia,
+  getMediaHealth,
+  getDuplicates,
+  getOpportunities,
+  getRecommendations as getMediaRecommendations,
+  getMediaPlan,
+  getAIPhotoIdeas,
+  analyzeQuality,
+  uploadMiddleware,
+} from "../../controllers/gbp/gbpMedia.controller.js";
+
+router.get("/locations/:locationId/media", authMiddleware, listLocationMedia);
+router.post("/locations/:locationId/media/sync", authMiddleware, syncMedia);
+router.post("/locations/:locationId/media/upload", authMiddleware, uploadMiddleware.array("files", 10), uploadMedia);
+router.post("/locations/:locationId/media/profile-photo", authMiddleware, uploadMiddleware.single("file"), replaceProfilePhoto);
+router.post("/locations/:locationId/media/cover-photo", authMiddleware, uploadMiddleware.single("file"), replaceCoverPhoto);
+router.delete("/locations/:locationId/media/:mediaId", authMiddleware, removeMedia);
+router.get("/locations/:locationId/media/health", authMiddleware, getMediaHealth);
+router.get("/locations/:locationId/media/duplicates", authMiddleware, getDuplicates);
+router.get("/locations/:locationId/media/opportunities", authMiddleware, getOpportunities);
+router.get("/locations/:locationId/media/recommendations", authMiddleware, getMediaRecommendations);
+router.get("/locations/:locationId/media/plan", authMiddleware, getMediaPlan);
+router.post("/locations/:locationId/media/ideas", authMiddleware, getAIPhotoIdeas);
+router.post("/locations/:locationId/media/:mediaId/analyze", authMiddleware, analyzeQuality);
 
 // Performance (Legacy)
 router.get("/locations/:locationId/performance", authMiddleware, getPerformance);
@@ -141,6 +174,10 @@ router.get("/scheduler/health", authMiddleware, getSchedulerHealth);
 router.get("/scheduler/history", authMiddleware, getPublishHistory);
 router.post("/scheduler/bulk-update", authMiddleware, bulkUpdatePosts);
 
+// AI Calendar - Keyword-driven
+import { generateKeywordAICalendar } from "../../controllers/gbp/gbpScheduler.controller.js";
+router.post("/scheduler/ai-calendar", authMiddleware, generateKeywordAICalendar);
+
 // Recurring Schedules
 router.post("/recurring-schedules", authMiddleware, createRecurringSchedule);
 router.get("/recurring-schedules", authMiddleware, getRecurringSchedules);
@@ -184,3 +221,6 @@ router.post("/sync", authMiddleware, triggerSync);
 router.get("/sync/status", authMiddleware, getSyncStatus);
 
 export default router;
+
+// Dashboard - Aggregated data endpoint
+router.get("/dashboard/:locationId", authMiddleware, getDashboardData);

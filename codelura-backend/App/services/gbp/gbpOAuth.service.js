@@ -4,21 +4,35 @@ import GbpOAuthToken from "../../models/gbp/GbpOAuthToken.js";
 import GbpNotification from "../../models/gbp/GbpNotification.js";
 
 const ALGORITHM = "aes-256-cbc";
-const KEY_HEX = process.env.GBP_ENCRYPTION_KEY || "0000000000000000000000000000000000000000000000000000000000000001";
-const KEY = Buffer.from(KEY_HEX, "hex");
+
+const getKey = () => {
+  const keyHex = process.env.GBP_ENCRYPTION_KEY || "0000000000000000000000000000000000000000000000000000000000000001";
+  if (keyHex.length === 64) {
+    return Buffer.from(keyHex, "hex");
+  }
+  return crypto.createHash("sha256").update(keyHex).digest();
+};
 
 const encrypt = (text) => {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, getKey(), iv);
   const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
   return { encrypted: encrypted.toString("hex"), iv: iv.toString("hex") };
 };
 
 const decrypt = (encryptedHex, ivHex) => {
   const iv = Buffer.from(ivHex, "hex");
-  const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
-  const decrypted = Buffer.concat([decipher.update(Buffer.from(encryptedHex, "hex")), decipher.final()]);
-  return decrypted.toString("utf8");
+  try {
+    const decipher = crypto.createDecipheriv(ALGORITHM, getKey(), iv);
+    const decrypted = Buffer.concat([decipher.update(Buffer.from(encryptedHex, "hex")), decipher.final()]);
+    return decrypted.toString("utf8");
+  } catch (err) {
+    // Try fallback default key if token was encrypted under fallback
+    const fallbackKey = Buffer.from("0000000000000000000000000000000000000000000000000000000000000001", "hex");
+    const decipher = crypto.createDecipheriv(ALGORITHM, fallbackKey, iv);
+    const decrypted = Buffer.concat([decipher.update(Buffer.from(encryptedHex, "hex")), decipher.final()]);
+    return decrypted.toString("utf8");
+  }
 };
 
 export const buildAuthUrl = (userId) => {

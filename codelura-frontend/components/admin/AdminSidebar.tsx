@@ -22,6 +22,8 @@ import {
   HiOutlineShoppingBag,
   HiOutlineGlobeAlt,
   HiOutlineLocationMarker,
+  HiOutlineCreditCard,
+  HiOutlineCalendar,
 } from "react-icons/hi";
 import { useState } from "react";
 
@@ -33,6 +35,10 @@ const menu = [
   { name: "GBP Locations",      href: "/google-business-profile/locations", icon: HiOutlineLocationMarker, group: "gbp" },
   { name: "Local SEO Audit",    href: "/google-business-profile/audit", icon: HiOutlineChartBar, group: "gbp" },
   { name: "Competitor Rank",    href: "/google-business-profile/competitors", icon: HiOutlineTrendingUp, group: "gbp" },
+
+  // Payments & EMI
+  { name: "Payment Management", href: "/admin/payments",        icon: HiOutlineCreditCard,        group: "payments" },
+  { name: "EMI Calendar",       href: "/payment-portal/calendar", icon: HiOutlineCalendar,      group: "payments" },
 
   // Learning & Tracks
   { name: "Campus Program",     href: "/admin/campus",          icon: HiOutlineAcademicCap,       group: "learning" },
@@ -67,6 +73,7 @@ const menu = [
 const groups: Record<string, string> = {
   main: "",
   gbp: "Google Business & SEO",
+  payments: "Payments & EMI",
   learning: "Learning & Tracks",
   content: "Content & Jobs",
   manage: "Services & Sales",

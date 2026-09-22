@@ -274,6 +274,57 @@ export default function Footer(): React.ReactElement {
 
         </div>
 
+        {/* ─── Flexible Payment Plans Section ─── */}
+        <div className="py-12 border-b border-white/5">
+          <div className="max-w-2xl mx-auto text-center space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-300">
+              <Sparkles size={14} className="text-indigo-400" />
+              <span>Flexible Payment Plans</span>
+            </div>
+            
+            <h3 className="text-2xl md:text-3xl font-bold text-white">
+              Pay for your Codelura project through flexible payment plans
+            </h3>
+            
+            <p className="text-sm md:text-base text-slate-400 leading-relaxed">
+              Easily track your installments, payments, and due dates with our custom payment portal. 
+              Pay using UPI or QR code with flexible EMI options.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+              <Link
+                href="/payment-portal"
+                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-blue-500/25"
+              >
+                <span>Payment Portal</span>
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              
+              <Link
+                href="/payment-portal/calendar"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-6 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 hover:text-white transition-all"
+              >
+                <span>EMI & Payments</span>
+              </Link>
+            </div>
+
+            <div className="flex items-center justify-center gap-6 pt-4 text-xs text-slate-500">
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                <span>UPI Payments</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                <span>QR Code Support</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-purple-400" />
+                <span>Flexible EMI</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ─── Bottom Footer Strip ─── */}
         <div className="pt-10 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
           

@@ -41,6 +41,8 @@ const gbpLocationSchema = new mongoose.Schema({
   regularHours: { periods: [mongoose.Schema.Types.Mixed] },
   specialHours: mongoose.Schema.Types.Mixed,
   profile: { description: String },
+  profilePhotoUrl: { type: String },
+  coverPhotoUrl: { type: String },
   serviceArea: mongoose.Schema.Types.Mixed,
   labels: [String],
   adWordsLocationExtensions: mongoose.Schema.Types.Mixed,
@@ -64,6 +66,5 @@ const gbpLocationSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 gbpLocationSchema.index({ userId: 1, googleLocationId: 1 }, { unique: true });
-gbpLocationSchema.index({ userId: 1 });
 
 export default mongoose.model("GbpLocation", gbpLocationSchema);

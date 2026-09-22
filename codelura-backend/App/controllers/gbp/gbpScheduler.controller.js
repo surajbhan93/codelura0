@@ -403,3 +403,45 @@ export const getSchedulerStats = async (req, res) => {
     res.status(err.code || 500).json({ success: false, message: err.message });
   }
 };
+
+/**
+ * Generate keyword-driven AI calendar
+ */
+export const generateKeywordAICalendar = async (req, res) => {
+  try {
+    const { locationId, month, year, numPosts = 12, autoSchedule = false, contentLanguage = 'english', primaryGoal = 'LOCAL_VISIBILITY' } = req.body;
+    
+    if (!locationId || !month || !year) {
+      return res.status(400).json({
+        success: false,
+        message: 'Location ID, month, and year are required'
+      });
+    }
+    
+    // Import calendar service
+    const { generateKeywordDrivenCalendar } = await import("../../services/gbp/aiCalendar.service.js");
+    
+    console.log(`[AI Calendar Controller] Generating calendar for location ${locationId}, ${month}/${year}`);
+    
+    const calendar = await generateKeywordDrivenCalendar(req.user._id, locationId, {
+      month: parseInt(month),
+      year: parseInt(year),
+      numPosts: parseInt(numPosts),
+      autoSchedule,
+      contentLanguage,
+      primaryGoal,
+    });
+    
+    res.json({
+      success: true,
+      data: calendar,
+      message: `AI Calendar generated with ${calendar.posts.length} posts based on ${calendar.keywordCoverage.totalUsed} real Google search keywords.`
+    });
+  } catch (err) {
+    console.error('[AI Calendar Controller] Error:', err);
+    res.status(err.code || 500).json({
+      success: false,
+      message: err.message || 'Failed to generate AI calendar'
+    });
+  }
+};

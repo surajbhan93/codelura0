@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
-import { X, Sparkles, Calendar, CheckCircle2, Loader } from "lucide-react";
-import { gbpGenerateAICalendar, gbpApproveCalendarPosts } from "@/lib/gbp/gbpApi";
+import { useState, useEffect, useCallback } from "react";
+import { X, Calendar, Sparkles, TrendingUp, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { gbpGenerateKeywordCalendar, gbpGetKeywords, gbpCreatePost } from "@/lib/gbp/gbpApi";
 import toast from "react-hot-toast";
 
 interface AICalendarModalProps {
@@ -12,45 +12,85 @@ interface AICalendarModalProps {
 }
 
 export default function AICalendarModal({ isOpen, onClose, location, onSuccess }: AICalendarModalProps) {
-  const [step, setStep] = useState<"configure" | "review">("configure");
-  const [generating, setGenerating] = useState(false);
+  const [step, setStep] = useState<"settings" | "generating" | "preview">("settings");
+  
+  // Settings
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [numPosts, setNumPosts] = useState(12);
+  const [autoSchedule, setAutoSchedule] = useState(true);
+  const [primaryGoal, setPrimaryGoal] = useState("LOCAL_VISIBILITY");
+  const [contentLanguage, setContentLanguage] = useState("english");
+  
+  // Generated data
+  const [calendar, setCalendar] = useState<any>(null);
+  const [keywordStats, setKeywordStats] = useState<any>(null);
+  const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
   const [approving, setApproving] = useState(false);
   
-  // Configuration
-  const [postsPerWeek, setPostsPerWeek] = useState(3);
-  const [duration, setDuration] = useState(30);
-  const [allowedTypes, setAllowedTypes] = useState<string[]>(["STANDARD", "EVENT", "OFFER"]);
-  const [tone, setTone] = useState("professional");
-  
-  // Generated calendar
-  const [calendar, setCalendar] = useState<any[]>([]);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
-
-  const handleGenerate = async () => {
-    setGenerating(true);
+  // Check keyword availability
+  const checkKeywordAvailability = useCallback(async () => {
     try {
-      const res = await gbpGenerateAICalendar(location._id, {
-        postsPerWeek,
-        duration,
-        allowedTypes,
-        tone,
-        timezone: "Asia/Kolkata",
+      // Format month as YYYY-MM for backend
+      const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+      
+      const res = await gbpGetKeywords(location._id, { month: monthStr, limit: 100 });
+      // Backend returns { success, data: keywords[], count, source }
+      const keywords = res.data.data || [];
+      
+      console.log('[AI Calendar] Keyword availability check - Location:', location._id, 'Month:', monthStr, 'Count:', keywords.length);
+      
+      // Sort by threshold (search volume) descending and take top 10
+      const topKeywords = keywords
+        .sort((a: any, b: any) => {
+          const thresholdA = parseInt(a.insightsValue?.threshold || "0");
+          const thresholdB = parseInt(b.insightsValue?.threshold || "0");
+          return thresholdB - thresholdA;
+        })
+        .slice(0, 10);
+      
+      setKeywordStats({
+        available: keywords.length > 0,
+        count: keywords.length,
+        topKeywords: topKeywords,
+      });
+    } catch (err) {
+      console.error('[AI Calendar] Error checking keyword availability:', err);
+      setKeywordStats({ available: false, count: 0, topKeywords: [] });
+    }
+  }, [location, month, year]);
+  
+  useEffect(() => {
+    if (isOpen && location) {
+      checkKeywordAvailability();
+    }
+  }, [isOpen, location, checkKeywordAvailability]);
+  
+  const handleGenerate = async () => {
+    setStep("generating");
+    
+    try {
+      const res = await gbpGenerateKeywordCalendar({
+        locationId: location._id,
+        month,
+        year,
+        numPosts,
+        autoSchedule,
+        contentLanguage,
+        primaryGoal,
       });
       
-      setCalendar(res.data.calendar || []);
-      setPosts(res.data.posts || []);
-      setSelectedPosts((res.data.posts || []).map((p: any) => p._id));
-      setStep("review");
+      setCalendar(res.data.data);
+      setSelectedPosts(res.data.data.posts.map((_: any, i: number) => `post-${i}`));
+      setStep("preview");
       
-      toast.success(`Generated ${res.data.posts?.length || 0} posts!`);
+      toast.success(res.data.message || "AI Calendar generated successfully!");
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to generate calendar");
-    } finally {
-      setGenerating(false);
+      toast.error(err.response?.data?.message || "Failed to generate AI calendar");
+      setStep("settings");
     }
   };
-
+  
   const handleApprove = async () => {
     if (selectedPosts.length === 0) {
       toast.error("Please select at least one post to approve");
@@ -58,47 +98,64 @@ export default function AICalendarModal({ isOpen, onClose, location, onSuccess }
     }
     
     setApproving(true);
+    
     try {
-      const res = await gbpApproveCalendarPosts(selectedPosts);
-      toast.success(`Approved ${res.data.approved} posts for scheduling!`);
+      const postsToCreate = calendar.posts.filter((_: any, i: number) => 
+        selectedPosts.includes(`post-${i}`)
+      );
+      
+      let created = 0;
+      for (const post of postsToCreate) {
+        try {
+          await gbpCreatePost(location._id, {
+            topicType: "STANDARD",
+            summary: post.summary,
+            scheduledAt: post.suggestedDate || undefined,
+            status: post.suggestedDate ? "scheduled" : "draft",
+            aiGenerated: true,
+            primaryKeyword: post.primaryKeyword,
+            searchIntent: post.searchIntent,
+            contentType: post.contentType,
+            media: post.imageUrl ? [{ mediaFormat: "PHOTO", sourceUrl: post.imageUrl }] : [],
+          });
+          created++;
+        } catch (err) {
+          console.error("Failed to create post:", err);
+        }
+      }
+      
+      toast.success(`${created} post(s) added to scheduler!`);
       onSuccess();
       onClose();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to approve posts");
+      toast.error("Failed to approve calendar");
     } finally {
       setApproving(false);
     }
   };
-
+  
   const togglePostSelection = (postId: string) => {
     setSelectedPosts(prev =>
       prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId]
     );
   };
-
-  const toggleType = (type: string) => {
-    setAllowedTypes(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    );
-  };
-
+  
   if (!isOpen) return null;
-
+  
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-5xl shadow-2xl my-8">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-gradient-to-r from-violet-600/10 to-purple-600/10">
+        <div className="flex items-center justify-between p-6 border-b border-slate-800">
           <div>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-violet-400" />
-              AI Monthly Calendar Generator
+              Keyword-Driven AI Calendar
             </h3>
             <p className="text-sm text-slate-400 mt-0.5">
-              {step === "configure" 
-                ? "Generate 30 days of SEO-optimized content with AI"
-                : `Review ${calendar.length} AI-generated posts`
-              }
+              {location?.locationName}
             </p>
           </div>
           <button
@@ -109,200 +166,269 @@ export default function AICalendarModal({ isOpen, onClose, location, onSuccess }
           </button>
         </div>
 
-        {step === "configure" ? (
-          // Configuration Step
+        {/* Content */}
+        {step === "settings" && (
           <div className="p-6 space-y-5">
-            {/* Location Info */}
-            <div className="p-4 rounded-xl bg-violet-500/5 border border-violet-500/20">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-violet-600 flex items-center justify-center text-white font-bold">
-                  {location?.locationName?.charAt(0) || "L"}
-                </div>
-                <div>
-                  <div className="font-semibold text-white">{location?.locationName}</div>
-                  <div className="text-sm text-slate-400">
-                    {location?.primaryCategory?.displayName} • {location?.address?.locality}
+            {/* Keyword Availability Notice */}
+            {keywordStats && !keywordStats.available && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-amber-300 mb-1">Smart Industry Keywords Mode</h4>
+                    <p className="text-xs text-amber-200/80">
+                      No Google search keywords synced for this month yet. The AI Calendar will use intelligent localized keywords tailored to {location?.locationName || "your business"} and your primary categories.
+                    </p>
                   </div>
                 </div>
               </div>
+            )}
+            
+            {/* Keyword Info */}
+            {keywordStats && keywordStats.available && (
+              <div className="rounded-xl border border-violet-500/30 bg-violet-950/20 p-4">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-violet-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-violet-300 mb-2">Using Real Google Search Data</h4>
+                    <p className="text-xs text-violet-200/80 mb-3">
+                      This calendar will be created based on actual customer search queries for {location?.locationName}. Total keywords available: {keywordStats.count}
+                    </p>
+                    {keywordStats.topKeywords && keywordStats.topKeywords.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-violet-300 mb-2">Top Search Keywords:</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {keywordStats.topKeywords.map((kw: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                              <span className="text-xs text-violet-200 font-medium truncate flex-1">
+                                {kw.searchKeyword || "—"}
+                              </span>
+                              <span className="text-xs text-violet-400 ml-2 flex-shrink-0">
+                                {kw.insightsValue?.threshold ? `${kw.insightsValue.threshold}+` : "0"} searches
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Month & Year */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold text-slate-300 mb-2 block">Month</label>
+                <select
+                  value={month}
+                  onChange={(e) => setMonth(parseInt(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-violet-500"
+                >
+                  {monthNames.map((m, i) => (
+                    <option key={i} value={i + 1}>{m}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-300 mb-2 block">Year</label>
+                <select
+                  value={year}
+                  onChange={(e) => setYear(parseInt(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-violet-500"
+                >
+                  <option value={2024}>2024</option>
+                  <option value={2025}>2025</option>
+                  <option value={2026}>2026</option>
+                  <option value={2027}>2027</option>
+                </select>
+              </div>
             </div>
-
-            {/* Posts per Week */}
+            
+            {/* Number of Posts */}
             <div>
-              <label className="text-sm font-semibold text-slate-300 mb-2 block">
-                Posts per Week
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {[1, 2, 3, 4, 5].map((num) => (
+              <label className="text-sm font-semibold text-slate-300 mb-2 block">Number of Posts</label>
+              <div className="grid grid-cols-4 gap-2">
+                {[8, 12, 16, 20].map(n => (
                   <button
-                    key={num}
-                    type="button"
-                    onClick={() => setPostsPerWeek(num)}
-                    className={`px-4 py-2.5 rounded-xl border font-medium text-sm transition ${
-                      postsPerWeek === num
+                    key={n}
+                    onClick={() => setNumPosts(n)}
+                    className={`px-4 py-2.5 rounded-lg border font-medium text-sm transition ${
+                      numPosts === n
                         ? "bg-violet-600 border-violet-500 text-white"
                         : "bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600"
                     }`}
                   >
-                    {num}
+                    {n} posts
                   </button>
                 ))}
               </div>
             </div>
-
-            {/* Duration */}
+            
+            {/* Primary Goal */}
             <div>
-              <label className="text-sm font-semibold text-slate-300 mb-2 block">
-                Duration (Days)
-              </label>
-              <input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
-                min={7}
-                max={90}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-violet-500"
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Total posts: ~{Math.floor((duration / 7) * postsPerWeek)}
-              </p>
-            </div>
-
-            {/* Allowed Post Types */}
-            <div>
-              <label className="text-sm font-semibold text-slate-300 mb-2 block">
-                Allowed Post Types
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {["STANDARD", "EVENT", "OFFER"].map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => toggleType(type)}
-                    className={`px-4 py-2.5 rounded-xl border font-medium text-sm transition ${
-                      allowedTypes.includes(type)
-                        ? "bg-violet-600 border-violet-500 text-white"
-                        : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600"
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tone */}
-            <div>
-              <label className="text-sm font-semibold text-slate-300 mb-2 block">
-                Tone
-              </label>
+              <label className="text-sm font-semibold text-slate-300 mb-2 block">Primary Goal</label>
               <select
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-violet-500"
+                value={primaryGoal}
+                onChange={(e) => setPrimaryGoal(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-violet-500"
               >
-                <option value="professional">Professional</option>
-                <option value="friendly">Friendly</option>
-                <option value="casual">Casual</option>
-                <option value="formal">Formal</option>
-                <option value="enthusiastic">Enthusiastic</option>
+                <option value="LOCAL_VISIBILITY">Local Visibility</option>
+                <option value="LEADS">Lead Generation</option>
+                <option value="BRAND_AWARENESS">Brand Awareness</option>
+                <option value="EDUCATION">Education & Information</option>
+                <option value="MIXED">Mixed Strategy</option>
               </select>
             </div>
-
-            {/* Generate Button */}
-            <button
-              onClick={handleGenerate}
-              disabled={generating || allowedTypes.length === 0}
-              className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {generating ? (
-                <>
-                  <Loader className="h-5 w-5 animate-spin" />
-                  Generating with AI...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-5 w-5" />
-                  Generate {Math.floor((duration / 7) * postsPerWeek)}-Post Calendar
-                </>
-              )}
-            </button>
-          </div>
-        ) : (
-          // Review Step
-          <div className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="text-sm text-slate-400">
-                {selectedPosts.length} of {posts.length} posts selected
+            
+            {/* Content Language */}
+            <div>
+              <label className="text-sm font-semibold text-slate-300 mb-2 block">Content Language</label>
+              <select
+                value={contentLanguage}
+                onChange={(e) => setContentLanguage(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-violet-500"
+              >
+                <option value="english">English</option>
+                <option value="hindi">Hindi</option>
+                <option value="hinglish">Hinglish (Mix)</option>
+              </select>
+            </div>
+            
+            {/* Auto Schedule */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800 border border-slate-700">
+              <div>
+                <label className="text-sm font-semibold text-slate-300 block">Automatic Scheduling</label>
+                <p className="text-xs text-slate-500 mt-0.5">Generate suggested posting dates</p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSelectedPosts(posts.map(p => p._id))}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                >
-                  Select All
-                </button>
-                <button
-                  onClick={() => setSelectedPosts([])}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                >
-                  Deselect All
-                </button>
+              <button
+                onClick={() => setAutoSchedule(!autoSchedule)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                  autoSchedule ? "bg-violet-600" : "bg-slate-700"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                    autoSchedule ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "generating" && (
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <div className="w-16 h-16 border-4 border-violet-600 border-t-transparent rounded-full animate-spin mb-6" />
+            <h3 className="text-lg font-bold text-white mb-2">Analyzing Keywords & Generating Calendar...</h3>
+            <p className="text-sm text-slate-400 max-w-md">
+              Fetching real Google search data, analyzing search intent, and creating keyword-driven content topics.
+            </p>
+          </div>
+        )}
+
+        {step === "preview" && calendar && (
+          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg bg-violet-500/10 border border-violet-500/20 p-3">
+                <p className="text-xs text-violet-300 mb-1">Calendar Generated</p>
+                <p className="text-xl font-bold text-white">{calendar.posts.length} Posts</p>
+              </div>
+              <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-3">
+                <p className="text-xs text-green-300 mb-1">Keywords Used</p>
+                <p className="text-xl font-bold text-white">{calendar.keywordCoverage.totalUsed}</p>
+              </div>
+              <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
+                <p className="text-xs text-blue-300 mb-1">Keyword Coverage</p>
+                <p className="text-xl font-bold text-white">
+                  {Math.round((calendar.keywordCoverage.totalUsed / calendar.keywordCoverage.totalAvailable) * 100)}%
+                </p>
               </div>
             </div>
-
-            <div className="max-h-[500px] overflow-y-auto space-y-3 mb-4">
-              {posts.map((post: any) => (
-                <div
-                  key={post._id}
-                  className={`p-4 rounded-xl border transition cursor-pointer ${
-                    selectedPosts.includes(post._id)
-                      ? "bg-violet-500/5 border-violet-500/30"
-                      : "bg-slate-800/50 border-slate-700 hover:border-slate-600"
-                  }`}
-                  onClick={() => togglePostSelection(post._id)}
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedPosts.includes(post._id)}
-                      onChange={() => togglePostSelection(post._id)}
-                      className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-700 text-violet-600 focus:ring-violet-500"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">
-                          Day {Math.floor((posts.indexOf(post) / posts.length) * duration) + 1}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
-                          {post.topicType}
-                        </span>
-                        <Sparkles className="h-3 w-3 text-violet-400" />
+            
+            {/* Calendar Posts */}
+            <div className="space-y-2">
+              {calendar.posts.map((post: any, index: number) => {
+                const postId = `post-${index}`;
+                const isSelected = selectedPosts.includes(postId);
+                
+                return (
+                  <div
+                    key={index}
+                    className={`rounded-xl border p-4 transition ${
+                      isSelected
+                        ? "border-violet-500/50 bg-violet-500/5"
+                        : "border-slate-800 bg-slate-900/60"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => togglePostSelection(postId)}
+                        className="mt-1 w-4 h-4 rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500"
+                      />
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                            {post.suggestedDate ? new Date(post.suggestedDate).toLocaleDateString() : "Draft"}
+                          </span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300">
+                            {post.contentType}
+                          </span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">
+                            {post.searchIntent}
+                          </span>
+                        </div>
+                        
+                        <p className="text-sm font-medium text-white mb-1">{post.topic}</p>
+                        <p className="text-xs text-slate-400 mb-2 line-clamp-2">{post.summary}</p>
+                        
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <TrendingUp className="h-3 w-3" />
+                          <span>Keyword: "{post.primaryKeyword}"</span>
+                          {post.location && (
+                            <span className="text-violet-400">• {post.location}</span>
+                          )}
+                        </div>
                       </div>
-                      
-                      <p className="text-sm text-slate-300 line-clamp-2 mb-2">
-                        {post.summary}
-                      </p>
-                      
-                      {post.media?.[0]?.sourceUrl && (
-                        <img
-                          src={post.media[0].sourceUrl}
-                          alt="Post preview"
-                          className="w-full h-32 object-cover rounded-lg mt-2"
-                          onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                        />
-                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+          </div>
+        )}
 
-            <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-800">
+        {/* Footer */}
+        {step === "settings" && (
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-800">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleGenerate}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-violet-600/20"
+            >
+              <Sparkles className="h-4 w-4" />
+              Generate AI Calendar
+            </button>
+          </div>
+        )}
+
+        {step === "preview" && (
+          <div className="flex items-center justify-between p-6 border-t border-slate-800">
+            <div className="text-sm text-slate-400">
+              {selectedPosts.length} of {calendar?.posts.length} posts selected
+            </div>
+            <div className="flex gap-3">
               <button
-                onClick={() => setStep("configure")}
+                onClick={() => setStep("settings")}
                 className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold transition"
               >
                 Back
@@ -310,17 +436,17 @@ export default function AICalendarModal({ isOpen, onClose, location, onSuccess }
               <button
                 onClick={handleApprove}
                 disabled={approving || selectedPosts.length === 0}
-                className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {approving ? (
                   <>
-                    <Loader className="h-4 w-4 animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Approving...
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="h-4 w-4" />
-                    Approve & Schedule {selectedPosts.length} Posts
+                    Approve & Schedule
                   </>
                 )}
               </button>

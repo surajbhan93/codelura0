@@ -577,7 +577,7 @@ export default function PerformanceDashboardPage() {
                         {trendDisplay.text}
                       </span>
                     </div>
-                    {trend.scoreChange && (
+                    {trend.scoreChange && typeof trend.scoreChange === 'number' && (
                       <span className="text-sm text-slate-400">
                         {trend.scoreChange > 0 ? "+" : ""}
                         {trend.scoreChange} points vs previous period
@@ -597,7 +597,7 @@ export default function PerformanceDashboardPage() {
                 </div>
               </div>
 
-              {trend.message && (
+              {trend.message && typeof trend.message === 'string' && trend.message.length > 0 && (
                 <p className="text-sm text-slate-300 mb-4">
                   {trend.message}
                 </p>

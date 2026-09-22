@@ -1,0 +1,866 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
+import {
+  Calendar,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  MessageSquare,
+  ExternalLink,
+  RefreshCw,
+  Ban,
+  TrendingUp,
+  Eye,
+  ThumbsUp,
+  Share2,
+  Search,
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Send,
+} from "lucide-react";
+
+interface Job {
+  _id: string;
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+}
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface Metrics {
+  impressions?: number;
+  clicks?: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+}
+
+interface AutoReply {
+  enabled: boolean;
+  mode: "automatic" | "approval_required";
+  lastCheckedAt?: Date;
+}
+
+interface Promotion {
+  _id: string;
+  jobId: Job;
+  userId: User;
+  linkedInPageId?: string;
+  postContent: string;
+  mediaUrl?: string;
+  hashtags: string[];
+  publishMode: "now" | "scheduled";
+  scheduledAt?: Date;
+  publishedAt?: Date;
+  linkedInPostId?: string;
+  linkedInPostUrl?: string;
+  status: "draft" | "scheduled" | "publishing" | "published" | "failed" | "cancelled";
+  errorMessage?: string;
+  retryCount: number;
+  aiAutoReply: AutoReply;
+  metrics: Metrics;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface AllJob {
+  _id: string;
+  title: string;
+  company: string;
+  location: string;
+  type: string;
+  salary?: string;
+  description?: string;
+  content?: string;
+  bannerImage?: string;
+  tags?: string[];
+  isFeatured?: boolean;
+  isExpired?: boolean;
+  createdAt: Date;
+  hasLinkedInPromotion?: boolean;
+  linkedInStatus?: string;
+}
+
+interface PaginationData {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+const statusColors = {
+  draft: "bg-gray-100 text-gray-700",
+  scheduled: "bg-blue-100 text-blue-700",
+  publishing: "bg-yellow-100 text-yellow-700",
+  published: "bg-green-100 text-green-700",
+  failed: "bg-red-100 text-red-700",
+  cancelled: "bg-gray-100 text-gray-500",
+};
+
+const statusIcons = {
+  draft: AlertCircle,
+  scheduled: Clock,
+  publishing: Loader2,
+  published: CheckCircle2,
+  failed: XCircle,
+  cancelled: Ban,
+};
+
+export default function LinkedInPromotionsPage() {
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [allJobs, setAllJobs] = useState<AllJob[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [activeTab, setActiveTab] = useState<"jobs" | "promotions">("jobs");
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [linkedInConnection, setLinkedInConnection] = useState<any>(null);
+
+  // Promote job modal
+  const [showPromoteModal, setShowPromoteModal] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<AllJob | null>(null);
+  const [promotionLoading, setPromotionLoading] = useState(false);
+  const [generatedPost, setGeneratedPost] = useState("");
+  const [publishMode, setPublishMode] = useState<"now" | "scheduled">("now");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
+
+  useEffect(() => {
+    fetchAllJobs();
+    fetchPromotions();
+    checkLinkedInConnection();
+  }, []);
+
+  const fetchAllJobs = async () => {
+    try {
+      setLoadingJobs(true);
+      const response = await fetch(`/api/jobs?limit=100`, {
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (data.success || data.jobs) {
+        const jobs = data.jobs || data.data || [];
+        
+        // Check which jobs have LinkedIn promotions
+        const jobsWithStatus = await Promise.all(
+          jobs.map(async (job: AllJob) => {
+            try {
+              const promoResponse = await fetch(`/api/linkedin/promotions/job/${job._id}`, {
+                credentials: "include",
+              });
+              const promoData = await promoResponse.json();
+              
+              return {
+                ...job,
+                hasLinkedInPromotion: promoData.success && promoData.promotion,
+                linkedInStatus: promoData.promotion?.status,
+              };
+            } catch {
+              return { ...job, hasLinkedInPromotion: false };
+            }
+          })
+        );
+
+        setAllJobs(jobsWithStatus);
+      } else {
+        toast.error(data.message || "Failed to fetch jobs");
+      }
+    } catch (error: any) {
+      console.error("Error fetching jobs:", error);
+      toast.error(error.message || "Failed to fetch jobs");
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
+
+  const fetchPromotions = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/linkedin/promotions?limit=100`, {
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setPromotions(data.promotions);
+      } else {
+        toast.error(data.message || "Failed to fetch promotions");
+      }
+    } catch (error: any) {
+      console.error("Error fetching promotions:", error);
+      toast.error(error.message || "Failed to fetch promotions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkLinkedInConnection = async () => {
+    try {
+      const response = await fetch(`/api/linkedin/status`, {
+        credentials: "include",
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setLinkedInConnection(data);
+      }
+    } catch (error) {
+      console.error("Error checking LinkedIn connection:", error);
+    }
+  };
+
+  const handlePromoteJob = async (job: AllJob) => {
+    if (!linkedInConnection?.connected) {
+      toast.error("Please connect your LinkedIn account first");
+      return;
+    }
+
+    setSelectedJob(job);
+    setGeneratedPost("");
+    setPublishMode("now");
+    setScheduledDate("");
+    setScheduledTime("");
+    setShowPromoteModal(true);
+
+    // Auto-generate post
+    await generatePostForJob(job);
+  };
+
+  const generatePostForJob = async (job: AllJob) => {
+    try {
+      setPromotionLoading(true);
+      const response = await fetch(`/api/linkedin/generate-job-post`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          type: job.type,
+          salary: job.salary,
+          description: job.description || job.content,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setGeneratedPost(data.post);
+      } else {
+        toast.error(data.message || "Failed to generate post");
+      }
+    } catch (error: any) {
+      console.error("Error generating post:", error);
+      toast.error(error.message || "Failed to generate post");
+    } finally {
+      setPromotionLoading(false);
+    }
+  };
+
+  const handlePublishPromotion = async () => {
+    if (!selectedJob || !generatedPost) {
+      toast.error("Please generate post content first");
+      return;
+    }
+
+    if (publishMode === "scheduled" && (!scheduledDate || !scheduledTime)) {
+      toast.error("Please select schedule date and time");
+      return;
+    }
+
+    try {
+      setPromotionLoading(true);
+
+      // Save promotion
+      const promotionData = {
+        jobId: selectedJob._id,
+        postContent: generatedPost,
+        mediaUrl: selectedJob.bannerImage || "",
+        hashtags: selectedJob.tags || [],
+        publishMode,
+        scheduledAt: publishMode === "scheduled" 
+          ? new Date(`${scheduledDate}T${scheduledTime}`)
+          : null,
+        aiAutoReply: {
+          enabled: true,
+          mode: "automatic",
+        },
+      };
+
+      const saveResponse = await fetch(`/api/linkedin/promotions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(promotionData),
+      });
+
+      const saveData = await saveResponse.json();
+
+      if (!saveData.success) {
+        throw new Error(saveData.message || "Failed to save promotion");
+      }
+
+      // If publish now, publish immediately
+      if (publishMode === "now") {
+        const publishResponse = await fetch(
+          `/api/linkedin/promotions/${saveData.promotion._id}/publish`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+
+        const publishData = await publishResponse.json();
+
+        if (publishData.success) {
+          toast.success("Job posted to LinkedIn successfully!");
+        } else {
+          toast.error(publishData.message || "Failed to publish to LinkedIn");
+        }
+      } else {
+        toast.success(`Job promotion scheduled for ${scheduledDate} at ${scheduledTime}`);
+      }
+
+      setShowPromoteModal(false);
+      fetchPromotions();
+      fetchAllJobs();
+    } catch (error: any) {
+      console.error("Error publishing promotion:", error);
+      toast.error(error.message || "Failed to publish promotion");
+    } finally {
+      setPromotionLoading(false);
+    }
+  };
+
+  const formatDate = (date: Date | undefined) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const filteredJobs = allJobs.filter((job) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      job.title?.toLowerCase().includes(query) ||
+      job.company?.toLowerCase().includes(query) ||
+      job.location?.toLowerCase().includes(query)
+    );
+  });
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">LinkedIn Job Promotions</h1>
+          <p className="text-gray-600">
+            Promote jobs on LinkedIn automatically with AI-generated content
+          </p>
+          
+          {/* LinkedIn Connection Status */}
+          {!linkedInConnection?.connected && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <span className="text-yellow-800 font-medium">
+                  LinkedIn not connected. Connect your account to promote jobs.
+                </span>
+              </div>
+              <button
+                onClick={() => window.location.href = "/admin/jobs/create"}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Connect LinkedIn
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6 border-b border-gray-200">
+          <div className="flex gap-8">
+            <button
+              onClick={() => setActiveTab("jobs")}
+              className={`pb-4 px-2 font-medium transition border-b-2 ${
+                activeTab === "jobs"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5" />
+                All Jobs ({allJobs.length})
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab("promotions")}
+              className={`pb-4 px-2 font-medium transition border-b-2 ${
+                activeTab === "promotions"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Active Promotions ({promotions.length})
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Jobs Tab */}
+        {activeTab === "jobs" && (
+          <div>
+            {/* Search */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search jobs by title, company, or location..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Showing {filteredJobs.length} jobs
+                </p>
+                <button
+                  onClick={fetchAllJobs}
+                  className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            {/* Jobs List */}
+            {loadingJobs ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Jobs Found</h3>
+                <p className="text-gray-600">Create jobs to promote them on LinkedIn</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {filteredJobs.map((job) => (
+                  <div
+                    key={job._id}
+                    className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {job.title}
+                          </h3>
+                          {job.hasLinkedInPromotion && (
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                                job.linkedInStatus === "published"
+                                  ? "bg-green-100 text-green-700"
+                                  : job.linkedInStatus === "scheduled"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : job.linkedInStatus === "failed"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {job.linkedInStatus === "published" && <CheckCircle2 className="w-3.5 h-3.5" />}
+                              {job.linkedInStatus === "scheduled" && <Clock className="w-3.5 h-3.5" />}
+                              {job.linkedInStatus === "failed" && <XCircle className="w-3.5 h-3.5" />}
+                              LinkedIn {job.linkedInStatus}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                          <span className="flex items-center gap-1">
+                            <Briefcase className="w-4 h-4" />
+                            {job.company}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            {job.location}
+                          </span>
+                          <span className="px-2 py-1 bg-gray-100 rounded text-xs">
+                            {job.type}
+                          </span>
+                          {job.salary && (
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="w-4 h-4" />
+                              {job.salary}
+                            </span>
+                          )}
+                        </div>
+                        {job.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                            {job.description.replace(/<[^>]*>/g, '')}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500">
+                          Posted on {new Date(job.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-2 ml-4">
+                        {!job.hasLinkedInPromotion ? (
+                          <button
+                            onClick={() => handlePromoteJob(job)}
+                            disabled={!linkedInConnection?.connected}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm whitespace-nowrap"
+                          >
+                            <Send className="w-4 h-4" />
+                            Promote on LinkedIn
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setActiveTab("promotions")}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium text-sm whitespace-nowrap"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View Promotion
+                          </button>
+                        )}
+                        {job.bannerImage && (
+                          <img
+                            src={job.bannerImage}
+                            alt={job.title}
+                            className="w-24 h-16 object-cover rounded border border-gray-200"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Promotions Tab */}
+        {activeTab === "promotions" && (
+          <div>
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : promotions.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Active Promotions</h3>
+                <p className="text-gray-600">Promote a job from the Jobs tab to see it here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {promotions.map((promotion) => {
+                  const StatusIcon = statusIcons[promotion.status];
+                  return (
+                    <div
+                      key={promotion._id}
+                      className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {promotion.jobId?.title || "Untitled Job"}
+                            </h3>
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                                statusColors[promotion.status]
+                              }`}
+                            >
+                              <StatusIcon className="w-3.5 h-3.5" />
+                              {promotion.status.charAt(0).toUpperCase() + promotion.status.slice(1)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-1">
+                            {promotion.jobId?.company} • {promotion.jobId?.location} • {promotion.jobId?.type}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Created by {promotion.userId?.name || "Unknown"} on {formatDate(promotion.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        {promotion.scheduledAt && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-600">
+                              Scheduled: {formatDate(promotion.scheduledAt)}
+                            </span>
+                          </div>
+                        )}
+
+                        {promotion.publishedAt && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <CheckCircle2 className="w-4 h-4 text-green-500" />
+                            <span className="text-gray-600">
+                              Published: {formatDate(promotion.publishedAt)}
+                            </span>
+                          </div>
+                        )}
+
+                        {promotion.linkedInPostUrl && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <a
+                              href={promotion.linkedInPostUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-blue-600 hover:underline"
+                            >
+                              View on LinkedIn
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+
+                      {promotion.metrics && promotion.status === "published" && (
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Eye className="w-4 h-4 text-gray-500" />
+                            <div>
+                              <p className="text-xs text-gray-500">Impressions</p>
+                              <p className="text-sm font-semibold">{promotion.metrics.impressions || 0}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-gray-500" />
+                            <div>
+                              <p className="text-xs text-gray-500">Clicks</p>
+                              <p className="text-sm font-semibold">{promotion.metrics.clicks || 0}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <ThumbsUp className="w-4 h-4 text-gray-500" />
+                            <div>
+                              <p className="text-xs text-gray-500">Likes</p>
+                              <p className="text-sm font-semibold">{promotion.metrics.likes || 0}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-gray-500" />
+                            <div>
+                              <p className="text-xs text-gray-500">Comments</p>
+                              <p className="text-sm font-semibold">{promotion.metrics.comments || 0}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Share2 className="w-4 h-4 text-gray-500" />
+                            <div>
+                              <p className="text-xs text-gray-500">Shares</p>
+                              <p className="text-sm font-semibold">{promotion.metrics.shares || 0}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {promotion.errorMessage && (
+                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-sm text-red-700 flex items-start gap-2">
+                            <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                            {promotion.errorMessage}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Promote Job Modal */}
+        {showPromoteModal && selectedJob && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Promote Job on LinkedIn</h2>
+                    <p className="text-sm text-gray-600 mt-1">{selectedJob.title} at {selectedJob.company}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPromoteModal(false)}
+                    className="text-gray-400 hover:text-gray-600 transition"
+                  >
+                    <XCircle className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Generated Post */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold text-gray-700">LinkedIn Post Content</label>
+                    {promotionLoading && (
+                      <span className="text-xs text-blue-600 flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Generating...
+                      </span>
+                    )}
+                  </div>
+                  <textarea
+                    value={generatedPost}
+                    onChange={(e) => setGeneratedPost(e.target.value)}
+                    rows={12}
+                    placeholder="AI will generate professional post content..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">{generatedPost.length} / 3000 characters</p>
+                </div>
+
+                {/* Job Banner Preview */}
+                {selectedJob.bannerImage && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 block mb-2">Job Banner</label>
+                    <img
+                      src={selectedJob.bannerImage}
+                      alt={selectedJob.title}
+                      className="w-full rounded-lg border border-gray-200"
+                    />
+                  </div>
+                )}
+
+                {/* Hashtags */}
+                {selectedJob.tags && selectedJob.tags.length > 0 && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 block mb-2">Hashtags</label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedJob.tags.map((tag, index) => (
+                        <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Publishing Options */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 block mb-3">Publishing Options</label>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={publishMode === "now"}
+                        onChange={() => setPublishMode("now")}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <div>
+                        <span className="font-medium text-gray-900">Publish Now</span>
+                        <p className="text-xs text-gray-500">Post immediately to LinkedIn</p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={publishMode === "scheduled"}
+                        onChange={() => setPublishMode("scheduled")}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <div>
+                        <span className="font-medium text-gray-900">Schedule for Later</span>
+                        <p className="text-xs text-gray-500">Choose a date and time</p>
+                      </div>
+                    </label>
+
+                    {publishMode === "scheduled" && (
+                      <div className="ml-7 grid grid-cols-2 gap-3 mt-3">
+                        <div>
+                          <label className="text-xs text-gray-600 block mb-1">Date</label>
+                          <input
+                            type="date"
+                            value={scheduledDate}
+                            onChange={(e) => setScheduledDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block mb-1">Time</label>
+                          <input
+                            type="time"
+                            value={scheduledTime}
+                            onChange={(e) => setScheduledTime(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => setShowPromoteModal(false)}
+                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePublishPromotion}
+                    disabled={promotionLoading || !generatedPost}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {promotionLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : publishMode === "now" ? (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Publish Now
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="w-5 h-5" />
+                        Schedule Post
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

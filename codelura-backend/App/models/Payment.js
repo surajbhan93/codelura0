@@ -1,21 +1,102 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const paymentSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  plan: { type: mongoose.Schema.Types.ObjectId, ref: "PremiumPlan" },
-
-  razorpay_order_id: String,
-  razorpay_payment_id: String,
-  razorpay_signature: String,
-
-  amount: Number,
-  currency: { type: String, default: "INR" },
-
-  status: {
-    type: String,
-    enum: ["created", "paid", "failed"],
-    default: "created",
+const PaymentSchema = new mongoose.Schema(
+  {
+    projectPaymentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ProjectPayment",
+      required: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PaymentClient", // Changed from "User"
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["UPI", "QR"],
+      required: true,
+    },
+    utrNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    paymentDate: {
+      type: Date,
+      required: true,
+    },
+    screenshotUrl: {
+      type: String,
+    },
+    screenshotPublicId: {
+      type: String,
+    },
+    notes: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: [
+        "PENDING",
+        "VERIFICATION_PENDING",
+        "PAID",
+        "PARTIALLY_PAID",
+        "REJECTED",
+        "CANCELLED",
+      ],
+      default: "VERIFICATION_PENDING",
+    },
+    verificationStatus: {
+      verifiedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      verifiedAt: {
+        type: Date,
+      },
+      verificationNotes: {
+        type: String,
+      },
+      rejectionReason: {
+        type: String,
+      },
+    },
+    relatedEmis: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "EMI",
+      },
+    ],
+    receiptNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    receiptGeneratedAt: {
+      type: Date,
+    },
   },
-}, { timestamps: true });
+  {
+    timestamps: true,
+  }
+);
 
-module.exports = mongoose.model("Payment", paymentSchema);
+// Generate receipt number on verification
+PaymentSchema.methods.generateReceiptNumber = function () {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0");
+  this.receiptNumber = `CL-${year}${month}-${random}`;
+  this.receiptGeneratedAt = date;
+};
+
+export default mongoose.model("Payment", PaymentSchema);

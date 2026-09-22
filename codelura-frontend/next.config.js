@@ -178,9 +178,14 @@ const nextConfig = {
     ];
   },
 
-  // ─── Rewrites (if needed) ───
+  // ─── Rewrites (API Proxy to Backend) ───
   async rewrites() {
-    return [];
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3002/api/:path*',
+      },
+    ];
   },
 
   // ─── i18n (if multi-language) ───

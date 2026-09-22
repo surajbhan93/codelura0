@@ -257,3 +257,5 @@ export const fetchSearchKeywords = async (userId, locationDbId, month) => {
     };
   }
 };
+
+export const getPerformanceStats = getStoredMetrics;

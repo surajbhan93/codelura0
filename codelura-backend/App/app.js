@@ -128,8 +128,11 @@ app.use("/api", aiRoutes);
 app.use("/api/admin/program",express.json(), programAdminRoutes);
 app.use("/api/program",express.json(), programWebRoutes);
 
-// Razorpay webhook (raw body required)
-// Razorpay webhook (raw body required)
+// ==================== LEGACY RAZORPAY WEBHOOK ====================
+// NOTE: This webhook is for EXISTING course/premium payments only.
+// NEW project payments use custom UPI system (no Razorpay).
+// Do NOT remove this unless migrating ALL payments to custom system.
+// ==================================================================
 app.post(
   "/api/payment/webhook",
   bodyParser.raw({ type: "application/json" }),
@@ -179,4 +182,24 @@ app.get("/api/admin/stats", express.json(), authMiddleware, getAdminStats);
 // Google Business Profile Module
 import gbpRoutes from "./routes/gbp/gbp.routes.js";
 app.use("/api/google-business-profile", gbpRoutes);
+
+// LinkedIn Job Promotion Module
+import linkedInRoutes from "./routes/linkedin.routes.js";
+import { startLinkedInScheduler } from "./cron/linkedinScheduler.cron.js";
+app.use("/api/linkedin", express.json(), linkedInRoutes);
+
+// Start LinkedIn promotion scheduler
+startLinkedInScheduler();
+
+// Custom UPI Payment System
+import customPaymentRoutes from "./routes/payment.custom.routes.js";
+import paymentSettingsRoutes from "./routes/paymentSettings.routes.js";
+import paymentClientRoutes from "./routes/paymentClient.routes.js";
+import usersRouter from "./routes/users.js";
+
+app.use("/api/payments", customPaymentRoutes);
+app.use("/api/payment-settings", paymentSettingsRoutes);
+app.use("/api/payment-clients", paymentClientRoutes);
+app.use("/api/users", usersRouter);
+
 export default app;

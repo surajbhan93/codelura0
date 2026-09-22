@@ -12,38 +12,95 @@ const buildGooglePostPayload = (post) => {
     topicType: post.topicType || "STANDARD"
   };
   
+  // Validate summary
+  if (!payload.summary) {
+    throw { code: 400, message: "Post summary is required" };
+  }
+  
   // Validate summary length (Google limit: 1500 characters)
   if (payload.summary.length > 1500) {
+    console.warn(`[GBP Post] Summary too long (${payload.summary.length} chars), truncating to 1500`);
     payload.summary = payload.summary.substring(0, 1497) + "...";
   }
   
-  // Add call to action if provided
+  if (payload.summary.length < 10) {
+    throw { code: 400, message: "Post summary must be at least 10 characters" };
+  }
+  
+  // Add call to action if provided and valid
   if (post.callToAction?.actionType && post.callToAction?.url) {
+    const url = post.callToAction.url.trim();
+    
+    // Validate URL format
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      throw { code: 400, message: "Call-to-action URL must start with http:// or https://" };
+    }
+    
     payload.callToAction = {
       actionType: post.callToAction.actionType,
-      url: post.callToAction.url
+      url: url
     };
   }
   
   // Add event if provided
   if (post.event?.title && post.event?.schedule) {
-    payload.event = post.event;
+    payload.event = {
+      title: post.event.title.trim(),
+      schedule: post.event.schedule
+    };
   }
   
   // Add offer if provided
-  if (post.offer?.couponCode && post.offer?.redeemOnlineUrl) {
-    payload.offer = post.offer;
+  if (post.offer) {
+    payload.offer = {};
+    
+    if (post.offer.couponCode) {
+      payload.offer.couponCode = post.offer.couponCode.trim();
+    }
+    
+    if (post.offer.redeemOnlineUrl) {
+      const url = post.offer.redeemOnlineUrl.trim();
+      
+      // Validate URL format
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        throw { code: 400, message: "Offer redeem URL must start with http:// or https://" };
+      }
+      
+      payload.offer.redeemOnlineUrl = url;
+    }
+    
+    if (post.offer.termsConditions) {
+      payload.offer.termsConditions = post.offer.termsConditions.trim();
+    }
   }
   
   // Add media if provided (validate image URLs)
   if (post.media?.length > 0) {
-    payload.media = post.media
-      .filter(m => m.sourceUrl && m.sourceUrl.startsWith('http'))
+    const validMedia = post.media
+      .filter(m => {
+        if (!m.sourceUrl) return false;
+        
+        const url = m.sourceUrl.trim();
+        
+        // Must be HTTPS for Google Business Profile
+        if (!url.startsWith('https://')) {
+          console.warn(`[GBP Post] Skipping invalid image URL (must be HTTPS): ${url}`);
+          return false;
+        }
+        
+        return true;
+      })
       .map(m => ({ 
         mediaFormat: m.mediaFormat || "PHOTO",
-        sourceUrl: m.sourceUrl 
+        sourceUrl: m.sourceUrl.trim()
       }));
+    
+    if (validMedia.length > 0) {
+      payload.media = validMedia;
+    }
   }
+  
+  console.log(`[GBP Post] Built payload - Summary: ${payload.summary.length} chars, Topic: ${payload.topicType}, Has CTA: ${!!payload.callToAction}, Has Media: ${!!payload.media}, Has Event: ${!!payload.event}, Has Offer: ${!!payload.offer}`);
   
   return payload;
 };
@@ -98,52 +155,80 @@ export const publishPost = async (userId, locationDbId, postDbId) => {
   if (!post.summary || post.summary.trim().length < 10) {
     throw { code: 400, message: "Post content is too short. Minimum 10 characters required." };
   }
+  
+  // Validate post summary length
+  if (post.summary.trim().length > 1500) {
+    throw { code: 400, message: "Post content is too long. Maximum 1500 characters allowed." };
+  }
 
   const accessToken = await getValidAccessToken(userId);
   const payload = buildGooglePostPayload(post);
 
   console.log(`[Codelura GBP Post] Publishing post for location: ${loc.googleLocationId}`);
+  console.log(`[Codelura GBP Post] Location Name: ${loc.locationName}`);
+  console.log(`[Codelura GBP Post] Account ID: ${loc.googleAccountId}`);
   console.log(`[Codelura GBP Post] Payload:`, JSON.stringify(payload, null, 2));
 
   try {
     const res = await axios.post(
       `${GBP_V4}/accounts/${loc.googleAccountId}/locations/${loc.googleLocationId}/localPosts`,
       payload,
-      { headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" } }
+      { 
+        headers: { 
+          Authorization: `Bearer ${accessToken}`, 
+          "Content-Type": "application/json" 
+        },
+        timeout: 30000 // 30 second timeout
+      }
     );
 
     console.log(`[Codelura GBP Post] ✓ Post published successfully`);
+    console.log(`[Codelura GBP Post] Google Resource Name: ${res.data.name}`);
 
     post.status = "published";
     post.googleResourceName = res.data.name;
     post.googlePostId = res.data.name?.split("/").pop();
     post.publishedAt = new Date();
     post.errorMessage = null; // Clear any previous errors
+    post.errorCode = null;
     await post.save();
+    
+    // Invalidate cache
+    cacheService.delete(cacheService.generateKey(userId, 'posts', `${locationDbId}:all`));
+    cacheService.delete(cacheService.generateKey(userId, 'posts', `${locationDbId}:published`));
+    
     return post;
   } catch (err) {
     const errorMsg = err.response?.data?.error?.message || err.message;
     const errorDetails = err.response?.data?.error?.details || [];
+    const errorCode = err.response?.status || err.code || "UNKNOWN";
     
     console.error(`[Codelura GBP Post] ✗ Failed to publish:`, errorMsg);
+    console.error(`[Codelura GBP Post] Error code:`, errorCode);
     console.error(`[Codelura GBP Post] Error details:`, JSON.stringify(errorDetails, null, 2));
+    console.error(`[Codelura GBP Post] Full error response:`, JSON.stringify(err.response?.data, null, 2));
 
     post.status = "failed";
     post.errorMessage = errorMsg;
+    post.errorCode = errorCode;
     post.retryCount = (post.retryCount || 0) + 1;
     await post.save();
 
     // Provide helpful error messages
     let userMessage = errorMsg;
-    if (errorMsg.includes("invalid argument")) {
-      userMessage = "Post validation failed. Please check:\n• Post content length (10-1500 characters)\n• Image URL is valid and accessible\n• Call-to-action URL is valid (if provided)\n• No special characters that might cause issues";
-    } else if (errorMsg.includes("media")) {
-      userMessage = "Image validation failed. Please ensure:\n• Image URL is accessible\n• Image is in JPEG or PNG format\n• Image size is reasonable (< 5MB)\n• Image URL starts with https://";
-    } else if (errorMsg.includes("permission")) {
-      userMessage = "Permission denied. Please reconnect your Google Business Profile.";
+    if (errorMsg.includes("invalid argument") || errorMsg.includes("INVALID_ARGUMENT")) {
+      userMessage = "Post validation failed. Please check:\n• Post content length (10-1500 characters)\n• Image URL is valid and accessible (must be HTTPS)\n• Call-to-action URL is valid (if provided)\n• Event dates are in correct format (if EVENT post)\n• No special characters that might cause issues";
+    } else if (errorMsg.includes("media") || errorMsg.includes("image")) {
+      userMessage = "Image validation failed. Please ensure:\n• Image URL is accessible publicly\n• Image is in JPEG or PNG format\n• Image size is reasonable (< 5MB)\n• Image URL starts with https://\n• Image dimensions are at least 250x250 pixels";
+    } else if (errorMsg.includes("permission") || errorMsg.includes("PERMISSION_DENIED")) {
+      userMessage = "Permission denied. Your Google Business Profile connection may have expired. Please reconnect your account.";
+    } else if (errorMsg.includes("quota") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
+      userMessage = "You've reached Google's posting limit. Please try again later (Google allows a limited number of posts per day).";
+    } else if (errorMsg.includes("location") || errorMsg.includes("NOT_FOUND")) {
+      userMessage = "Location not found or access denied. The business location may have been removed or you may have lost access.";
     }
 
-    throw { code: 400, message: `Google rejected this post: ${userMessage}` };
+    throw { code: errorCode === "UNKNOWN" ? 400 : errorCode, message: `Google rejected this post: ${userMessage}` };
   }
 };
 

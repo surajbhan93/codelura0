@@ -14,9 +14,11 @@ import { TextInput, Textarea, ToggleSwitch } from "flowbite-react";
 import {
   Briefcase, 
   ImagePlus, Loader2, X, CheckCircle2,
-  Upload, Sparkles, Copy, Share2, Check
+  Upload, Sparkles, Copy, Share2, Check, Linkedin,
+  Calendar, Clock, Settings, Zap
 } from "lucide-react";
 import type Quill from "quill";
+import * as linkedinApi from "@/lib/linkedinApi";
 
 // ─── Lazy Load ReactQuill ───
 const ReactQuill = dynamic(() => import("react-quill-new"), { 
@@ -94,6 +96,23 @@ export default function AdminJobForm({
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  
+  // LinkedIn Promotion State
+  const [linkedInEnabled, setLinkedInEnabled] = useState(false);
+  const [linkedInPostType, setLinkedInPostType] = useState<"ai" | "custom">("ai");
+  const [linkedInPost, setLinkedInPost] = useState("");
+  const [linkedInGenerating, setLinkedInGenerating] = useState(false);
+  const [linkedInPublishMode, setLinkedInPublishMode] = useState<"now" | "scheduled">("now");
+  const [linkedInScheduledDate, setLinkedInScheduledDate] = useState("");
+  const [linkedInScheduledTime, setLinkedInScheduledTime] = useState("10:00");
+  const [linkedInMediaUrl, setLinkedInMediaUrl] = useState("");
+  const [linkedInHashtags, setLinkedInHashtags] = useState<string[]>([]);
+  const [linkedInConnection, setLinkedInConnection] = useState<any>(null);
+  const [linkedInPages, setLinkedInPages] = useState<any[]>([]);
+  const [linkedInSelectedPage, setLinkedInSelectedPage] = useState("");
+  const [linkedInAutoReply, setLinkedInAutoReply] = useState(false);
+  const [linkedInAutoReplyMode, setLinkedInAutoReplyMode] = useState<"automatic" | "approval_required">("approval_required");
+  const [linkedInConnecting, setLinkedInConnecting] = useState(false);
 
   /* ─────────────────────────────────────────
    CLOUDINARY UPLOAD (Memoized)
@@ -464,6 +483,22 @@ ${defaultHashtags}`;
     });
   }, [form.content]);
 
+  /* ── Check LinkedIn connection on mount ── */
+  useEffect(() => {
+    const checkLinkedInConnection = async () => {
+      try {
+        const response = await linkedinApi.linkedinGetStatus();
+        if (response.data.connected) {
+          setLinkedInConnection(response.data);
+          setLinkedInPages(response.data.organizationPages || []);
+        }
+      } catch (error) {
+        console.error("Failed to check LinkedIn status:", error);
+      }
+    };
+    checkLinkedInConnection();
+  }, []);
+
   /* ── Banner upload ── */
   const handleBannerUpload = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) return toast.error("Only images allowed");
@@ -495,6 +530,96 @@ ${defaultHashtags}`;
 
   /* ── Preview (Memoized) ── */
   const previewHtml = useMemo(() => sanitize(form.content), [form.content, sanitize]);
+
+  /* ══════════════════════════════════════════════════════════════════
+     LINKEDIN HANDLERS
+  ══════════════════════════════════════════════════════════════════ */
+
+  // Connect LinkedIn
+  const handleLinkedInConnect = useCallback(async () => {
+    try {
+      setLinkedInConnecting(true);
+      await linkedinApi.openLinkedInOAuthPopup();
+      
+      // Poll for connection status
+      const checkInterval = setInterval(async () => {
+        try {
+          const response = await linkedinApi.linkedinGetStatus();
+          if (response.data.connected) {
+            setLinkedInConnection(response.data);
+            setLinkedInPages(response.data.organizationPages || []);
+            clearInterval(checkInterval);
+            setLinkedInConnecting(false);
+            toast.success("LinkedIn connected successfully!");
+          }
+        } catch (error) {
+          // Still waiting...
+        }
+      }, 2000);
+
+      // Stop checking after 2 minutes
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        setLinkedInConnecting(false);
+      }, 120000);
+    } catch (error: any) {
+      setLinkedInConnecting(false);
+      toast.error(error.message || "Failed to connect LinkedIn");
+    }
+  }, []);
+
+  // Generate LinkedIn post with AI
+  const handleGenerateLinkedInPost = useCallback(async () => {
+    if (!form.title || !form.company) {
+      toast.error("Please fill in job title and company name first");
+      return;
+    }
+
+    try {
+      setLinkedInGenerating(true);
+      const response = await linkedinApi.linkedinGenerateJobPost({
+        title: form.title,
+        company: form.company,
+        location: form.location,
+        type: form.type,
+        salary: form.salary,
+        description: form.description,
+        tags: form.tags,
+        careerPageUrl: form.careerPageUrl,
+      });
+
+      setLinkedInPost(response.data.post);
+      setLinkedInHashtags(response.data.hashtags || []);
+      toast.success("LinkedIn post generated successfully!");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to generate LinkedIn post");
+    } finally {
+      setLinkedInGenerating(false);
+    }
+  }, [form]);
+
+  // Handle LinkedIn media upload
+  const handleLinkedInMediaUpload = useCallback(async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only images are allowed");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Max file size is 5MB");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const url = await uploadToCloudinary(file);
+      setLinkedInMediaUrl(url);
+      toast.success("Media uploaded successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload media");
+    } finally {
+      setUploading(false);
+    }
+  }, [uploadToCloudinary]);
 
   /* ── Submit ── */
   const handleSubmit = useCallback(async () => {
@@ -561,14 +686,52 @@ ${defaultHashtags}`;
 };
       const headers = { Authorization: `Bearer ${localStorage.getItem("token")}` };
 
+      let createdJobId = jobId;
+
       if (isEdit && jobId) {
         await api.patch(`/jobs/${jobId}`, payload, { headers });
         toast.success("Job updated ✅");
       } else {
-        await api.post("/jobs", payload, { headers });
+        const response = await api.post("/jobs", payload, { headers });
+        createdJobId = response.data.job?._id || response.data._id;
         toast.success("Job posted 🚀");
         localStorage.removeItem(FORM_KEY);
         localStorage.removeItem(STORAGE_KEY);
+        
+        // Handle LinkedIn promotion if enabled
+        if (linkedInEnabled && linkedInPost.trim() && createdJobId) {
+          try {
+            const linkedInPayload = {
+              jobId: createdJobId,
+              linkedInPageId: linkedInSelectedPage || null,
+              linkedInPageName: linkedInPages.find(p => p.id === linkedInSelectedPage)?.name || null,
+              postContent: linkedInPost,
+              mediaUrl: linkedInMediaUrl || null,
+              hashtags: linkedInHashtags,
+              publishMode: linkedInPublishMode,
+              scheduledAt: linkedInPublishMode === "scheduled" 
+                ? new Date(`${linkedInScheduledDate}T${linkedInScheduledTime}`).toISOString()
+                : null,
+              aiAutoReply: {
+                enabled: linkedInAutoReply,
+                mode: linkedInAutoReplyMode,
+              },
+            };
+
+            const promotionResponse = await linkedinApi.linkedinSavePromotion(linkedInPayload);
+            
+            // If publish now, publish immediately
+            if (linkedInPublishMode === "now") {
+              await linkedinApi.linkedinPublishPost(promotionResponse.data.promotion._id);
+              toast.success("LinkedIn post published successfully! 🎉");
+            } else {
+              toast.success(`LinkedIn post scheduled for ${linkedInScheduledDate} ${linkedInScheduledTime}! ⏰`);
+            }
+          } catch (error: any) {
+            toast.error(error.response?.data?.message || "LinkedIn promotion failed, but job was created");
+          }
+        }
+        
         setForm({
           title: "", slug: "", company: "", bannerImage: "",
           location: "", type: "", salary: "",
@@ -589,7 +752,7 @@ isFeatured: false, isExpired: false,
     } finally {
       setLoading(false);
     }
-  }, [form, isEdit, jobId, sanitize, FORM_KEY, STORAGE_KEY, today]);
+  }, [form, isEdit, jobId, sanitize, FORM_KEY, STORAGE_KEY, today, linkedInEnabled, linkedInPost, linkedInMediaUrl, linkedInHashtags, linkedInPublishMode, linkedInScheduledDate, linkedInScheduledTime, linkedInAutoReply, linkedInAutoReplyMode, linkedInSelectedPage, linkedInPages]);
 
   // ─── Save Indicator (Memoized) ───
   const SaveIndicator = useMemo(() => {
@@ -1094,6 +1257,379 @@ isFeatured: false, isExpired: false,
                 </button>
               )}
             </div>
+          </Card>
+
+          {/* ══ LINKEDIN JOB PROMOTION SECTION ══ */}
+          <Card title="🔷 LinkedIn Job Promotion" delay={0.345}>
+            <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 16, lineHeight: 1.6 }}>
+              Automatically create and publish a professional LinkedIn post for this job. Reach thousands of potential candidates on LinkedIn with AI-generated content.
+            </p>
+
+            {/* Enable LinkedIn Promotion Toggle */}
+            <div className="ajf-toggle-row" style={{ marginBottom: 20 }}>
+              <div>
+                <div className="ajf-toggle-label">☑ Promote this job on LinkedIn</div>
+                <div className="ajf-toggle-desc">Enable to create a LinkedIn post for this job</div>
+              </div>
+              <ToggleSwitch 
+                checked={linkedInEnabled} 
+                label=""
+                onChange={setLinkedInEnabled} 
+              />
+            </div>
+
+            {linkedInEnabled && (
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ overflow: "hidden" }}
+                >
+                  {/* LinkedIn Connection Status */}
+                  {!linkedInConnection?.connected ? (
+                    <div style={{
+                      padding: 16,
+                      borderRadius: 12,
+                      background: "linear-gradient(135deg, rgba(10, 102, 194, 0.1) 0%, rgba(10, 102, 194, 0.05) 100%)",
+                      border: "1px solid rgba(10, 102, 194, 0.2)",
+                      marginBottom: 16,
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                        <Linkedin size={24} color="#0a66c2" />
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0", marginBottom: 4 }}>
+                            LinkedIn Not Connected
+                          </p>
+                          <p style={{ fontSize: 12, color: "#94a3b8" }}>
+                            Connect your LinkedIn account to publish job posts directly.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="ajf-btn-ai"
+                        onClick={handleLinkedInConnect}
+                        disabled={linkedInConnecting}
+                        style={{ width: "100%" }}
+                      >
+                        {linkedInConnecting ? (
+                          <><Loader2 size={14} className="animate-spin" /> Connecting...</>
+                        ) : (
+                          <><Linkedin size={14} /> Connect LinkedIn</>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Connected Status */}
+                      <div style={{
+                        padding: 12,
+                        borderRadius: 10,
+                        background: "rgba(16, 185, 129, 0.1)",
+                        border: "1px solid rgba(16, 185, 129, 0.3)",
+                        marginBottom: 16,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                      }}>
+                        <CheckCircle2 size={16} color="#10b981" />
+                        <span style={{ fontSize: 13, color: "#6ee7b7" }}>
+                          LinkedIn Connected: {linkedInConnection.userName}
+                        </span>
+                      </div>
+
+                      {/* Post Type Selector */}
+                      <Field label="Post Type" style={{ marginBottom: 16 }}>
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <button
+                            type="button"
+                            className={`ajf-chip-type ${linkedInPostType === "ai" ? "sel-intern" : ""}`}
+                            onClick={() => setLinkedInPostType("ai")}
+                            style={{ flex: 1 }}
+                          >
+                            <Sparkles size={14} /> AI Generated Post
+                          </button>
+                          <button
+                            type="button"
+                            className={`ajf-chip-type ${linkedInPostType === "custom" ? "sel-full" : ""}`}
+                            onClick={() => setLinkedInPostType("custom")}
+                            style={{ flex: 1 }}
+                          >
+                            <Share2 size={14} /> Custom Post
+                          </button>
+                        </div>
+                      </Field>
+
+                      {/* AI Generation */}
+                      {linkedInPostType === "ai" && (
+                        <div style={{ marginBottom: 16 }}>
+                          <button
+                            type="button"
+                            className="ajf-btn-ai"
+                            onClick={handleGenerateLinkedInPost}
+                            disabled={linkedInGenerating || !form.title || !form.company}
+                            style={{ width: "100%" }}
+                          >
+                            {linkedInGenerating ? (
+                              <><Loader2 size={14} className="animate-spin" /> Generating LinkedIn Post...</>
+                            ) : linkedInPost ? (
+                              <><Sparkles size={14} /> Regenerate LinkedIn Post</>
+                            ) : (
+                              <><Sparkles size={14} /> Generate LinkedIn Post</>
+                            )}
+                          </button>
+                          {!form.title || !form.company && (
+                            <p style={{ fontSize: 11, color: "#f87171", marginTop: 6 }}>
+                              Fill in job title and company name first
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* LinkedIn Post Content */}
+                      {(linkedInPost || linkedInPostType === "custom") && (
+                        <>
+                          <Field label="LinkedIn Post Content" style={{ marginBottom: 16 }}>
+                            <Textarea
+                              rows={12}
+                              value={linkedInPost}
+                              onChange={(e) => setLinkedInPost(e.target.value)}
+                              placeholder="Write or generate your LinkedIn post content..."
+                              style={{
+                                fontFamily: "monospace",
+                                fontSize: 13,
+                                lineHeight: 1.6,
+                                background: "rgba(15, 23, 42, 0.7)",
+                                borderColor: "rgba(139, 92, 246, 0.3)",
+                                color: "#e2e8f0",
+                              }}
+                            />
+                            <p className="ajf-hint" style={{ marginTop: 6 }}>
+                              {linkedInPost.length} / 3000 characters
+                            </p>
+                          </Field>
+
+                          {/* Hashtags */}
+                          <Field label="Hashtags" style={{ marginBottom: 16 }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                              {linkedInHashtags.map((tag, idx) => (
+                                <span
+                                  key={idx}
+                                  className="ajf-tag-preview"
+                                  style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                                >
+                                  #{tag}
+                                  <X
+                                    size={12}
+                                    onClick={() => setLinkedInHashtags(linkedInHashtags.filter((_, i) => i !== idx))}
+                                  />
+                                </span>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const tag = prompt("Enter hashtag (without #):");
+                                  if (tag) setLinkedInHashtags([...linkedInHashtags, tag.replace("#", "")]);
+                                }}
+                                style={{
+                                  padding: "4px 10px",
+                                  fontSize: 12,
+                                  borderRadius: 6,
+                                  border: "1px dashed rgba(139, 92, 246, 0.4)",
+                                  background: "transparent",
+                                  color: "#a78bfa",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                + Add Hashtag
+                              </button>
+                            </div>
+                          </Field>
+
+                          {/* Media Upload */}
+                          <Field label="Job Banner / Image (Optional)" style={{ marginBottom: 16 }}>
+                            {linkedInMediaUrl ? (
+                              <div style={{ position: "relative" }}>
+                                <img
+                                  src={linkedInMediaUrl}
+                                  alt="LinkedIn media"
+                                  style={{ width: "100%", borderRadius: 10, maxHeight: 200, objectFit: "cover" }}
+                                />
+                                <button
+                                  className="ajf-rm"
+                                  onClick={() => setLinkedInMediaUrl("")}
+                                  style={{ position: "absolute", top: 8, right: 8 }}
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleLinkedInMediaUpload(file);
+                                  }}
+                                  style={{ display: "none" }}
+                                  id="linkedin-media-upload"
+                                />
+                                <label
+                                  htmlFor="linkedin-media-upload"
+                                  style={{
+                                    display: "block",
+                                    padding: 20,
+                                    border: "2px dashed rgba(139, 92, 246, 0.3)",
+                                    borderRadius: 10,
+                                    textAlign: "center",
+                                    cursor: "pointer",
+                                    background: "rgba(139, 92, 246, 0.05)",
+                                  }}
+                                >
+                                  <ImagePlus size={24} style={{ color: "#a78bfa", margin: "0 auto 8px" }} />
+                                  <p style={{ fontSize: 13, color: "#94a3b8" }}>Click to upload image</p>
+                                  <p style={{ fontSize: 11, color: "#64748b" }}>PNG, JPG — Max 5MB</p>
+                                </label>
+                              </div>
+                            )}
+                          </Field>
+
+                          {/* Publishing Options */}
+                          <Field label="Publishing" style={{ marginBottom: 16 }}>
+                            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+                              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", flex: 1 }}>
+                                <input
+                                  type="radio"
+                                  name="linkedInPublishMode"
+                                  checked={linkedInPublishMode === "now"}
+                                  onChange={() => setLinkedInPublishMode("now")}
+                                  style={{ accentColor: "#a78bfa" }}
+                                />
+                                <span style={{ fontSize: 13, color: "#e2e8f0" }}>Publish Now</span>
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", flex: 1 }}>
+                                <input
+                                  type="radio"
+                                  name="linkedInPublishMode"
+                                  checked={linkedInPublishMode === "scheduled"}
+                                  onChange={() => setLinkedInPublishMode("scheduled")}
+                                  style={{ accentColor: "#a78bfa" }}
+                                />
+                                <span style={{ fontSize: 13, color: "#e2e8f0" }}>Schedule for Later</span>
+                              </label>
+                            </div>
+
+                            {linkedInPublishMode === "scheduled" && (
+                              <div className="ajf-grid-2" style={{ gap: 10 }}>
+                                <div>
+                                  <label className="ajf-label" style={{ fontSize: 12, marginBottom: 6 }}>
+                                    <Calendar size={12} /> Date
+                                  </label>
+                                  <TextInput
+                                    type="date"
+                                    value={linkedInScheduledDate}
+                                    onChange={(e) => setLinkedInScheduledDate(e.target.value)}
+                                    min={today}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="ajf-label" style={{ fontSize: 12, marginBottom: 6 }}>
+                                    <Clock size={12} /> Time
+                                  </label>
+                                  <TextInput
+                                    type="time"
+                                    value={linkedInScheduledTime}
+                                    onChange={(e) => setLinkedInScheduledTime(e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </Field>
+
+                          {/* LinkedIn Page Selector */}
+                          {linkedInPages.length > 0 && (
+                            <Field label="Publish As" style={{ marginBottom: 16 }}>
+                              <select
+                                value={linkedInSelectedPage}
+                                onChange={(e) => setLinkedInSelectedPage(e.target.value)}
+                                style={{
+                                  width: "100%",
+                                  padding: 10,
+                                  borderRadius: 8,
+                                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                                  background: "rgba(15, 23, 42, 0.7)",
+                                  color: "#e2e8f0",
+                                  fontSize: 13,
+                                }}
+                              >
+                                <option value="">Personal Profile ({linkedInConnection.userName})</option>
+                                {linkedInPages.map((page) => (
+                                  <option key={page.id} value={page.id}>
+                                    {page.name} (Organization Page)
+                                  </option>
+                                ))}
+                              </select>
+                            </Field>
+                          )}
+
+                          {/* AI Auto Reply */}
+                          <div style={{
+                            padding: 14,
+                            borderRadius: 10,
+                            background: "rgba(139, 92, 246, 0.05)",
+                            border: "1px solid rgba(139, 92, 246, 0.2)",
+                          }}>
+                            <div className="ajf-toggle-row" style={{ marginBottom: 12 }}>
+                              <div>
+                                <div className="ajf-toggle-label" style={{ fontSize: 13 }}>
+                                  <Zap size={14} /> AI Auto Reply to Comments
+                                </div>
+                                <div className="ajf-toggle-desc" style={{ fontSize: 11 }}>
+                                  Automatically generate replies to LinkedIn comments
+                                </div>
+                              </div>
+                              <ToggleSwitch
+                                checked={linkedInAutoReply}
+                                label=""
+                                onChange={setLinkedInAutoReply}
+                              />
+                            </div>
+
+                            {linkedInAutoReply && (
+                              <div style={{ display: "flex", gap: 10 }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", flex: 1 }}>
+                                  <input
+                                    type="radio"
+                                    name="linkedInAutoReplyMode"
+                                    checked={linkedInAutoReplyMode === "approval_required"}
+                                    onChange={() => setLinkedInAutoReplyMode("approval_required")}
+                                    style={{ accentColor: "#a78bfa" }}
+                                  />
+                                  <span style={{ fontSize: 12, color: "#cbd5e1" }}>Require Approval</span>
+                                </label>
+                                <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", flex: 1 }}>
+                                  <input
+                                    type="radio"
+                                    name="linkedInAutoReplyMode"
+                                    checked={linkedInAutoReplyMode === "automatic"}
+                                    onChange={() => setLinkedInAutoReplyMode("automatic")}
+                                    style={{ accentColor: "#a78bfa" }}
+                                  />
+                                  <span style={{ fontSize: 12, color: "#cbd5e1" }}>Automatic</span>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            )}
           </Card>
 
           {/* ══ SECTION 8 — SETTINGS ══ */}

@@ -215,3 +215,59 @@ export const gbpGetActionPlan = (locationId: string) =>
 
 export const gbpGetFixQueue = (locationId: string) =>
   api.get(`${BASE}/audit/fix-queue`, { params: { locationId } });
+
+
+// Keyword-Driven AI Calendar
+export const gbpGenerateKeywordCalendar = (data: Record<string, unknown>) =>
+  api.post(`${BASE}/scheduler/ai-calendar`, data);
+
+// Dashboard Aggregation
+export const gbpGetDashboardData = (locationId: string, dateRange?: string) =>
+  api.get(`${BASE}/dashboard/${locationId}`, { params: dateRange ? { dateRange } : {} });
+
+// AI Media Manager APIs
+export const gbpGetMediaList = (locationId: string, params: Record<string, unknown> = {}) =>
+  api.get(`${BASE}/locations/${locationId}/media`, { params });
+
+export const gbpSyncMedia = (locationId: string) =>
+  api.post(`${BASE}/locations/${locationId}/media/sync`);
+
+export const gbpUploadMedia = (locationId: string, formData: FormData) =>
+  api.post(`${BASE}/locations/${locationId}/media/upload`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const gbpReplaceProfilePhoto = (locationId: string, formData: FormData) =>
+  api.post(`${BASE}/locations/${locationId}/media/profile-photo`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const gbpReplaceCoverPhoto = (locationId: string, formData: FormData) =>
+  api.post(`${BASE}/locations/${locationId}/media/cover-photo`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const gbpDeleteMedia = (locationId: string, mediaId: string) =>
+  api.delete(`${BASE}/locations/${locationId}/media/${mediaId}`);
+
+export const gbpGetMediaHealth = (locationId: string) =>
+  api.get(`${BASE}/locations/${locationId}/media/health`);
+
+export const gbpGetDuplicates = (locationId: string) =>
+  api.get(`${BASE}/locations/${locationId}/media/duplicates`);
+
+export const gbpGetOpportunities = (locationId: string) =>
+  api.get(`${BASE}/locations/${locationId}/media/opportunities`);
+
+export const gbpGetMediaRecommendations = (locationId: string) =>
+  api.get(`${BASE}/locations/${locationId}/media/recommendations`);
+
+export const gbpGetMediaPlan = (locationId: string, month?: string) =>
+  api.get(`${BASE}/locations/${locationId}/media/plan`, { params: month ? { month } : {} });
+
+export const gbpGetAIPhotoIdeas = (locationId: string, prompt?: string) =>
+  api.post(`${BASE}/locations/${locationId}/media/ideas`, { prompt });
+
+export const gbpAnalyzeMediaQuality = (locationId: string, mediaId: string) =>
+  api.post(`${BASE}/locations/${locationId}/media/${mediaId}/analyze`);
+
