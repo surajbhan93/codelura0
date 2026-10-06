@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, MapPin, Building2, Star, FileText, CalendarClock,
   Image, BarChart2, Search, Gauge, Bot, Users2, Bell, ShieldCheck,
-  Settings, ChevronLeft, Menu, X
+  Settings, ChevronLeft, Menu, X, Wrench
 } from "lucide-react";
 import { useState } from "react";
 
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/google-business-profile/dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { href: "/google-business-profile/locations", label: "Locations", Icon: MapPin },
   { href: "/google-business-profile/profile", label: "Profile", Icon: Building2 },
+  { href: "/google-business-profile/services", label: "AI Services", Icon: Wrench },
   { href: "/google-business-profile/reviews", label: "Reviews", Icon: Star },
   { href: "/google-business-profile/posts", label: "Posts", Icon: FileText },
   { href: "/google-business-profile/post-scheduler", label: "Post Scheduler", Icon: CalendarClock },

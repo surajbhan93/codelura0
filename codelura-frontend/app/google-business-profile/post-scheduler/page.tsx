@@ -7,6 +7,7 @@ import {
   gbpGetCampaigns,
   gbpBulkUpdatePosts,
   gbpGetSchedulerHealth,
+  gbpPublishPost,
 } from "@/lib/gbp/gbpApi";
 import {
   CalendarClock,
@@ -27,6 +28,8 @@ import {
   RefreshCw,
   Eye,
   Edit,
+  Send,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import SchedulePostModal from "@/components/gbp/SchedulePostModal";
@@ -37,6 +40,8 @@ export default function PostSchedulerPage() {
   const [location, setLocation] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [bulkPublishing, setBulkPublishing] = useState(false);
   const [view, setView] = useState<"list" | "calendar">("list");
   
   // Stats
@@ -51,7 +56,7 @@ export default function PostSchedulerPage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   
   // Filters
-  const [statusFilter, setStatusFilter] = useState<string>("scheduled");
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
 
   useEffect(() => {
@@ -125,20 +130,64 @@ export default function PostSchedulerPage() {
     if (loc) setLocation(loc);
   };
 
+  const handlePublishSingle = async (postId: string) => {
+    if (!location) return;
+    setPublishingId(postId);
+    const toastId = toast.loading("Publishing post to Google Business Profile...");
+    try {
+      await gbpPublishPost(location._id, postId);
+      toast.success("Post published successfully to Google! 🚀", { id: toastId });
+      loadScheduledPosts();
+      loadStats();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || "Failed to publish post";
+      toast.error(msg, { id: toastId, duration: 6000 });
+      loadScheduledPosts();
+      loadStats();
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
   const handleBulkAction = async (action: string) => {
     if (selectedPosts.length === 0) {
       toast.error("Please select posts first");
       return;
     }
     
+    if (action === "publish_now") {
+      setBulkPublishing(true);
+      const toastId = toast.loading(`Publishing ${selectedPosts.length} post(s) to Google...`);
+      try {
+        const res = await gbpBulkUpdatePosts(selectedPosts, "publish_now");
+        toast.success(res.data.message || `Published ${selectedPosts.length} post(s)! 🚀`, { id: toastId });
+        setSelectedPosts([]);
+        loadScheduledPosts();
+        loadStats();
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Bulk publish failed", { id: toastId });
+      } finally {
+        setBulkPublishing(false);
+      }
+      return;
+    }
+
     try {
       await gbpBulkUpdatePosts(selectedPosts, action);
-      toast.success(`${selectedPosts.length} post(s) ${action}`);
+      toast.success(`${selectedPosts.length} post(s) marked as ${action}`);
       setSelectedPosts([]);
       loadScheduledPosts();
       loadStats();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Bulk action failed");
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPosts.length === posts.length) {
+      setSelectedPosts([]);
+    } else {
+      setSelectedPosts(posts.map(p => p._id));
     }
   };
 
@@ -333,29 +382,43 @@ export default function PostSchedulerPage() {
             <option value="failed">Failed</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          <button
+            onClick={handleSelectAll}
+            className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-medium transition"
+          >
+            {selectedPosts.length === posts.length && posts.length > 0 ? "Deselect All" : "Select All"}
+          </button>
         </div>
 
         {/* Bulk Actions */}
         {selectedPosts.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">{selectedPosts.length} selected</span>
+            <span className="text-xs text-slate-400 font-medium">{selectedPosts.length} selected:</span>
+            <button
+              onClick={() => handleBulkAction("publish_now")}
+              disabled={bulkPublishing}
+              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-emerald-900/30 disabled:opacity-50"
+            >
+              {bulkPublishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+              Publish to Google Now
+            </button>
             <button
               onClick={() => handleBulkAction("scheduled")}
-              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition"
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1"
             >
-              <Play className="h-3 w-3 inline mr-1" /> Activate
+              <Play className="h-3 w-3" /> Set Scheduled
             </button>
             <button
               onClick={() => handleBulkAction("cancelled")}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium transition"
+              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium transition flex items-center gap-1"
             >
-              <Pause className="h-3 w-3 inline mr-1" /> Pause
+              <Pause className="h-3 w-3" /> Pause
             </button>
             <button
               onClick={() => handleBulkAction("deleted")}
-              className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-medium transition"
+              className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-medium transition flex items-center gap-1"
             >
-              <Trash2 className="h-3 w-3 inline mr-1" /> Delete
+              <Trash2 className="h-3 w-3" /> Delete
             </button>
           </div>
         )}
@@ -400,12 +463,12 @@ export default function PostSchedulerPage() {
                       type="checkbox"
                       checked={selectedPosts.includes(post._id)}
                       onChange={() => togglePostSelection(post._id)}
-                      className="mt-1 w-4 h-4 rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500"
+                      className="mt-1 w-4 h-4 rounded border-slate-700 bg-slate-800 text-violet-600 focus:ring-violet-500 cursor-pointer"
                     />
                     
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 ${getStatusColor(post.status)}`}>
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className={`text-xs px-2.5 py-0.5 rounded-full border flex items-center gap-1 font-medium ${getStatusColor(post.status)}`}>
                           {getStatusIcon(post.status)}
                           {post.status.toUpperCase()}
                         </span>
@@ -418,34 +481,65 @@ export default function PostSchedulerPage() {
                           </span>
                         )}
                         {post.aiGenerated && (
-                          <Sparkles className="h-3 w-3 text-violet-400" />
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
+                            <Sparkles className="h-3 w-3" /> AI Post
+                          </span>
                         )}
                       </div>
                       
-                      <p className="text-sm text-slate-300 mb-2 line-clamp-2">{post.summary}</p>
+                      <p className="text-sm text-slate-200 mb-2 leading-relaxed">{post.summary}</p>
+
+                      {post.errorMessage && (
+                        <div className="mb-2 p-2.5 rounded-lg bg-red-950/40 border border-red-800/40 text-red-300 text-xs flex items-start gap-2">
+                          <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-semibold text-red-200">Error: </span>
+                            {post.errorMessage}
+                          </div>
+                        </div>
+                      )}
                       
-                      <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <div className="flex items-center gap-4 text-xs text-slate-400">
                         <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {post.scheduledAtLocal?.formatted || new Date(post.scheduledAt).toLocaleString()}
+                          <Clock className="h-3.5 w-3.5 text-slate-500" />
+                          Scheduled: {post.scheduledAtLocal?.formatted || new Date(post.scheduledAt).toLocaleString()}
                         </span>
-                        {post.retryCount > 0 && (
-                          <span className="text-yellow-400">
-                            Retry {post.retryCount}/{post.maxRetries}
+                        {post.publishedAt && (
+                          <span className="flex items-center gap-1 text-emerald-400">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Published: {new Date(post.publishedAt).toLocaleString()}
+                          </span>
+                        )}
+                        {post.retryCount > 0 && post.status !== "published" && (
+                          <span className="text-yellow-400 font-medium">
+                            Retry {post.retryCount}/{post.maxRetries || 4}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <button className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition">
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition">
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button className="p-2 rounded-lg hover:bg-slate-800 text-red-400 hover:text-red-300 transition">
+                  <div className="flex items-center gap-2 shrink-0">
+                    {post.status !== "published" && (
+                      <button
+                        onClick={() => handlePublishSingle(post._id)}
+                        disabled={publishingId === post._id}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-emerald-900/30"
+                        title="Publish immediately to Google Business Profile"
+                      >
+                        {publishingId === post._id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Send className="h-3.5 w-3.5" />
+                        )}
+                        <span>Publish Now</span>
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleBulkAction("deleted")}
+                      className="p-2 rounded-lg hover:bg-slate-800 text-red-400 hover:text-red-300 transition"
+                      title="Delete post"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>

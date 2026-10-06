@@ -1,21 +1,28 @@
 /**
  * Review Auto-Reply Cron Job
- * Runs every 5 minutes to check for new reviews and auto-reply
+ * Runs every 5 minutes to check for new reviews and auto-reply to unreplied reviews
  */
 
 import cron from 'node-cron';
+import mongoose from 'mongoose';
 import GbpLocation from '../models/gbp/GbpLocation.js';
 import GbpReviewAutomationSettings from '../models/gbp/GbpReviewAutomationSettings.js';
-import { syncReviews } from '../services/gbp/gbpReview.service.js';
+import { syncReviews, processLocationAutoReplies } from '../services/gbp/gbpReview.service.js';
 
 let isRunning = false;
 
 /**
- * Auto-reply worker - syncs reviews for all locations with automation enabled
+ * Auto-reply worker - syncs reviews and processes auto-replies for all locations with automation enabled
  */
 async function runAutoReplyWorker() {
   if (isRunning) {
-    console.log('[Review Auto-Reply] Previous job still running, skipping...');
+    console.log('[Review Auto-Reply] Previous worker run still active, skipping...');
+    return;
+  }
+
+  // Check database connection before executing queries
+  if (mongoose.connection.readyState !== 1) {
+    console.warn('[Review Auto-Reply] Database not connected, skipping worker run...');
     return;
   }
 
@@ -23,7 +30,7 @@ async function runAutoReplyWorker() {
   const startTime = Date.now();
 
   try {
-    console.log('[Review Auto-Reply] Starting review sync worker...');
+    console.log('[Review Auto-Reply] === STARTING REVIEW SYNC & AUTO-REPLY WORKER ===');
 
     // Find all locations with automation enabled
     const automationSettings = await GbpReviewAutomationSettings.find({
@@ -32,54 +39,60 @@ async function runAutoReplyWorker() {
     }).populate('locationId');
 
     if (automationSettings.length === 0) {
-      console.log('[Review Auto-Reply] No locations with automation enabled');
+      console.log('[Review Auto-Reply] No locations with automation enabled currently.');
       return;
     }
 
-    console.log(`[Review Auto-Reply] Found ${automationSettings.length} locations with automation enabled`);
+    console.log(`[Review Auto-Reply] Found ${automationSettings.length} locations with automation enabled.`);
 
-    // Process each location
     let totalSynced = 0;
-    let totalNewReviews = 0;
+    let totalReplied = 0;
     let errors = 0;
 
     for (const setting of automationSettings) {
       try {
-        if (!setting.locationId) {
-          console.warn('[Review Auto-Reply] Location not found for setting:', setting._id);
+        if (!setting.locationId || !setting.userId) {
           continue;
         }
 
         const location = setting.locationId;
-        console.log(`[Review Auto-Reply] Syncing reviews for: ${location.locationName}`);
+        console.log(`[Review Auto-Reply] Processing location: ${location.locationName}`);
 
-        // Sync reviews (which will trigger auto-reply processing)
-        const result = await syncReviews(setting.userId, location._id);
+        // 1. Sync reviews to get latest from Google (if token valid)
+        try {
+          const syncRes = await syncReviews(setting.userId, location._id);
+          totalSynced += syncRes.synced || 0;
+          console.log(`[Review Auto-Reply] ✓ Synced ${syncRes.synced} reviews for ${location.locationName}`);
+        } catch (syncErr) {
+          console.warn(`[Review Auto-Reply] Sync warning for ${location.locationName}:`, syncErr.message);
+        }
 
-        totalSynced += result.synced || 0;
-        totalNewReviews += result.newReviews || 0;
+        // 2. Process all unreplied reviews in DB for this location
+        const replyRes = await processLocationAutoReplies(setting.userId, location._id, { maxCount: 25 });
+        totalReplied += replyRes.successful || 0;
 
-        console.log(`[Review Auto-Reply] ✓ ${location.locationName}: ${result.synced} synced, ${result.newReviews} new`);
+        if (replyRes.successful > 0) {
+          console.log(`[Review Auto-Reply] ✓ Published ${replyRes.successful} auto-replies for ${location.locationName}`);
+        }
 
-      } catch (error) {
+      } catch (locationError) {
         errors++;
-        console.error(`[Review Auto-Reply] Error syncing location ${setting.locationId._id}:`, error.message);
+        console.error(`[Review Auto-Reply] Error on location:`, locationError.message);
       }
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[Review Auto-Reply] ✓ Worker completed in ${duration}ms`);
-    console.log(`[Review Auto-Reply] Stats: ${totalSynced} reviews synced, ${totalNewReviews} new reviews, ${errors} errors`);
+    console.log(`[Review Auto-Reply] ✓ Worker finished in ${duration}ms (${totalSynced} synced, ${totalReplied} auto-replies published, ${errors} errors)`);
 
-  } catch (error) {
-    console.error('[Review Auto-Reply] Fatal error:', error);
+  } catch (fatalError) {
+    console.error('[Review Auto-Reply] Worker fatal error:', fatalError);
   } finally {
     isRunning = false;
   }
 }
 
 /**
- * Start the cron job
+ * Start the review auto-reply cron scheduler
  */
 export function startReviewAutoReplyCron() {
   // Run every 5 minutes
@@ -87,15 +100,16 @@ export function startReviewAutoReplyCron() {
     runAutoReplyWorker();
   });
 
-  console.log('[Review Auto-Reply] ✓ Cron job started (runs every 5 minutes)');
+  console.log('[Review Auto-Reply] ✓ Cron scheduler initialized (runs every 5 minutes)');
 
-  // Run immediately on startup (after 30 seconds delay)
+  // Run initial check on server start (after 10s delay to allow DB/OAuth to initialize)
   setTimeout(() => {
-    console.log('[Review Auto-Reply] Running initial check...');
+    console.log('[Review Auto-Reply] Running initial review automation check...');
     runAutoReplyWorker();
-  }, 30000);
+  }, 10000);
 }
 
 export default {
   startReviewAutoReplyCron,
+  runAutoReplyWorker,
 };

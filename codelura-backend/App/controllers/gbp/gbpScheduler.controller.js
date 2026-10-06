@@ -344,9 +344,36 @@ export const bulkUpdatePosts = async (req, res) => {
   try {
     const { postIds, status } = req.body;
     
+    if (status === "publish_now") {
+      const { publishPost } = await import("../../services/gbp/gbpPost.service.js");
+      const posts = await GbpPost.find({ _id: { $in: postIds }, userId: req.user._id });
+      
+      let published = 0;
+      let failed = 0;
+      const errors = [];
+      
+      for (const post of posts) {
+        try {
+          await publishPost(req.user._id, post.locationId, post._id);
+          published++;
+        } catch (err) {
+          failed++;
+          errors.push({ id: post._id, error: err.message });
+        }
+      }
+      
+      return res.json({
+        success: true,
+        message: `Published ${published} post(s) successfully${failed > 0 ? `, ${failed} failed` : ''}`,
+        published,
+        failed,
+        errors,
+      });
+    }
+
     const result = await GbpPost.updateMany(
       { _id: { $in: postIds }, userId: req.user._id },
-      { $set: { status } }
+      { $set: { status, ...(status === "scheduled" ? { claimedAt: null, claimedBy: null, lockExpiry: null, retryCount: 0 } : {}) } }
     );
     
     res.json({ success: true, updated: result.modifiedCount });

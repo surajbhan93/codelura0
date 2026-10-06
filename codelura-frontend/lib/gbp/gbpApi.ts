@@ -18,6 +18,12 @@ export const gbpGetReviews = (locationId: string, params?: Record<string, unknow
   api.get(`${BASE}/locations/${locationId}/reviews`, { params });
 export const gbpSyncReviews = (locationId: string) =>
   api.post(`${BASE}/locations/${locationId}/reviews/sync`);
+export const gbpAutoReplyAll = (locationId?: string, force = false) =>
+  api.post(`${BASE}/reviews/auto-reply-all`, { locationId, force });
+export const gbpGetReviewAutomationSettings = (locationId: string) =>
+  api.get(`${BASE}/locations/${locationId}/reviews/automation/settings`);
+export const gbpUpdateReviewAutomationSettings = (locationId: string, data: Record<string, unknown>) =>
+  api.put(`${BASE}/locations/${locationId}/reviews/automation/settings`, data);
 export const gbpReplyToReview = (locationId: string, reviewId: string, replyText: string) =>
   api.put(`${BASE}/locations/${locationId}/reviews/${reviewId}/reply`, { replyText });
 export const gbpDeleteReviewReply = (locationId: string, reviewId: string) =>
@@ -50,6 +56,14 @@ export const gbpGetAudit = (locationId: string) =>
 // AI
 export const gbpAIReviewReply = (data: Record<string, unknown>) => api.post(`${BASE}/ai/review-reply`, data);
 export const gbpAIPost = (data: Record<string, unknown>) => api.post(`${BASE}/ai/post`, data);
+export const gbpAIGenerateImage = (data: Record<string, unknown>) => api.post(`${BASE}/ai/generate-image`, data);
+export const gbpUploadImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post("/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
 export const gbpAIDescription = (data: Record<string, unknown>) => api.post(`${BASE}/ai/description`, data);
 export const gbpAISEORecommendations = (locationId: string, data?: Record<string, unknown>) =>
   api.post(`${BASE}/ai/seo-recommendations/${locationId}`, data || {});
@@ -271,3 +285,75 @@ export const gbpGetAIPhotoIdeas = (locationId: string, prompt?: string) =>
 export const gbpAnalyzeMediaQuality = (locationId: string, mediaId: string) =>
   api.post(`${BASE}/locations/${locationId}/media/${mediaId}/analyze`);
 
+// AI Media Calendar & Media Scheduler APIs
+export const gbpGenerateAIMediaCalendar = (locationId: string, data: Record<string, unknown>) =>
+  api.post(`${BASE}/locations/${locationId}/media/ai-calendar`, data);
+
+export const gbpApproveAIMediaCalendar = (locationId: string, data: Record<string, unknown>) =>
+  api.post(`${BASE}/locations/${locationId}/media/ai-calendar/approve`, data);
+
+export const gbpScheduleMedia = (locationId: string, data: Record<string, unknown>) =>
+  api.post(`${BASE}/locations/${locationId}/media/schedule`, data);
+
+export const gbpGetScheduledMedia = (locationId: string, params: Record<string, unknown> = {}) =>
+  api.get(`${BASE}/locations/${locationId}/media/scheduled`, { params });
+
+export const gbpPublishScheduledMediaNow = (locationId: string, mediaId: string) =>
+  api.post(`${BASE}/locations/${locationId}/media/${mediaId}/publish-now`);
+
+export const gbpUpdateScheduledMedia = (locationId: string, mediaId: string, data: Record<string, unknown>) =>
+  api.patch(`${BASE}/locations/${locationId}/media/${mediaId}/schedule`, data);
+
+export const gbpCancelScheduledMedia = (locationId: string, mediaId: string) =>
+  api.delete(`${BASE}/locations/${locationId}/media/${mediaId}/schedule`);
+
+
+// ========================================
+// AI Services Optimizer APIs
+// ========================================
+
+// Service management
+export const gbpGetServices = (locationId: string, sync = false) =>
+  api.get(`${BASE}/locations/${locationId}/services`, { params: sync ? { sync: "true" } : {} });
+
+export const gbpSyncServices = (locationId: string) =>
+  api.post(`${BASE}/locations/${locationId}/services/sync`);
+
+export const gbpGetSupportedServices = (locationId: string) =>
+  api.get(`${BASE}/locations/${locationId}/services/supported`);
+
+export const gbpAnalyzeServices = (locationId: string) =>
+  api.post(`${BASE}/locations/${locationId}/services/analyze`);
+
+export const gbpApplyServices = (locationId: string, changes: Record<string, unknown>) =>
+  api.post(`${BASE}/locations/${locationId}/services/apply`, changes);
+
+export const gbpAddService = (locationId: string, data: Record<string, unknown>) =>
+  api.post(`${BASE}/locations/${locationId}/services`, data);
+
+export const gbpDeleteService = (locationId: string, serviceId: string) =>
+  api.delete(`${BASE}/locations/${locationId}/services/${serviceId}`);
+
+// Recommendation management
+export const gbpGetServiceRecommendations = (locationId: string, status?: string) =>
+  api.get(`${BASE}/locations/${locationId}/services/recommendations`, { params: status ? { status } : {} });
+
+export const gbpApproveRecommendation = (locationId: string, recommendationId: string) =>
+  api.post(`${BASE}/locations/${locationId}/services/recommendations/${recommendationId}/approve`);
+
+export const gbpRejectRecommendation = (locationId: string, recommendationId: string) =>
+  api.post(`${BASE}/locations/${locationId}/services/recommendations/${recommendationId}/reject`);
+
+export const gbpBulkApplyServices = (locationId: string, recommendationIds: string[]) =>
+  api.post(`${BASE}/locations/${locationId}/services/bulk-apply`, { recommendationIds });
+
+// Activity log and health
+export const gbpGetServiceActivity = (locationId: string, limit?: number) =>
+  api.get(`${BASE}/locations/${locationId}/services/activity`, { params: limit ? { limit } : {} });
+
+export const gbpGetServiceHealth = (locationId: string) =>
+  api.get(`${BASE}/locations/${locationId}/services/health`);
+
+// Bulk multi-location analysis
+export const gbpBulkAnalyzeLocations = (locationIds: string[]) =>
+  api.post(`${BASE}/services/bulk-analyze`, { locationIds });

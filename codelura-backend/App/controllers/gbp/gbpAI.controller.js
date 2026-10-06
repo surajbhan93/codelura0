@@ -1,4 +1,4 @@
-import { generateReviewReply, generateGooglePost, generateBusinessDescription, generateSEORecommendations, generate30DayPlan, generateFAQ, analyzeProfile } from "../../services/gbp/gbpGrokAI.service.js";
+import { generateReviewReply, generateGooglePost, generateAIImageUrl, generateBusinessDescription, generateSEORecommendations, generate30DayPlan, generateFAQ, analyzeProfile } from "../../services/gbp/gbpGrokAI.service.js";
 import GbpLocation from "../../models/gbp/GbpLocation.js";
 import GbpSEOAudit from "../../models/gbp/GbpSEOAudit.js";
 import GbpSEOActionPlan from "../../models/gbp/GbpSEOActionPlan.js";
@@ -26,6 +26,16 @@ export const aiPost = async (req, res) => {
     } else {
       res.json({ success: true, data: { post: result, imageUrl: null } });
     }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const aiGenerateImage = async (req, res) => {
+  try {
+    const { topic, category, city, businessName } = req.body;
+    const imageUrl = generateAIImageUrl({ topic, category, city, businessName });
+    res.json({ success: true, data: { imageUrl } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

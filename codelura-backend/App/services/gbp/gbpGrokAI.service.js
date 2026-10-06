@@ -87,6 +87,30 @@ export const generateReviewReply = async ({ businessName = "Tutvex", reviewerNam
   }
 };
 
+export const generateAIImageUrl = ({ topic = "Business Services", category = "Local Business", city = "India", businessName = "" }) => {
+  let categoryKeywords = "professional service business quality modern workplace";
+  const catLower = (category || "").toLowerCase();
+  if (catLower.includes("tutor") || catLower.includes("tuition") || catLower.includes("education") || catLower.includes("school") || catLower.includes("teach") || catLower.includes("course") || catLower.includes("acad")) {
+    categoryKeywords = "education tutoring student studying teacher classroom books learning modern Indian student home tuition academic success";
+  } else if (catLower.includes("software") || catLower.includes("web") || catLower.includes("it") || catLower.includes("tech") || catLower.includes("app")) {
+    categoryKeywords = "software technology coding modern computer digital agency developer office";
+  } else if (catLower.includes("health") || catLower.includes("clinic") || catLower.includes("doctor") || catLower.includes("dent") || catLower.includes("hosp")) {
+    categoryKeywords = "healthcare medical clinic doctor patient care wellness professional";
+  } else if (catLower.includes("rest") || catLower.includes("food") || catLower.includes("cafe") || catLower.includes("bake")) {
+    categoryKeywords = "delicious food gourmet dining restaurant chef culinary meal";
+  } else if (catLower.includes("real") || catLower.includes("prop") || catLower.includes("build") || catLower.includes("home")) {
+    categoryKeywords = "modern real estate luxury home architecture commercial interior building";
+  } else if (catLower.includes("gym") || catLower.includes("fit") || catLower.includes("yoga")) {
+    categoryKeywords = "fitness workout training gym health energetic active lifestyle";
+  }
+
+  const cityContext = city || "India";
+  const cleanPrompt = `Professional ${category} business advertisement poster photo, ${topic}, high quality photography, cinematic lighting, 4k sharp details, ${cityContext}, ${categoryKeywords}, elegant design, clean aesthetic, vibrant colors, no distorted text, ultra realistic`;
+  
+  const seed = Math.floor(Math.random() * 1000000);
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1200&height=800&nologo=true&enhance=true&seed=${seed}`;
+};
+
 export const generateGooglePost = async ({ businessName = "Tutvex", category = "Education & Home Tutors", city = "", topic = "Special Offer", tone = "friendly", offer = "", cta = "Contact Us" }) => {
   
   const system = `You are a Google Business Profile SEO expert for "${businessName}". Create high-converting, SEO-optimized Google Business Posts.
@@ -118,13 +142,16 @@ Desired CTA: ${cta || "Contact us"}
 
 Generate an SEO-optimized Google Business Post that will drive engagement and conversions.`;
 
-  const res = await chat(system, user, true);
+  const res = await chat(system, user, false);
 
-  const bName = businessName || "Tutvex";
-  const cityName = city || "Prayagraj";
-  
+  const bName = businessName || "Our Business";
+  const cityName = (city || "").trim();
+  const cityClause = cityName ? ` in ${cityName}` : "";
+  const servingClause = cityName ? `📍 Proudly serving ${cityName} and nearby areas` : `📍 Proudly serving our local community`;
+  const hashtagCity = cityName ? `#${cityName.replace(/\s+/g, '')}${category.split(' ')[0] || ''}` : '';
+
   // Fallback SEO-optimized post if AI fails
-  const postText = res || `🎓 Looking for Quality ${category} in ${cityName}?
+  const postText = res || `🎓 Looking for Quality ${category}${cityClause}?
 
 ${bName} is here to help! ${offer ? `\n\n🎁 Special Offer: ${offer}` : `\n\nWe provide top-rated ${category.toLowerCase()} services with:`}
 
@@ -135,24 +162,13 @@ ${bName} is here to help! ${offer ? `\n\n🎁 Special Offer: ${offer}` : `\n\nWe
 
 ${topic && !offer ? `\n📢 ${topic}` : ''}
 
-📍 Proudly serving ${cityName} and nearby areas
+${servingClause}
 
 👉 ${cta} - Book your session today!
 
-#${cityName.replace(/\s+/g, '')}${category.split(' ')[0]} #${bName.replace(/\s+/g, '')}`;
+${hashtagCity} #${bName.replace(/[^a-zA-Z0-9]/g, '')}`.trim();
 
-  // Generate professional, attractive banner image
-  const categoryKeywords = category.includes("Tutor") || category.includes("Education") 
-    ? "education tutoring students learning books professional classroom" 
-    : category.includes("Software") || category.includes("Web")
-    ? "software development technology coding professional workspace modern"
-    : "professional service business quality modern";
-
-  const cityContext = city ? city : "India";
-  const cleanPrompt = `Professional ${category} business promotional banner, ${topic}, modern design, high quality, professional photography, ${cityContext}, ${categoryKeywords}, clean layout, attractive colors, no text overlay, business oriented`;
-  
-  const seed = Math.floor(Math.random() * 100000);
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1200&height=800&nologo=true&enhance=true&seed=${seed}`;
+  const imageUrl = generateAIImageUrl({ topic, category, city: cityName, businessName: bName });
 
   return {
     post: postText,

@@ -30,6 +30,7 @@ const gbpMediaSchema = new mongoose.Schema({
   sourceUrl: { type: String },
   googleUrl: { type: String },
   thumbnailUrl: { type: String },
+  title: { type: String },
   description: { type: String },
   attribution: {
     displayName: String,
@@ -65,13 +66,29 @@ const gbpMediaSchema = new mongoose.Schema({
     viewCount: { type: Number, default: 0 },
     hasInsights: { type: Boolean, default: false },
   },
-  uploadStatus: { type: String, enum: ["uploading", "uploaded", "failed"], default: "uploaded" },
+  // Scheduling & publishing lifecycle
+  status: { 
+    type: String, 
+    enum: ["scheduled", "processing", "uploaded", "failed"], 
+    default: "uploaded",
+    index: true 
+  },
+  scheduledAt: { type: Date, index: true },
+  claimedAt: { type: Date },
+  claimedBy: { type: String },
+  lockExpiry: { type: Date },
+  retryCount: { type: Number, default: 0 },
+  errorMessage: { type: String },
+  aiGenerated: { type: Boolean, default: false },
+  uploadStatus: { type: String, enum: ["uploading", "uploaded", "failed", "scheduled", "processing"], default: "uploaded" },
   createTime: { type: Date, default: Date.now },
   lastSyncedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 
 gbpMediaSchema.index({ userId: 1, locationId: 1, createdAt: -1 });
 gbpMediaSchema.index({ locationId: 1, category: 1 });
+gbpMediaSchema.index({ locationId: 1, status: 1 });
+gbpMediaSchema.index({ status: 1, scheduledAt: 1 });
 gbpMediaSchema.index({ locationId: 1, source: 1 });
 gbpMediaSchema.index({ googleMediaName: 1 });
 gbpMediaSchema.index({ hash: 1 });

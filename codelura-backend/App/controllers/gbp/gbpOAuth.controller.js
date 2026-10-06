@@ -24,7 +24,14 @@ export const oauthCallback = async (req, res) => {
     const userId = decoded.userId;
     if (!userId) return res.redirect(`${frontendUrl}/google-business-profile/oauth?error=invalid_state`);
 
-    await exchangeCode(code, userId);
+    const tokenDoc = await exchangeCode(code, userId);
+
+    const hasBusinessScope = tokenDoc.scopes && tokenDoc.scopes.some(s => s.includes("business.manage"));
+
+    if (!hasBusinessScope) {
+      console.warn("[GBP OAuth] Token connected but user did NOT grant 'business.manage' scope.");
+      return res.redirect(`${frontendUrl}/google-business-profile/locations?connected=partial&missing_scope=true`);
+    }
 
     // Auto-sync locations after connect
     try { await syncAccountsAndLocations(userId); } catch (_) {}

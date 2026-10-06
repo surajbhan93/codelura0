@@ -1,47 +1,123 @@
-import { getReviews, syncReviews, replyToReview, deleteReviewReply } from "../../services/gbp/gbpReview.service.js";
+import {
+  getReviews,
+  syncReviews,
+  replyToReview,
+  deleteReviewReply,
+  getAutomationSettings,
+  updateAutomationSettings,
+  autoReplyAllLocations,
+  processLocationAutoReplies,
+} from "../../services/gbp/gbpReview.service.js";
 
+/**
+ * List reviews for a location (or all locations)
+ */
 export const listReviews = async (req, res) => {
   try {
     const { page = 1, limit = 20, rating, replied, sort } = req.query;
-    const result = await getReviews(req.user._id, req.params.locationId, { page: Number(page), limit: Number(limit), rating, replied, sort });
+    const result = await getReviews(req.user._id, req.params.locationId, {
+      page: Number(page),
+      limit: Number(limit),
+      rating,
+      replied,
+      sort,
+    });
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({ success: false, message: err.message });
+    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
+/**
+ * Sync reviews from Google API for a location
+ */
 export const syncLocationReviews = async (req, res) => {
   try {
     const result = await syncReviews(req.user._id, req.params.locationId);
-    res.json({ success: true, message: `Synced ${result.synced} reviews.` });
+    res.json({
+      success: true,
+      message: `Synced ${result.synced} reviews.`,
+      data: result,
+    });
   } catch (err) {
-    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({ success: false, message: err.message });
+    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
+/**
+ * Trigger Auto-Reply for unreplied reviews across locations or a specific location
+ */
+export const triggerAutoReplyAllReviews = async (req, res) => {
+  try {
+    const locationId = req.params.locationId || req.body.locationId;
+    const force = req.body.force === true;
+
+    if (locationId && locationId !== "all") {
+      const result = await processLocationAutoReplies(req.user._id, locationId, { maxCount: 100, force });
+      res.json({
+        success: true,
+        data: result,
+        message: `Processed ${result.processed} reviews (${result.successful} replies published, ${result.failed} failed).`,
+      });
+    } else {
+      const results = await autoReplyAllLocations(req.user._id, { force });
+      const totalSuccessful = results.reduce((acc, r) => acc + (r.successful || 0), 0);
+      const totalProcessed = results.reduce((acc, r) => acc + (r.processed || 0), 0);
+      res.json({
+        success: true,
+        data: results,
+        message: `Processed ${totalProcessed} reviews across all locations (${totalSuccessful} published).`,
+      });
+    }
+  } catch (err) {
+    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+/**
+ * Post single manual review reply
+ */
 export const postReviewReply = async (req, res) => {
   try {
     const { replyText } = req.body;
     if (!replyText?.trim()) return res.status(400).json({ success: false, message: "Reply text is required." });
     const updated = await replyToReview(req.user._id, req.params.locationId, req.params.reviewId, replyText);
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: updated, message: "Reply published successfully." });
   } catch (err) {
-    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({ success: false, message: err.message });
+    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
+/**
+ * Delete a review reply
+ */
 export const removeReviewReply = async (req, res) => {
   try {
     await deleteReviewReply(req.user._id, req.params.locationId, req.params.reviewId);
     res.json({ success: true, message: "Reply removed." });
   } catch (err) {
-    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({ success: false, message: err.message });
+    res.status(typeof err.status === "number" ? err.status : (typeof err.code === "number" ? err.code : 500)).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
-// Automation endpoints
-import { getAutomationSettings, updateAutomationSettings } from "../../services/gbp/gbpReview.service.js";
-
+/**
+ * Get review automation settings
+ */
 export const getReviewAutomationSettings = async (req, res) => {
   try {
     const settings = await getAutomationSettings(req.user._id, req.params.locationId);
@@ -51,6 +127,9 @@ export const getReviewAutomationSettings = async (req, res) => {
   }
 };
 
+/**
+ * Update review automation settings
+ */
 export const updateReviewAutomationSettings = async (req, res) => {
   try {
     const settings = await updateAutomationSettings(
@@ -58,7 +137,7 @@ export const updateReviewAutomationSettings = async (req, res) => {
       req.params.locationId,
       req.body
     );
-    res.json({ success: true, data: settings, message: 'Automation settings updated' });
+    res.json({ success: true, data: settings, message: "Automation settings updated successfully." });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

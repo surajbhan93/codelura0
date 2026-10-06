@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
-import { X, Calendar, Clock, Image as ImageIcon, Link as LinkIcon, Sparkles } from "lucide-react";
-import { gbpCreatePost, gbpAIPost } from "@/lib/gbp/gbpApi";
+import { useState, useRef } from "react";
+import { X, Calendar, Clock, Image as ImageIcon, Link as LinkIcon, Sparkles, Upload, Trash2, RefreshCw, Loader2 } from "lucide-react";
+import { gbpCreatePost, gbpAIPost, gbpAIGenerateImage, gbpUploadImage } from "@/lib/gbp/gbpApi";
 import toast from "react-hot-toast";
 
 interface SchedulePostModalProps {
@@ -35,7 +35,9 @@ export default function SchedulePostModal({ isOpen, onClose, location, onSuccess
   const [termsConditions, setTermsConditions] = useState("");
   
   const [aiLoading, setAiLoading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAIGenerate = async () => {
     if (!summary.trim()) {
@@ -57,11 +59,61 @@ export default function SchedulePostModal({ isOpen, onClose, location, onSuccess
       if (data.post) setSummary(data.post);
       if (data.imageUrl) setImageUrl(data.imageUrl);
       
-      toast.success("AI generated content and image!");
+      toast.success("AI generated content and banner image!");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "AI generation failed");
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image file size must be less than 10MB");
+      return;
+    }
+    
+    setImageLoading(true);
+    const toastId = toast.loading("Uploading image to Cloudinary...");
+    try {
+      const res = await gbpUploadImage(file);
+      const uploadedUrl = res.data?.url || res.data?.secure_url;
+      if (uploadedUrl) {
+        setImageUrl(uploadedUrl);
+        toast.success("Image uploaded successfully! 📸", { id: toastId });
+      } else {
+        toast.error("Upload succeeded but no image URL was returned", { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || "Image upload failed", { id: toastId });
+    } finally {
+      setImageLoading(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
+  const handleGenerateAIImage = async () => {
+    const topic = summary.trim() || location?.primaryCategory?.displayName || "Business Services";
+    setImageLoading(true);
+    const toastId = toast.loading("Generating attractive AI banner image...");
+    try {
+      const res = await gbpAIGenerateImage({
+        topic,
+        category: location?.primaryCategory?.displayName || "Business",
+        city: location?.address?.locality || "",
+        businessName: location?.locationName || "",
+      });
+      if (res.data?.data?.imageUrl) {
+        setImageUrl(res.data.data.imageUrl);
+        toast.success("AI image generated! ✨", { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error("Failed to generate AI image", { id: toastId });
+    } finally {
+      setImageLoading(false);
     }
   };
 
@@ -353,26 +405,95 @@ export default function SchedulePostModal({ isOpen, onClose, location, onSuccess
               />
             </div>
 
-            {/* Image */}
+            {/* Image Section */}
             <div>
-              <label className="text-sm font-semibold text-slate-300 mb-2 block flex items-center gap-2">
-                <ImageIcon className="h-4 w-4 text-violet-400" />
-                Image URL
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4 text-violet-400" />
+                  Post Image (Recommended for Google SEO)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/png,image/jpeg,image/webp,image/jpg"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={imageLoading}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition flex items-center gap-1.5 border border-slate-700"
+                  >
+                    <Upload className="h-3.5 w-3.5 text-violet-400" />
+                    Upload Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGenerateAIImage}
+                    disabled={imageLoading}
+                    className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm"
+                  >
+                    {imageLoading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5" />
+                    )}
+                    Generate AI Image
+                  </button>
+                </div>
+              </div>
+
               <input
                 type="url"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://image.example.com/photo.jpg"
-                className="w-full px-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-violet-500"
+                placeholder="Or paste direct image URL (https://...)"
+                className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-violet-500 mb-2"
               />
-              {imageUrl && (
-                <img
-                  src={imageUrl}
-                  alt="Preview"
-                  className="mt-2 w-full h-40 object-cover rounded-lg border border-slate-700"
-                  onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                />
+
+              {imageUrl ? (
+                <div className="relative rounded-xl overflow-hidden border border-slate-700 bg-slate-950 group max-h-52">
+                  <img
+                    src={imageUrl}
+                    alt="Post Preview"
+                    className="w-full h-48 object-cover transition duration-300 group-hover:scale-[1.02]"
+                    onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-between p-3">
+                    <span className="text-xs text-white/90 bg-black/60 px-2 py-0.5 rounded backdrop-blur-sm truncate max-w-[70%]">
+                      {imageUrl}
+                    </span>
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleGenerateAIImage}
+                        className="p-1.5 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white transition backdrop-blur-sm"
+                        title="Regenerate AI image"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageUrl("")}
+                        className="p-1.5 rounded-lg bg-red-600/80 hover:bg-red-600 text-white transition backdrop-blur-sm"
+                        title="Remove image"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-700 hover:border-violet-500/50 rounded-xl p-6 text-center cursor-pointer transition bg-slate-900/30 hover:bg-violet-950/10"
+                >
+                  <ImageIcon className="h-8 w-8 text-slate-500 mx-auto mb-2" />
+                  <p className="text-xs text-slate-300 font-medium">Click to upload an image, or click "Generate AI Image"</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Supports PNG, JPG, WEBP (Max 10MB)</p>
+                </div>
               )}
             </div>
 

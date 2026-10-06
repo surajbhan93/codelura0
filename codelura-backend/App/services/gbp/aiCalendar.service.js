@@ -9,6 +9,7 @@ import {
   generateTopicsFromKeyword,
   isSimilarTopic,
 } from './keywordIntelligence.service.js';
+import { generateGooglePost, generateAIImageUrl } from './gbpGrokAI.service.js';
 import GbpSearchKeyword from '../../models/gbp/GbpSearchKeyword.js';
 import GbpLocation from '../../models/gbp/GbpLocation.js';
 
@@ -97,6 +98,31 @@ const generatePostingSchedule = (year, month, numPosts, timezone = 'Asia/Kolkata
   return schedule;
 };
 
+export const getEffectiveCity = (location) => {
+  if (location?.address?.locality && location.address.locality.trim()) {
+    return location.address.locality.trim();
+  }
+  const textToScan = `${location?.locationName || ''} ${location?.address?.addressLines?.join(' ') || ''} ${location?.address?.administrativeArea || ''}`;
+  const match = textToScan.match(/\b(lucknow|prayagraj|allahabad|kanpur|varanasi|noida|greater noida|delhi|new delhi|mumbai|bangalore|bengaluru|pune|hyderabad|jaipur|kolkata|chennai|ahmedabad|chandigarh|patna|bhopal|indore|agra|meerut|ghaziabad|gurgaon|gurugram|faridabad)\b/i);
+  if (match) {
+    const raw = match[1].toLowerCase();
+    if (raw === 'allahabad') return 'Prayagraj';
+    if (raw === 'bengaluru') return 'Bangalore';
+    if (raw === 'gurugram') return 'Gurgaon';
+    if (raw === 'greater noida') return 'Greater Noida';
+    if (raw === 'new delhi') return 'New Delhi';
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }
+  const parts = (location?.locationName || '').split(/[,\-–|]/);
+  if (parts.length > 1) {
+    const lastPart = parts[parts.length - 1].trim();
+    if (lastPart.length >= 3 && lastPart.length <= 25 && !lastPart.toLowerCase().includes('provider') && !lastPart.toLowerCase().includes('service')) {
+      return lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
+    }
+  }
+  return '';
+};
+
 /**
  * Generate keyword-driven AI calendar
  */
@@ -119,7 +145,7 @@ export const generateKeywordDrivenCalendar = async (userId, locationId, options 
   const location = await GbpLocation.findOne({ _id: locationId, userId });
   if (!location) throw { code: 404, message: 'Location not found' };
   
-  const businessCity = location.address?.locality || '';
+  const businessCity = getEffectiveCity(location);
   const businessName = location.locationName || '';
   
   console.log('[AI Calendar] Location:', businessName, 'City:', businessCity);
@@ -144,14 +170,14 @@ export const generateKeywordDrivenCalendar = async (userId, locationId, options 
     const city = businessCity || '';
     isFallback = true;
     keywords = [
-      { searchKeyword: `${categoryName} ${city}`.trim(), insightsValue: { threshold: '50', value: 'HIGH' } },
-      { searchKeyword: `best ${categoryName} in ${city}`.trim(), insightsValue: { threshold: '40', value: 'HIGH' } },
+      { searchKeyword: `${categoryName}${city ? ' in ' + city : ''}`.trim(), insightsValue: { threshold: '50', value: 'HIGH' } },
+      { searchKeyword: `best ${categoryName}${city ? ' in ' + city : ''}`.trim(), insightsValue: { threshold: '40', value: 'HIGH' } },
       { searchKeyword: `${categoryName} near me`, insightsValue: { threshold: '60', value: 'HIGH' } },
-      { searchKeyword: `${businessName} ${city}`.trim(), insightsValue: { threshold: '30', value: 'MEDIUM' } },
-      { searchKeyword: `top rated ${categoryName} ${city}`.trim(), insightsValue: { threshold: '25', value: 'MEDIUM' } },
-      { searchKeyword: `affordable ${categoryName} services ${city}`.trim(), insightsValue: { threshold: '20', value: 'MEDIUM' } },
-      { searchKeyword: `expert ${categoryName} ${city}`.trim(), insightsValue: { threshold: '15', value: 'MEDIUM' } },
-      { searchKeyword: `${categoryName} guidance ${city}`.trim(), insightsValue: { threshold: '15', value: 'MEDIUM' } },
+      { searchKeyword: `${businessName}${city ? ' ' + city : ''}`.trim(), insightsValue: { threshold: '30', value: 'MEDIUM' } },
+      { searchKeyword: `top rated ${categoryName}${city ? ' in ' + city : ''}`.trim(), insightsValue: { threshold: '25', value: 'MEDIUM' } },
+      { searchKeyword: `affordable ${categoryName} services${city ? ' in ' + city : ''}`.trim(), insightsValue: { threshold: '20', value: 'MEDIUM' } },
+      { searchKeyword: `expert ${categoryName}${city ? ' in ' + city : ''}`.trim(), insightsValue: { threshold: '15', value: 'MEDIUM' } },
+      { searchKeyword: `${categoryName} guidance${city ? ' in ' + city : ''}`.trim(), insightsValue: { threshold: '15', value: 'MEDIUM' } },
     ];
     console.log('[AI Calendar] Using default intelligent keywords for', categoryName, city);
   }
@@ -240,7 +266,7 @@ export const generateKeywordDrivenCalendar = async (userId, locationId, options 
       const topics = generateTopicsFromKeyword(
         selectedKeyword.keyword,
         selectedKeyword.searchIntent,
-        selectedKeyword.location
+        selectedKeyword.location || businessCity
       );
       
       // Find non-duplicate topic
@@ -273,39 +299,52 @@ export const generateKeywordDrivenCalendar = async (userId, locationId, options 
   
   console.log('[AI Calendar] Generated', calendarItems.length, 'calendar items');
   
-  // Generate AI content for each item
+  // Generate AI content and attractive images for each item
+  const categoryDisplayName = location.primaryCategory?.displayName || 'Services';
+  
   const generatedPosts = await Promise.all(
     calendarItems.map(async (item, index) => {
       try {
-        console.log('[AI Calendar] Generating content', index + 1, '/', calendarItems.length, ':', item.topic);
+        console.log('[AI Calendar] Generating content & image', index + 1, '/', calendarItems.length, ':', item.topic);
         
-        const aiContent = await generateFallbackContent({
+        const aiContent = await generateGooglePost({
           businessName,
-          category: location.primaryCategory?.displayName || 'Business',
+          category: categoryDisplayName,
           city: item.location || businessCity,
-          topic: item.topic,
+          topic: `${item.topic} (Target Keyword: ${item.primaryKeyword})`,
           tone: 'professional',
-          language: contentLanguage,
-          primaryKeyword: item.primaryKeyword,
-          searchIntent: item.searchIntent,
-          avoidKeywordStuffing: true,
+          cta: 'Contact Us',
         });
         
+        const postText = (aiContent?.post || aiContent || '').trim();
+        const imageUrl = aiContent?.imageUrl || generateAIImageUrl({
+          topic: item.topic,
+          category: categoryDisplayName,
+          city: item.location || businessCity,
+          businessName,
+        });
+
         return {
           ...item,
-          summary: aiContent.post || aiContent.content || item.topic,
-          imageUrl: aiContent.imageUrl || null,
+          summary: postText.length >= 10 ? postText : `${item.topic} - Quality ${categoryDisplayName} in ${item.location || businessCity}. Contact us today to learn more!`,
+          imageUrl,
           aiGenerated: true,
         };
       } catch (err) {
-        console.error('[AI Calendar] Failed to generate content for topic:', item.topic, '- Error:', err.message);
+        console.error('[AI Calendar] AI generation notice for topic:', item.topic, '- Error:', err.message);
         
-        // Fallback to simple content
+        const fallbackImage = generateAIImageUrl({
+          topic: item.topic,
+          category: categoryDisplayName,
+          city: item.location || businessCity,
+          businessName,
+        });
+
         return {
           ...item,
-          summary: item.topic + '\n\nLearn more about our services' + (item.location ? ' in ' + item.location : '') + '. Contact us for personalized support.',
-          imageUrl: null,
-          aiGenerated: false,
+          summary: `🌟 ${item.topic}\n\nLooking for trusted ${categoryDisplayName.toLowerCase()} in ${item.location || businessCity}? ${businessName} provides dedicated, top-rated support with proven excellence.\n\n✅ Experienced professionals\n✅ Personalized attention\n✅ Affordable pricing\n\n👉 Contact us today for details!\n#${(item.location || businessCity).replace(/\s+/g, '')} #${businessName.replace(/\s+/g, '')}`,
+          imageUrl: fallbackImage,
+          aiGenerated: true,
         };
       }
     })
@@ -326,7 +365,7 @@ export const generateKeywordDrivenCalendar = async (userId, locationId, options 
   const uniqueKeywordsUsed = new Set(finalPosts.map(p => p.primaryKeyword)).size;
   const totalKeywordsAvailable = prioritized.length;
   
-  console.log('[AI Calendar] Calendar generated successfully');
+  console.log('[AI Calendar] Calendar generated successfully with images');
   console.log('[AI Calendar] Keyword coverage:', uniqueKeywordsUsed, '/', totalKeywordsAvailable, 'used');
   
   return {
@@ -354,45 +393,5 @@ export const generateKeywordDrivenCalendar = async (userId, locationId, options 
       localRelevance,
       generatedAt: new Date(),
     },
-  };
-};
-
-/**
- * Simple AI content generation (fallback if gbpAI.service not available)
- */
-const generateFallbackContent = async (params) => {
-  // This will be replaced by actual AI generation
-  // For now, return structured content
-  
-  const {
-    businessName,
-    city,
-    topic,
-    primaryKeyword,
-    searchIntent,
-    avoidKeywordStuffing,
-  } = params;
-  
-  // Create natural content (not keyword-stuffed)
-  let content = topic + '\n\n';
-  
-  if (searchIntent === 'LOCAL_SERVICE') {
-    content += 'Looking for quality services' + (city ? ' in ' + city : '') + '? We provide personalized solutions tailored to your needs. ';
-  } else if (searchIntent === 'QUESTION' || searchIntent === 'INFORMATIONAL') {
-    content += 'Here\'s what you should know: We focus on delivering value through expert guidance and support. ';
-  } else {
-    content += 'Discover how our services can help you achieve your goals. ';
-  }
-  
-  content += 'Contact us to learn more about what we offer.';
-  
-  // Keep it under 400 characters for GBP posts
-  if (content.length > 400) {
-    content = content.substring(0, 397) + '...';
-  }
-  
-  return {
-    post: content,
-    imageUrl: null,
   };
 };

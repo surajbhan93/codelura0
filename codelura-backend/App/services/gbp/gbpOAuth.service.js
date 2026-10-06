@@ -47,9 +47,10 @@ export const buildAuthUrl = (userId) => {
     client_id: process.env.GBP_NEW_CLIENT_ID,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "https://www.googleapis.com/auth/business.manage https://www.googleapis.com/auth/userinfo.email openid",
+    scope: "https://www.googleapis.com/auth/business.manage https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid",
     access_type: "offline",
-    prompt: "consent",
+    prompt: "consent select_account",
+    include_granted_scopes: "true",
     state,
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
@@ -173,11 +174,14 @@ export const revokeConnection = async (userId) => {
 export const getConnectionStatus = async (userId) => {
   const tokenDoc = await GbpOAuthToken.findOne({ userId });
   if (!tokenDoc || !tokenDoc.isConnected) return { connected: false };
+  const hasBusinessScope = tokenDoc.scopes && tokenDoc.scopes.some(s => s.includes("business.manage"));
   return {
-    connected: true,
+    connected: !!hasBusinessScope,
+    needsScopeUpgrade: !hasBusinessScope,
     googleEmail: tokenDoc.googleEmail,
     connectedAt: tokenDoc.connectedAt,
     lastRefreshedAt: tokenDoc.lastRefreshedAt,
     tokenExpiry: tokenDoc.tokenExpiry,
+    scopes: tokenDoc.scopes,
   };
 };

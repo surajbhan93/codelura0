@@ -12,6 +12,10 @@ import {
   calculateMediaHealth,
   detectDuplicates,
   getMissingPhotoOpportunities,
+  scheduleMedia,
+  bulkScheduleMedia,
+  getScheduledMediaList,
+  publishSingleScheduledMedia,
 } from "../../services/gbp/gbpMedia.service.js";
 
 import {
@@ -19,7 +23,9 @@ import {
   generateMediaRecommendations,
   generateMonthlyMediaPlan,
   getPhotoIdeas,
+  generateAIMediaCalendar,
 } from "../../services/gbp/gbpMediaAI.service.js";
+import GbpMedia from "../../models/gbp/GbpMedia.js";
 
 // Multer in-memory storage for handling image uploads
 const storage = multer.memoryStorage();
@@ -73,7 +79,6 @@ export const syncMedia = async (req, res) => {
     });
   } catch (err) {
     console.error("[Media Controller] syncMedia error:", err);
-    console.error("[Media Controller] Error stack:", err.stack);
     res.status(err.code || 500).json({ 
       success: false, 
       message: err.message || "Failed to sync Google media",
@@ -85,17 +90,38 @@ export const syncMedia = async (req, res) => {
 };
 
 /**
- * Upload Photo(s) to Google Business Profile
+ * Upload Photo(s) to Google Business Profile (Direct or Scheduled)
  */
 export const uploadMedia = async (req, res) => {
   try {
     const { locationId } = req.params;
-    const { category = "ADDITIONAL", description = "", sourceUrl } = req.body;
+    const { category = "ADDITIONAL", description = "", title = "", sourceUrl, scheduledAt } = req.body;
 
     const files = req.files || (req.file ? [req.file] : []);
 
     if (files.length === 0 && !sourceUrl) {
       return res.status(400).json({ success: false, message: "Please select at least one photo or provide a source URL." });
+    }
+
+    // If scheduledAt is provided, schedule it instead of instant upload
+    if (scheduledAt) {
+      if (!sourceUrl) {
+        return res.status(400).json({ success: false, message: "Source URL is required for scheduled photos. Please upload the photo first." });
+      }
+
+      const scheduledItem = await scheduleMedia(req.user._id, locationId, {
+        sourceUrl,
+        category,
+        title,
+        description,
+        scheduledAt,
+      });
+
+      return res.json({
+        success: true,
+        data: scheduledItem,
+        message: "Photo scheduled successfully for Google Business Profile.",
+      });
     }
 
     const results = [];
@@ -105,6 +131,7 @@ export const uploadMedia = async (req, res) => {
         const record = await uploadGoogleMedia(req.user._id, locationId, null, {
           category,
           description,
+          title,
           sourceUrl,
         });
         results.push({ success: true, filename: sourceUrl, record });
@@ -123,6 +150,7 @@ export const uploadMedia = async (req, res) => {
           const record = await uploadGoogleMedia(req.user._id, locationId, file.buffer, {
             category,
             description,
+            title,
             contentType: file.mimetype,
           });
           results.push({ success: true, filename: file.originalname, record });
@@ -155,8 +183,199 @@ export const uploadMedia = async (req, res) => {
       message: err.message || "Failed to upload media to Google",
       errorCode: err.code,
       googleError: err.googleError,
-      requestContext: err.requestContext,
     });
+  }
+};
+
+/**
+ * Generate AI Media Calendar with Opposite-Days Auto-Scheduling
+ */
+export const generateAIMediaCalendarController = async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    const { month, year, numPhotos, categories, preferOppositeDays } = req.body;
+
+    const calendar = await generateAIMediaCalendar(req.user._id, locationId, {
+      month,
+      year,
+      numPhotos: Number(numPhotos) || 8,
+      categories,
+      preferOppositeDays: preferOppositeDays !== false,
+    });
+
+    res.json({
+      success: true,
+      data: calendar,
+      message: `Generated AI Media Calendar with ${calendar.photos.length} photos.`,
+    });
+  } catch (err) {
+    console.error("[Media Controller] generateAIMediaCalendar error:", err);
+    res.status(err.code || 500).json({
+      success: false,
+      message: err.message || "Failed to generate AI media calendar",
+    });
+  }
+};
+
+/**
+ * Approve & Schedule AI Media Calendar Photos
+ */
+export const approveAIMediaCalendarController = async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    const { photos, publishFirstNow } = req.body;
+
+    if (!Array.isArray(photos) || photos.length === 0) {
+      return res.status(400).json({ success: false, message: "No photos provided to approve." });
+    }
+
+    let firstPublished = null;
+    let photosToSchedule = photos;
+
+    // If publishFirstNow is requested, upload 1st photo immediately
+    if (publishFirstNow && photos.length > 0) {
+      const first = photos[0];
+      try {
+        firstPublished = await uploadGoogleMedia(req.user._id, locationId, null, {
+          category: first.category,
+          title: first.title,
+          description: first.description,
+          sourceUrl: first.imageUrl || first.sourceUrl,
+          aiGenerated: true,
+        });
+        photosToSchedule = photos.slice(1);
+      } catch (fErr) {
+        console.warn("[Media Controller] Immediate publish of first photo warning:", fErr.message);
+      }
+    }
+
+    const scheduled = await bulkScheduleMedia(req.user._id, locationId, photosToSchedule);
+
+    res.json({
+      success: true,
+      data: {
+        firstPublished,
+        scheduledCount: scheduled.scheduledCount,
+        items: scheduled.items,
+      },
+      message: `Successfully scheduled ${scheduled.scheduledCount} photos to auto-publish on Google Business Profile.${firstPublished ? ' First photo uploaded now!' : ''}`,
+    });
+  } catch (err) {
+    console.error("[Media Controller] approveAIMediaCalendar error:", err);
+    res.status(err.code || 500).json({
+      success: false,
+      message: err.message || "Failed to schedule media calendar",
+    });
+  }
+};
+
+/**
+ * Schedule Single Media Item
+ */
+export const scheduleSingleMediaController = async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    const { sourceUrl, category, title, description, scheduledAt, aiGenerated } = req.body;
+
+    const item = await scheduleMedia(req.user._id, locationId, {
+      sourceUrl,
+      category,
+      title,
+      description,
+      scheduledAt,
+      aiGenerated,
+    });
+
+    res.json({
+      success: true,
+      data: item,
+      message: "Photo scheduled successfully!",
+    });
+  } catch (err) {
+    console.error("[Media Controller] scheduleSingleMedia error:", err);
+    res.status(err.code || 500).json({
+      success: false,
+      message: err.message || "Failed to schedule media",
+    });
+  }
+};
+
+/**
+ * List Scheduled Media Queue
+ */
+export const listScheduledMediaController = async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    const result = await getScheduledMediaList(req.user._id, locationId, req.query);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error("[Media Controller] listScheduledMedia error:", err);
+    res.status(err.code || 500).json({
+      success: false,
+      message: err.message || "Failed to fetch scheduled media queue",
+    });
+  }
+};
+
+/**
+ * Publish Scheduled Media Now ("Upload to Google Now 🚀")
+ */
+export const publishScheduledMediaNowController = async (req, res) => {
+  try {
+    const { locationId, mediaId } = req.params;
+    const published = await publishSingleScheduledMedia(req.user._id, locationId, mediaId);
+    res.json({
+      success: true,
+      data: published,
+      message: "Photo published to Google Business Profile successfully! 🚀",
+    });
+  } catch (err) {
+    console.error("[Media Controller] publishScheduledMediaNow error:", err);
+    res.status(err.code || 500).json({
+      success: false,
+      message: err.message || "Failed to upload scheduled media to Google",
+      googleError: err.googleError,
+    });
+  }
+};
+
+/**
+ * Update Scheduled Media
+ */
+export const updateScheduledMediaController = async (req, res) => {
+  try {
+    const { locationId, mediaId } = req.params;
+    const { category, title, description, scheduledAt, sourceUrl } = req.body;
+
+    const item = await GbpMedia.findOne({ _id: mediaId, userId: req.user._id, locationId });
+    if (!item) return res.status(404).json({ success: false, message: "Media not found" });
+
+    if (category) item.category = category;
+    if (title !== undefined) item.title = title;
+    if (description !== undefined) item.description = description;
+    if (scheduledAt) item.scheduledAt = new Date(scheduledAt);
+    if (sourceUrl) item.sourceUrl = sourceUrl;
+
+    await item.save();
+
+    res.json({ success: true, data: item, message: "Scheduled photo updated successfully." });
+  } catch (err) {
+    console.error("[Media Controller] updateScheduledMedia error:", err);
+    res.status(err.code || 500).json({ success: false, message: err.message || "Failed to update scheduled media" });
+  }
+};
+
+/**
+ * Cancel / Delete Scheduled Media
+ */
+export const cancelScheduledMediaController = async (req, res) => {
+  try {
+    const { locationId, mediaId } = req.params;
+    const result = await deleteGoogleMedia(req.user._id, locationId, mediaId);
+    res.json({ success: true, data: result, message: "Scheduled photo removed from queue." });
+  } catch (err) {
+    console.error("[Media Controller] cancelScheduledMedia error:", err);
+    res.status(err.code || 500).json({ success: false, message: err.message || "Failed to cancel scheduled media" });
   }
 };
 
