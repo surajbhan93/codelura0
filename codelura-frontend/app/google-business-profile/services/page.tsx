@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, ReactNode } from "react";
 import {
   gbpGetLocations,
   gbpGetServices,
@@ -33,7 +33,7 @@ const ACTION_COLORS: Record<string, string> = {
   REVIEW: "text-violet-400 bg-violet-500/10 border-violet-500/30",
 };
 
-const ACTION_ICONS: Record<string, JSX.Element> = {
+const ACTION_ICONS: Record<string, ReactNode> = {
   ADD: <Plus className="h-3.5 w-3.5" />,
   MODIFY: <ArrowRight className="h-3.5 w-3.5" />,
   REMOVE: <XCircle className="h-3.5 w-3.5" />,
