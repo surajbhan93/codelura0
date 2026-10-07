@@ -1,4 +1,5 @@
 import Job from "../../models/Job.model.js";
+import PremiumReferralUnlock from "../../models/PremiumReferralUnlock.js";
 import { generateJobAutoFill } from "../../services/ai.service.js";
 
 export const getAllJobs = async (req, res) => {
@@ -32,7 +33,16 @@ export const getAllJobs = async (req, res) => {
       }
     }
 
-    if (type)                query.type       = type;
+    if (type) {
+      if (type === "all-including-referral") {
+        // Return all jobs including referral
+      } else {
+        query.type = type;
+      }
+    } else {
+      // Exclude premium-referral from general/all job queries
+      query.type = { $ne: "premium-referral" };
+    }
     if (featured === "true") query.isFeatured = true;
 
     if (q) {
@@ -51,10 +61,10 @@ export const getAllJobs = async (req, res) => {
       query.$and = conditions;
     }
 
-    const [jobs, total] = await Promise.all([
+    const [rawJobs, total] = await Promise.all([
       Job.find(query)
         .select(
-          "title slug company bannerImage location type salary description tags careerPageUrl isFeatured isExpired views postedAt deadline createdAt"
+          "title slug company bannerImage location type salary description tags careerPageUrl isFeatured isExpired views postedAt deadline createdAt creditCost recruiterEmail recruiterPhone referralLink applyInstructions"
         )
         .sort({ isFeatured: -1, postedAt: -1, createdAt: -1 })
         .skip((page - 1) * limit)
@@ -62,6 +72,38 @@ export const getAllJobs = async (req, res) => {
         .lean(),
       Job.countDocuments(query),
     ]);
+
+    // Check unlocks for req.user if logged in
+    const userId = req.user?._id || req.user?.id;
+    let unlockedSet = new Set();
+    if (userId) {
+      const unlocks = await PremiumReferralUnlock.find({ userId }).select("referralId").lean();
+      unlockedSet = new Set(unlocks.map((u) => u.referralId.toString()));
+    }
+
+    const jobs = rawJobs.map((j) => {
+      const isRef = j.type === "premium-referral";
+      const isUnlocked = isRef
+        ? (unlockedSet.has(j._id.toString()) || (admin === "true" && req.user?.role === "admin"))
+        : true;
+
+      if (isRef && !isUnlocked) {
+        return {
+          ...j,
+          isUnlocked: false,
+          recruiterEmail: "",
+          recruiterPhone: "",
+          referralLink: "",
+          applyInstructions: "",
+          careerPageUrl: "", // Redact so user cannot bypass unlock
+        };
+      }
+
+      return {
+        ...j,
+        isUnlocked: isRef ? true : undefined,
+      };
+    });
 
     res.json({
       jobs,
@@ -72,8 +114,9 @@ export const getAllJobs = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch jobs" });
   }
 };
+
 /* ─────────────────────────────────────────────────
-   ✅ GET SINGLE JOB BY SLUG (with view tracking)
+   ✅ GET SINGLE JOB BY SLUG (with view tracking & referral lock)
 ───────────────────────────────────────────────── */
 export const getJobBySlug = async (req, res) => {
   try {
@@ -87,7 +130,32 @@ export const getJobBySlug = async (req, res) => {
     job.views = (job.views || 0) + 1;
     await job.save();
 
-    res.json(job);
+    const jobObj = job.toObject();
+
+    if (jobObj.type === "premium-referral") {
+      const userId = req.user?._id || req.user?.id;
+      let isUnlocked = false;
+
+      if (req.query.admin === "true" && req.user?.role === "admin") {
+        isUnlocked = true;
+      } else if (userId) {
+        const unlock = await PremiumReferralUnlock.findOne({ userId, referralId: job._id });
+        if (unlock) isUnlocked = true;
+      }
+
+      if (!isUnlocked) {
+        jobObj.isUnlocked = false;
+        jobObj.recruiterEmail = "";
+        jobObj.recruiterPhone = "";
+        jobObj.referralLink = "";
+        jobObj.applyInstructions = "";
+        jobObj.careerPageUrl = ""; // Protected
+      } else {
+        jobObj.isUnlocked = true;
+      }
+    }
+
+    res.json(jobObj);
   } catch (error) {
     console.error("GET JOB DETAIL ERROR 👉", error);
     res.status(500).json({ message: "Failed to fetch job" });
@@ -101,8 +169,8 @@ export const createJob = async (req, res) => {
   try {
     const {
       title, slug, company, bannerImage, location, type,
-      salary, description, content, tags, careerPageUrl,seo,
-
+      salary, description, content, tags, careerPageUrl, seo,
+      creditCost, recruiterEmail, recruiterPhone, referralLink, applyInstructions,
       isFeatured, isExpired, postedAt, deadline,
     } = req.body;
 
@@ -117,20 +185,21 @@ export const createJob = async (req, res) => {
       location, type, salary, description,
       content: content || "",
       tags: Array.isArray(tags) ? tags : [],
-      careerPageUrl,
+      careerPageUrl: careerPageUrl || "",
+      creditCost: creditCost ?? 10,
+      recruiterEmail: recruiterEmail || "",
+      recruiterPhone: recruiterPhone || "",
+      referralLink: referralLink || "",
+      applyInstructions: applyInstructions || "",
       // SEO
-  seo: {
-    metaTitle: seo?.metaTitle || "",
-    metaDescription: seo?.metaDescription || "",
-
-    keywords: Array.isArray(seo?.keywords)
-      ? seo.keywords
-      : [],
-
-    canonicalUrl: seo?.canonicalUrl || "",
-    ogImage: seo?.ogImage || "",
-    noIndex: seo?.noIndex ?? false,
-  },
+      seo: {
+        metaTitle: seo?.metaTitle || "",
+        metaDescription: seo?.metaDescription || "",
+        keywords: Array.isArray(seo?.keywords) ? seo.keywords : [],
+        canonicalUrl: seo?.canonicalUrl || "",
+        ogImage: seo?.ogImage || "",
+        noIndex: seo?.noIndex ?? false,
+      },
       isFeatured:  isFeatured  ?? false,
       isExpired:   isExpired   ?? false,
       postedAt:    postedAt    ?? new Date(),

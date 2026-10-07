@@ -24,10 +24,10 @@ function LoginForm() {
 
   const redirectParam = searchParams.get("redirect");
   const defaultTarget = (role: string) => {
-    if (role === "admin") return "/admin";
     if (redirectParam && redirectParam !== "/" && redirectParam !== "/login" && redirectParam !== "/auth/login") {
       return redirectParam;
     }
+    if (role === "admin") return "/admin";
     return "/dashboard/Portal";
   };
 

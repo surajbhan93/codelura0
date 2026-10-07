@@ -6,9 +6,11 @@ import api from "@/lib/api";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import RelatedJobs from "@/components/jobs/RelatedJobs";
+import UnlockReferralButton from "@/components/jobs/UnlockReferralButton";
 import {
   Clock, Calendar, MapPin, ArrowLeft, ChevronUp,
   ExternalLink, DollarSign, Tag, Building2, Eye, Briefcase,
+  Lock, Mail, Phone, CheckCircle2, Coins
 } from "lucide-react";
 
 /* ─────────────────────────────────────────
@@ -21,7 +23,7 @@ interface Job {
   company: string;
   bannerImage?: string;
   location: string;
-  type: "internship" | "full-time" | "part-time" | "contract";
+  type: string;
   salary?: string;
   description: string;
   content?: string;
@@ -33,6 +35,12 @@ interface Job {
   postedAt?: string;
   deadline?: string;
   createdAt?: string;
+  creditCost?: number;
+  isUnlocked?: boolean;
+  recruiterEmail?: string;
+  recruiterPhone?: string;
+  referralLink?: string;
+  applyInstructions?: string;
 }
 
 const TYPE_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -40,6 +48,7 @@ const TYPE_META: Record<string, { label: string; color: string; bg: string; bord
   "full-time": { label: "Full-Time",  color: "#10b981", bg: "rgba(16,185,129,0.12)",  border: "rgba(16,185,129,0.3)"  },
   "part-time": { label: "Part-Time",  color: "#f59e0b", bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.3)"  },
   contract:    { label: "Contract",   color: "#a855f7", bg: "rgba(168,85,247,0.12)",  border: "rgba(168,85,247,0.3)"  },
+  "premium-referral": { label: "⚡ Premium Referral", color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.4)" },
 };
 
 function formatDate(d?: string) {
@@ -324,31 +333,105 @@ export default function JobDetailPage() {
 
           <div className="jd-divider" />
 
-          {/* ── APPLY CTA ── */}
-          <div className="jd-apply-block">
-            <div>
-              <h3 className="jd-apply-title">
-                {job.isExpired ? "This listing has expired" : "Ready to apply?"}
-              </h3>
-              <p className="jd-apply-sub">
-                {job.isExpired
-                  ? "The application deadline for this role has passed."
-                  : `Apply directly on ${job.company}'s official career page.`
-                }
-              </p>
+          {/* ── APPLY CTA / REFERRAL UNLOCK ── */}
+          {job.type === "premium-referral" ? (
+            <div className="jd-apply-block flex-col items-start gap-4">
+              <div className="w-full">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold mb-2">
+                  <Coins className="w-3.5 h-3.5 fill-amber-400" /> Premium Referral Opportunity
+                </div>
+                <h3 className="jd-apply-title">
+                  {job.isUnlocked ? "Recruiter Referral Details Unlocked!" : "Unlock Recruiter Referral Contacts"}
+                </h3>
+                <p className="jd-apply-sub">
+                  {job.isUnlocked
+                    ? "You have unlocked direct contact details and application instructions for this referral opportunity."
+                    : `Use ${job.creditCost || 10} credits to unlock verified recruiter email, phone, and direct referral apply URL.`}
+                </p>
+              </div>
+
+              {job.isUnlocked ? (
+                <div className="w-full rounded-2xl bg-slate-950 p-5 border border-emerald-500/40 space-y-2 text-sm">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-sm mb-3">
+                    <CheckCircle2 className="w-4 h-4" /> Recruiter Details
+                  </div>
+                  {job.recruiterEmail && (
+                    <p className="text-slate-200 text-xs flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-violet-400" />
+                      <strong>Email:</strong> <span className="font-mono text-violet-300 select-all">{job.recruiterEmail}</span>
+                    </p>
+                  )}
+                  {job.recruiterPhone && (
+                    <p className="text-slate-200 text-xs flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-emerald-400" />
+                      <strong>Phone:</strong> <span className="font-mono text-emerald-300 select-all">{job.recruiterPhone}</span>
+                    </p>
+                  )}
+                  {job.applyInstructions && (
+                    <p className="text-slate-300 text-xs mt-3 border-t border-slate-800 pt-3">
+                      <strong>Instructions:</strong> {job.applyInstructions}
+                    </p>
+                  )}
+
+                  <div className="pt-3">
+                    <a
+                      href={job.referralLink || job.careerPageUrl || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm transition shadow-lg shadow-emerald-600/20"
+                    >
+                      Apply via Referral Link <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-950/80 border border-slate-800">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs">
+                      <Lock className="w-4 h-4" /> Direct Recruiter Contact Protected
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Requires {job.creditCost || 10} Credits to reveal recruiter email & referral application link.
+                    </p>
+                  </div>
+                  <UnlockReferralButton
+                    referralId={job._id}
+                    creditCost={job.creditCost || 10}
+                    isUnlocked={job.isUnlocked}
+                    className="py-3 px-6 text-sm font-extrabold"
+                    onUnlockedSuccess={(updatedJob) => {
+                      setJob((prev: any) => ({ ...prev, ...updatedJob, isUnlocked: true }));
+                    }}
+                  />
+                </div>
+              )}
             </div>
-            {!job.isExpired && (
-              <a
-                href={job.careerPageUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="jd-apply-btn"
-              >
-                Apply Now
-                <ExternalLink size={15} />
-              </a>
-            )}
-          </div>
+          ) : (
+            <div className="jd-apply-block">
+              <div>
+                <h3 className="jd-apply-title">
+                  {job.isExpired ? "This listing has expired" : "Ready to apply?"}
+                </h3>
+                <p className="jd-apply-sub">
+                  {job.isExpired
+                    ? "The application deadline for this role has passed."
+                    : `Apply directly on ${job.company}'s official career page.`
+                  }
+                </p>
+              </div>
+              {!job.isExpired && (
+                <a
+                  href={job.careerPageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="jd-apply-btn"
+                >
+                  Apply Now
+                  <ExternalLink size={15} />
+                </a>
+              )}
+            </div>
+          )}
 <RelatedJobs
   currentSlug={job.slug}
   tags={job.tags}

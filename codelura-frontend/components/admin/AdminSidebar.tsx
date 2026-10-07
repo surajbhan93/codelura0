@@ -52,7 +52,9 @@ const menu = [
   { name: "All Blogs",          href: "/admin/blogs",           icon: HiOutlineDocumentText,      group: "content" },
   { name: "Create Blog",        href: "/admin/blogs/create",    icon: HiOutlinePlusCircle,        group: "content" },
   { name: "Comments",           href: "/admin/blogs/comments",  icon: HiOutlineChatAlt2,          group: "content" },
-  { name: "Jobs",               href: "/admin/jobs",            icon: HiOutlineBriefcase,         group: "content" },
+  { name: "All Jobs",           href: "/admin/jobs",            icon: HiOutlineBriefcase,         group: "content" },
+  { name: "Premium Referrals",  href: "/admin/premium-referrals", icon: HiOutlineStar,          group: "content" },
+  { name: "Create Referral Job",href: "/admin/premium-referrals/create", icon: HiOutlinePlusCircle, group: "content" },
   { name: "Analytics",          href: "/admin/analytics",       icon: HiOutlineChartBar,          group: "content" },
 
   // Services & Business

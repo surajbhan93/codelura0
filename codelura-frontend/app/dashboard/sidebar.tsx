@@ -19,10 +19,12 @@ import {
   GraduationCap,
   Sparkles,
   Zap,
+  Coins,
 } from "lucide-react";
 
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard/Portal", badge: null },
+  { title: "My Credits & Unlocks", icon: Coins, href: "/dashboard/credits", badge: "NEW", badgeColor: "gold" },
   { title: "Campus Program", icon: GraduationCap, href: "/dashboard/campus", badge: "HOT", badgeColor: "purple" },
   { title: "My Programs & Tracks", icon: GraduationCap, href: "/dashboard/programs", badge: "Active", badgeColor: "emerald" },
   { title: "Premium", icon: Crown, href: "/dashboard/premium", badge: "PRO", badgeColor: "gold" },
@@ -132,6 +134,22 @@ export default function Sidebar({ onLogout }: SidebarProps) {
             </span>
           </div>
           <span className="text-orange-400/70 text-[10px] font-semibold">Keep it up! 🔥</span>
+        </div>
+
+        {/* Credit Wallet Widget */}
+        <div className="mt-2 flex items-center justify-between rounded-xl px-2.5 py-1.5 bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-violet-500/15 border border-amber-500/30">
+          <div className="flex items-center gap-1.5">
+            <Coins size={14} className="text-amber-400 fill-amber-400" />
+            <span className="text-amber-300 text-xs font-extrabold">
+              {user?.walletBalance ?? 0} Credits
+            </span>
+          </div>
+          <Link
+            href="/dashboard/credits"
+            className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition shadow-sm"
+          >
+            + Buy Credits
+          </Link>
         </div>
       </div>
 

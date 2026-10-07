@@ -9,17 +9,17 @@ import {
   getRelatedJobs,
   autoFillJob,
 } from "../controllers/web/Job.controller.js";
-import { authMiddleware } from "../middleware/auth.middleware.js";
+import { authMiddleware, authOptional } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 /* ── Admin AI Auto-fill ── */
 router.post("/auto-fill", authMiddleware, autoFillJob);
 
-/* ── Public Routes ── */
-router.get("/",      getAllJobs);      // GET  /jobs
-router.get("/related", getRelatedJobs);
-router.get("/:slug", getJobBySlug);   // GET  /jobs/:slug
+/* ── Public Routes (with optional auth for unlock checking) ── */
+router.get("/",      authOptional, getAllJobs);      // GET  /jobs
+router.get("/related", authOptional, getRelatedJobs);
+router.get("/:slug", authOptional, getJobBySlug);   // GET  /jobs/:slug
 
 /* ── Admin Routes ── */
 router.post("/",          authMiddleware  ,   createJob);   // POST   /jobs

@@ -180,6 +180,14 @@ const PILLARS = [
     metric: "new openings this week",
   },
   {
+    title: "Premium Referrals",
+    desc: "Direct employee referral links & recruiter contacts unlocked with credits",
+    icon: Sparkles,
+    href: "/career/jobs/premium-referrals",
+    count: "Credit-based",
+    metric: "1-click unlock",
+  },
+  {
     title: "Learning",
     desc: "Courses and paths mapped to what recruiters actually ask for",
     icon: GraduationCap,

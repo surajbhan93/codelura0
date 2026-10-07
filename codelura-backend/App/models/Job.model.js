@@ -43,6 +43,7 @@ const jobSchema = new mongoose.Schema(
     "off-campus",
     "walk-in",
     "codelura",
+    "premium-referral",
   ],
   required: [true, "Job type is required"],
 },
@@ -57,6 +58,36 @@ const jobSchema = new mongoose.Schema(
       type: String,
       required: [true, "Short description is required"],
       trim: true,
+    },
+
+    // ✅ Premium Referral Specific Fields
+    creditCost: {
+      type: Number,
+      default: 10,
+      min: 0,
+    },
+
+    recruiterEmail: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    recruiterPhone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    referralLink: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    applyInstructions: {
+      type: String,
+      default: "",
     },
 
     // ✅ Full rich-text HTML (ReactQuill) — shown on detail page

@@ -21,7 +21,9 @@ import {
   Settings,
   Flame,
   Zap,
+  Coins,
 } from "lucide-react";
+import CreditBadge from "@/components/credits/CreditBadge";
 
 // Memoized menu data to prevent re-creation
 const MENU = [
@@ -343,75 +345,87 @@ export default function CareerNavbar() {
         {/* Desktop CTA & Account Menu */}
         <div className="hidden shrink-0 items-center gap-3 lg:flex">
           {isLoggedIn ? (
-            <div className="relative" ref={userDropdownRef}>
-              <button
-                onClick={() => setUserDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.04] px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-white/[0.08] hover:border-violet-500/40"
-              >
-                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-[11px] font-extrabold text-white shadow-sm shadow-violet-600/30">
-                  {initial}
-                </div>
-                <span className="font-semibold text-slate-100">{firstName}</span>
-                <ChevronDown
-                  size={13}
-                  className={`text-slate-400 transition-transform duration-200 ${
-                    userDropdownOpen ? "rotate-180 text-violet-400" : ""
-                  }`}
-                />
-              </button>
+            <>
+              <CreditBadge showBuyBtn={true} />
 
-              {userDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0e20]/95 p-2 shadow-2xl backdrop-blur-2xl space-y-1 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-3 py-2 border-b border-white/[0.06] mb-1">
-                    <p className="text-xs font-bold text-white truncate">{user?.name || "Student"}</p>
-                    <p className="text-[10px] text-slate-400 truncate">{user?.email || ""}</p>
+              <div className="relative" ref={userDropdownRef}>
+                <button
+                  onClick={() => setUserDropdownOpen((prev) => !prev)}
+                  className="flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.04] px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-white/[0.08] hover:border-violet-500/40"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-[11px] font-extrabold text-white shadow-sm shadow-violet-600/30">
+                    {initial}
                   </div>
-                  <Link
-                    href={role === "admin" ? "/admin" : "/dashboard/Portal"}
-                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-violet-600/20 hover:text-white transition"
-                    onClick={() => setUserDropdownOpen(false)}
-                  >
-                    <LayoutDashboard size={14} className="text-violet-400" />
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/dashboard/profile"
-                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-violet-600/20 hover:text-white transition"
-                    onClick={() => setUserDropdownOpen(false)}
-                  >
-                    <User size={14} className="text-indigo-400" />
-                    Profile Settings
-                  </Link>
-                  <Link
-                    href="/dashboard/campus"
-                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-violet-600/20 hover:text-white transition"
-                    onClick={() => setUserDropdownOpen(false)}
-                  >
-                    <GraduationCap size={14} className="text-pink-400" />
-                    Campus Program <span className="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300">HOT</span>
-                  </Link>
-                  <Link
-                    href="/dashboard/programs"
-                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-violet-600/20 hover:text-white transition"
-                    onClick={() => setUserDropdownOpen(false)}
-                  >
-                    <Award size={14} className="text-emerald-400" />
-                    My Learning
-                  </Link>
-                  <div className="my-1 border-t border-white/[0.06]" />
-                  <button
-                    onClick={() => {
-                      setUserDropdownOpen(false);
-                      handleLogout();
-                    }}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition"
-                  >
+                  <span className="font-semibold text-slate-100">{firstName}</span>
+                  <ChevronDown
+                    size={13}
+                    className={`text-slate-400 transition-transform duration-200 ${
+                      userDropdownOpen ? "rotate-180 text-violet-400" : ""
+                    }`}
+                  />
+                </button>
+
+                {userDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0e20]/95 p-2 shadow-2xl backdrop-blur-2xl space-y-1 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-3 py-2 border-b border-white/[0.06] mb-1">
+                      <p className="text-xs font-bold text-white truncate">{user?.name || "Student"}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{user?.email || ""}</p>
+                    </div>
+                    <Link
+                      href={role === "admin" ? "/admin" : "/dashboard/Portal"}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-violet-600/20 hover:text-white transition"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <LayoutDashboard size={14} className="text-violet-400" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/credits"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-amber-500/20 hover:text-amber-300 transition"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <Coins size={14} className="text-amber-400 fill-amber-400" />
+                      My Credits & Wallet
+                    </Link>
+                    <Link
+                      href="/dashboard/profile"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-violet-600/20 hover:text-white transition"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <User size={14} className="text-indigo-400" />
+                      Profile Settings
+                    </Link>
+                    <Link
+                      href="/dashboard/campus"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-violet-600/20 hover:text-white transition"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <GraduationCap size={14} className="text-pink-400" />
+                      Campus Program <span className="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300">HOT</span>
+                    </Link>
+                    <Link
+                      href="/dashboard/programs"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-violet-600/20 hover:text-white transition"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <Award size={14} className="text-emerald-400" />
+                      My Learning
+                    </Link>
+                    <div className="my-1 border-t border-white/[0.06]" />
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition"
+                    >
                     <LogOut size={14} />
                     Logout
                   </button>
                 </div>
               )}
             </div>
+          </>
           ) : (
             <div className="flex items-center gap-2.5">
               <Link

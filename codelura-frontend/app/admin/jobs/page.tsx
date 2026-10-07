@@ -55,6 +55,11 @@ codelura: {
   color: "#8b5cf6",
   bg: "rgba(139,92,246,0.1)",
 },
+"premium-referral": {
+  label: "⚡ Premium Referral",
+  color: "#f59e0b",
+  bg: "rgba(245,158,11,0.1)",
+},
 };
 
 function formatDate(d?: string) {

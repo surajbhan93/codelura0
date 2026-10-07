@@ -2,6 +2,6 @@
 
 import PublicPremiumReferralClient from "@/components/jobs/PublicPremiumReferralClient";
 
-export default function PremiumReferralsRoutePage() {
+export default function PremiumReferralsAliasRoutePage() {
   return <PublicPremiumReferralClient />;
 }

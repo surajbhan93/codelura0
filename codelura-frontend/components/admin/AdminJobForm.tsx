@@ -47,12 +47,19 @@ interface JobFormData {
   | "off-campus"
   | "walk-in"
   | "codelura"
+  | "premium-referral"
   | "";
   salary:       string;
   description:  string;
   content:      string;
   tags:         string;
   careerPageUrl:string;
+  // Premium Referral Specific Fields
+  creditCost?:       number;
+  recruiterEmail?:   string;
+  recruiterPhone?:   string;
+  referralLink?:     string;
+  applyInstructions?:string;
    // SEO
   seoMetaTitle: string;
   seoMetaDescription: string;
@@ -182,6 +189,7 @@ const JOB_TYPES = useMemo(() => [
   { value: "off-campus", label: "🏫 Off Campus", cls: "sel-offcampus" },
   { value: "walk-in", label: "🚶 Walk-In", cls: "sel-walkin" },
   { value: "codelura", label: "🚀 Codelura", cls: "sel-codelura" },
+  { value: "premium-referral", label: "⚡ Premium Referral", cls: "sel-premium" },
 ], []);
 
 const TOGGLE_ITEMS = useMemo(() => [
@@ -252,12 +260,17 @@ isFeatured: false, isExpired: false,
       location: "", type: "", salary: "",
       description: "", content: "", tags: "",
       careerPageUrl: "", 
+      creditCost: 10,
+      recruiterEmail: "",
+      recruiterPhone: "",
+      referralLink: "",
+      applyInstructions: "",
       seoMetaTitle: "",
-seoMetaDescription: "",
-seoKeywords: "",
-seoCanonicalUrl: "",
-seoOgImage: "",
-seoNoIndex: false,
+      seoMetaDescription: "",
+      seoKeywords: "",
+      seoCanonicalUrl: "",
+      seoOgImage: "",
+      seoNoIndex: false,
       isFeatured: false, isExpired: false,
       postedAt: today, deadline: "",
     };
@@ -628,7 +641,15 @@ ${defaultHashtags}`;
     if (!form.location.trim())      return toast.error("Location is required");
     if (!form.type)                 return toast.error("Job type is required");
     if (!form.description.trim())   return toast.error("Short description is required");
-    if (!form.careerPageUrl.trim()) return toast.error("Career page URL is required");
+
+    let finalCareerUrl = form.careerPageUrl?.trim() || "";
+    if (!finalCareerUrl) {
+      if (form.type === "premium-referral" && form.referralLink?.trim()) {
+        finalCareerUrl = form.referralLink.trim();
+      } else {
+        return toast.error("Career page URL / Referral apply link is required");
+      }
+    }
 
     try {
       setLoading(true);
@@ -651,7 +672,14 @@ ${defaultHashtags}`;
     .map((t) => t.trim())
     .filter(Boolean),
 
-  careerPageUrl: form.careerPageUrl,
+  careerPageUrl: finalCareerUrl,
+
+  // Premium Referral Specific Fields
+  creditCost: form.creditCost ? Number(form.creditCost) : 10,
+  recruiterEmail: form.recruiterEmail?.trim() || "",
+  recruiterPhone: form.recruiterPhone?.trim() || "",
+  referralLink: form.referralLink?.trim() || finalCareerUrl,
+  applyInstructions: form.applyInstructions || "",
 
   /* SEO */
   seo: {
@@ -964,6 +992,63 @@ isFeatured: false, isExpired: false,
               ))}
             </div>
           </Card>
+
+          {/* ══ SECTION 3.5 — PREMIUM REFERRAL SETTINGS ══ */}
+          {form.type === "premium-referral" && (
+            <Card title="⚡ Premium Referral Settings (Credit Locked)" delay={0.18}>
+              <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", marginBottom: 16, fontSize: 12, color: "#fcd34d" }}>
+                <p style={{ fontWeight: 700, marginBottom: 4 }}>🔒 Protected Referral Fields</p>
+                These details will be <strong>hidden</strong> from public users until they spend credits to unlock them.
+              </div>
+
+              <div className="ajf-grid-2" style={{ marginBottom: 14 }}>
+                <Field label="Unlock Cost (Credits) *">
+                  <TextInput
+                    type="number"
+                    placeholder="10"
+                    value={form.creditCost ?? 10}
+                    onChange={(e) => handleFormChange("creditCost", Number(e.target.value))}
+                  />
+                </Field>
+                <Field label="Direct Referral / Apply Link *">
+                  <TextInput
+                    placeholder="https://company.referrals.com/apply/xyz"
+                    value={form.referralLink ?? ""}
+                    onChange={(e) => {
+                      handleFormChange("referralLink", e.target.value);
+                      if (!form.careerPageUrl) handleFormChange("careerPageUrl", e.target.value);
+                    }}
+                  />
+                </Field>
+              </div>
+
+              <div className="ajf-grid-2" style={{ marginBottom: 14 }}>
+                <Field label="Recruiter / Referrer Email">
+                  <TextInput
+                    placeholder="recruiter@company.com"
+                    value={form.recruiterEmail ?? ""}
+                    onChange={(e) => handleFormChange("recruiterEmail", e.target.value)}
+                  />
+                </Field>
+                <Field label="Recruiter / Referrer Phone">
+                  <TextInput
+                    placeholder="+91 9876543210"
+                    value={form.recruiterPhone ?? ""}
+                    onChange={(e) => handleFormChange("recruiterPhone", e.target.value)}
+                  />
+                </Field>
+              </div>
+
+              <Field label="Special Application Instructions for Unlocked User">
+                <Textarea
+                  rows={3}
+                  placeholder="e.g. Please mention 'Referred by Codelura' in your application email subject line..."
+                  value={form.applyInstructions ?? ""}
+                  onChange={(e) => handleFormChange("applyInstructions", e.target.value)}
+                />
+              </Field>
+            </Card>
+          )}
 
           {/* ══ SECTION 4 — COMPENSATION & LINK ══ */}
           <Card title="💰 Compensation & Apply Link" delay={0.2}>

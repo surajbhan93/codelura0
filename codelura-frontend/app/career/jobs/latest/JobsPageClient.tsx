@@ -99,6 +99,12 @@ const TYPE_CONFIG: Record<string, { label: string; icon: typeof Briefcase; color
     color: "text-violet-700",
     bg: "bg-violet-50",
   },
+  "premium-referral": {
+    label: "Premium Referral",
+    icon: Briefcase,
+    color: "text-amber-800",
+    bg: "bg-amber-100",
+  },
 };
 
 function formatDate(d?: string) {

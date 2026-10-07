@@ -202,4 +202,12 @@ app.use("/api/payment-settings", paymentSettingsRoutes);
 app.use("/api/payment-clients", paymentClientRoutes);
 app.use("/api/users", usersRouter);
 
+// Credits System for Premium Referrals
+import creditsRoutes from "./routes/credits.routes.js";
+app.use("/api/credits", express.json(), creditsRoutes);
+
+// Referral Student Comments & Reviews
+import referralCommentRoutes from "./routes/referralComment.routes.js";
+app.use("/api/referral-comments", express.json(), referralCommentRoutes);
+
 export default app;

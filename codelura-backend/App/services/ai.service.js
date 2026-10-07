@@ -147,7 +147,12 @@ Required JSON structure:
 "seoKeywords": "",
 "canonicalUrl": "",
 "socialOgImageUrl": "",
-"socialSharingPost": ""
+"socialSharingPost": "",
+"recruiterEmail": "",
+"recruiterPhone": "",
+"referralLink": "",
+"applyInstructions": "",
+"creditCost": 10
 }
 
 Rules:
@@ -190,6 +195,7 @@ Rules:
    Off Campus
    Walk-In
    Codelura
+   Premium Referral
 
 If the source clearly indicates the type, use it.
 Otherwise return an empty string.
@@ -278,6 +284,23 @@ Example:
     🔗 Application: Apply through the form provided above.
 
     #Hiring #[Company] #[SkillTags] #Freshers #TechJobs #JobOpening
+
+20. recruiterEmail:
+    Extract recruiter, referrer, or contact email if mentioned in the job source.
+    If unavailable, return an empty string.
+
+21. recruiterPhone:
+    Extract recruiter phone number / WhatsApp contact if mentioned in the source.
+    If unavailable, return an empty string.
+
+22. referralLink:
+    Extract direct referral link or referral application URL. If same as careerUrl, return it.
+
+23. applyInstructions:
+    Extract any special referral apply instructions (e.g. "Email your resume with Subject 'Referral SDE1' to recruiter").
+
+24. creditCost:
+    Suggest a recommended credit cost (integer: 10 to 50) for unlocking this referral based on seniority/tier. Default is 10.
 
 IMPORTANT:
 
@@ -695,6 +718,11 @@ Follow me and drop your email in the comments section — or join our community 
     canonicalUrl,
     socialOgImageUrl: (parsed.socialOgImageUrl || "").trim(),
     socialSharingPost,
+    recruiterEmail: cleanStr(parsed.recruiterEmail || ""),
+    recruiterPhone: cleanStr(parsed.recruiterPhone || ""),
+    referralLink: (parsed.referralLink || parsed.careerUrl || fallbackUrl || "").trim(),
+    applyInstructions: cleanStr(parsed.applyInstructions || ""),
+    creditCost: Number(parsed.creditCost) || 10,
   };
 }
 

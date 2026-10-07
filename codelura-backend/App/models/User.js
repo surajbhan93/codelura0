@@ -63,7 +63,7 @@ referredBy: {
 
 walletBalance: {
   type: Number,
-  default: 0,
+  default: 30,
 },
     // 🔐 Password reset
     resetPasswordToken: String,

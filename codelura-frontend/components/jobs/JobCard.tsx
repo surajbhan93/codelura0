@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import UnlockReferralButton from "./UnlockReferralButton";
 
 export interface Job {
   _id: string;
@@ -9,7 +10,7 @@ export interface Job {
   company: string;
   companyLogo?: string;
   location: string;
-  type: "internship" | "full-time" | "part-time" | "contract";
+  type: string;
   salary?: string;
   tags: string[];
   careerPageUrl: string;
@@ -18,6 +19,8 @@ export interface Job {
   isExpired: boolean;
   postedAt?: string;
   deadline?: string;
+  creditCost?: number;
+  isUnlocked?: boolean;
 }
 
 interface JobCardProps {
@@ -31,6 +34,10 @@ const TYPE_BADGE: Record<string, { cls: string; label: string }> = {
   "full-time": { cls: "badge-fulltime",   label: "Full-Time"  },
   "part-time": { cls: "badge-parttime",   label: "Part-Time"  },
   contract:    { cls: "badge-contract",   label: "Contract"   },
+  "off-campus":{ cls: "badge-offcampus",  label: "Off Campus" },
+  "walk-in":   { cls: "badge-walkin",     label: "Walk-In"    },
+  codelura:    { cls: "badge-codelura",   label: "Codelura"   },
+  "premium-referral": { cls: "badge-premium", label: "⚡ Premium Referral" },
 };
 
 function formatDate(d?: string) {
@@ -160,6 +167,10 @@ export default function JobCard({ job, expired = false, featured = false }: JobC
         .badge-fulltime   { background: #e6f5ed; color: #1a7a4a; }
         .badge-parttime   { background: #fef9e6; color: #7a5c00; }
         .badge-contract   { background: #f3e6f9; color: #5c1a8a; }
+        .badge-offcampus  { background: #e0e7ff; color: #3730a3; }
+        .badge-walkin     { background: #ffedd5; color: #9a3412; }
+        .badge-codelura   { background: #f3e8ff; color: #6b21a8; }
+        .badge-premium    { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 700; }
         .badge-location   { background: #f2ede4; color: #7a7065; border: 1px solid #ddd5c8; }
         .badge-salary     { background: #e6f9ef; color: #1a6640; border: 1px solid #b3e6cc; }
 
@@ -239,7 +250,9 @@ export default function JobCard({ job, expired = false, featured = false }: JobC
           </div>
           <div>
             <div className="jc-company">{job.company}</div>
-            <div className="jc-title">{job.title}</div>
+            <Link href={`/jobs-Alerts/${job.slug}`} style={{ textDecoration: "none" }}>
+              <div className="jc-title" style={{ cursor: "pointer" }}>{job.title}</div>
+            </Link>
           </div>
         </div>
 
@@ -278,17 +291,43 @@ export default function JobCard({ job, expired = false, featured = false }: JobC
             }
           </span>
           {!expired && (
-            <a
-              href={job.careerPageUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="jc-apply"
-            >
-              Apply Now
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 6h8M6 2l4 4-4 4" />
-              </svg>
-            </a>
+            job.type === "premium-referral" ? (
+              job.isUnlocked ? (
+                <a
+                  href={job.careerPageUrl || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="jc-apply"
+                  style={{ background: "#059669" }}
+                >
+                  Apply Referral
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 6h8M6 2l4 4-4 4" />
+                  </svg>
+                </a>
+              ) : (
+                <UnlockReferralButton
+                  referralId={job._id}
+                  creditCost={job.creditCost || 10}
+                  isUnlocked={job.isUnlocked}
+                  onUnlockedSuccess={() => {
+                    job.isUnlocked = true;
+                  }}
+                />
+              )
+            ) : (
+              <a
+                href={job.careerPageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="jc-apply"
+                >
+                Apply Now
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 6h8M6 2l4 4-4 4" />
+                </svg>
+              </a>
+            )
           )}
         </div>
       </div>
