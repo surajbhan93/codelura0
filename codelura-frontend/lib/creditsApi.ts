@@ -81,3 +81,34 @@ export const getMyUnlockedReferrals = async () => {
   const res = await api.get("/credits/my-unlocked-referrals");
   return res.data.referrals || [];
 };
+
+export const getAdminSubscriptions = async () => {
+  const res = await api.get("/credits/admin/subscriptions");
+  return res.data;
+};
+
+export interface AdminUnlockedReferralItem {
+  _id: string;
+  user: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    avatar?: string;
+  };
+  job: {
+    _id?: string;
+    title?: string;
+    company?: string;
+    slug?: string;
+    creditCost?: number;
+  };
+  creditCost: number;
+  unlockedAt: string;
+}
+
+export const getAdminUnlockedReferrals = async () => {
+  const res = await api.get("/credits/admin/unlocked-referrals");
+  return res.data;
+};
+

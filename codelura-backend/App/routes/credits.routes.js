@@ -14,6 +14,8 @@ import {
   adminUpdatePackage,
   adminDeletePackage,
   adminAdjustCredits,
+  adminGetSubscriptions,
+  adminGetUnlockedReferrals,
 } from "../controllers/credits.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { adminOnly } from "../middleware/adminOnly.js";
@@ -38,6 +40,8 @@ router.post("/verify-payment", authMiddleware, verifyCreditPayment);
 router.post("/referral/:id/unlock", authMiddleware, unlockReferral);
 
 /* ── Admin Credit Routes ── */
+router.get("/admin/subscriptions", authMiddleware, adminOnly, adminGetSubscriptions);
+router.get("/admin/unlocked-referrals", authMiddleware, adminOnly, adminGetUnlockedReferrals);
 router.get("/admin/packages", authMiddleware, adminOnly, adminGetPackages);
 router.post("/admin/packages", authMiddleware, adminOnly, adminCreatePackage);
 router.put("/admin/packages/:id", authMiddleware, adminOnly, adminUpdatePackage);

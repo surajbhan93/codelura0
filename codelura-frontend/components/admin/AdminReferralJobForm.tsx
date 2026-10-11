@@ -535,6 +535,33 @@ export default function AdminReferralJobForm({
               />
             </div>
 
+            {/* Slug */}
+            <div>
+              <label className="text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                <span>URL Slug (Permalink) *</span>
+                <span className="text-[10px] text-amber-400 font-mono">Auto-generated</span>
+              </label>
+              <input
+                type="text"
+                value={form.slug}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    slug: e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9-]/g, "-")
+                      .replace(/-+/g, "-"),
+                  }))
+                }
+                placeholder="e.g. sde-1-electronic-arts"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-amber-300 font-mono placeholder-slate-500 focus:outline-none focus:border-violet-500"
+                required
+              />
+              <p className="text-[10px] text-slate-500 mt-1">
+                URL: <span className="text-slate-400 font-mono">/jobs-Alerts/{form.slug || "job-slug"}</span>
+              </p>
+            </div>
+
             {/* Company */}
             <div>
               <label className="text-xs font-semibold text-slate-300 mb-1.5 block">

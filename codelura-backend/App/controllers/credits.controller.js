@@ -334,6 +334,7 @@ export const verifyCreditPayment = async (req, res) => {
       userId,
       type: "PURCHASE",
       amount: pkg.credits,
+      pricePaid: pkg.price || 0,
       balanceBefore,
       balanceAfter,
       referenceId: razorpay_payment_id || `pay_test_${Date.now()}`,
@@ -583,3 +584,157 @@ export const adminAdjustCredits = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+/**
+ * GET /api/credits/admin/subscriptions
+ * Fetch all student subscriptions, free trial claims, and paid credit purchases for Admin Panel
+ */
+export const adminGetSubscriptions = async (req, res) => {
+  try {
+    const query = {
+      $or: [
+        { type: "PURCHASE" },
+        { referenceType: "FREE_TRIAL" },
+        { description: { $regex: /Free Trial|Purchased|Pack/i } },
+      ],
+    };
+
+    const transactions = await CreditTransaction.find(query)
+      .sort({ createdAt: -1 })
+      .populate("userId", "name email avatar phone role")
+      .lean();
+
+    let totalRevenue = 0;
+    let freeTrialCount = 0;
+    let paidCount = 0;
+
+    const formattedList = transactions.map((tx) => {
+      const isFree =
+        tx.referenceType === "FREE_TRIAL" ||
+        tx.pricePaid === 0 ||
+        (tx.description && tx.description.toLowerCase().includes("free trial"));
+      const price = isFree ? 0 : tx.pricePaid || 0;
+
+      if (isFree) {
+        freeTrialCount++;
+      } else {
+        paidCount++;
+        totalRevenue += price;
+      }
+
+      return {
+        _id: tx._id,
+        user: tx.userId || { name: "Student Candidate", email: "candidate@codelura.com" },
+        type: tx.type,
+        creditsGranted: tx.amount,
+        pricePaid: price,
+        isFree,
+        referenceId: tx.referenceId || "N/A",
+        referenceType: tx.referenceType,
+        description: tx.description,
+        createdAt: tx.createdAt,
+      };
+    });
+
+    return res.json({
+      success: true,
+      stats: {
+        totalSubscriptions: formattedList.length,
+        totalRevenue,
+        freeTrialCount,
+        paidCount,
+      },
+      subscriptions: formattedList,
+    });
+  } catch (error) {
+    console.error("ADMIN GET SUBSCRIPTIONS ERROR:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/credits/admin/unlocked-referrals
+ * Fetch all premium referral unlocks by users for Admin Panel
+ */
+export const adminGetUnlockedReferrals = async (req, res) => {
+  try {
+    const unlocks = await PremiumReferralUnlock.find()
+      .sort({ unlockedAt: -1 })
+      .populate("userId", "name email phone avatar role createdAt")
+      .populate("referralId", "title company slug creditCost location type")
+      .lean();
+
+    let totalCreditsSpent = 0;
+    const uniqueUserIds = new Set();
+
+    const formattedUnlocks = unlocks.map((u) => {
+      const cost = u.creditCost || u.referralId?.creditCost || 10;
+      totalCreditsSpent += cost;
+      if (u.userId?._id) {
+        uniqueUserIds.add(u.userId._id.toString());
+      }
+
+      return {
+        _id: u._id,
+        user: {
+          _id: u.userId?._id || null,
+          name: u.userId?.name || "Unknown User",
+          email: u.userId?.email || "N/A",
+          phone: u.userId?.phone || "N/A",
+          avatar: u.userId?.avatar || "",
+        },
+        job: {
+          _id: u.referralId?._id || null,
+          title: u.referralId?.title || "Deleted Referral Job",
+          company: u.referralId?.company || "N/A",
+          slug: u.referralId?.slug || "#",
+          creditCost: cost,
+        },
+        creditCost: cost,
+        unlockedAt: u.unlockedAt || u.createdAt,
+      };
+    });
+
+    // Calculate total payments / revenue collected from credit purchases
+    const userPurchases = await CreditTransaction.aggregate([
+      {
+        $match: {
+          type: "PURCHASE",
+          pricePaid: { $gt: 0 },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$pricePaid" },
+          totalPurchasedCredits: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    const totalRevenue = userPurchases[0]?.totalRevenue || 0;
+    const totalPurchasedCredits = userPurchases[0]?.totalPurchasedCredits || 0;
+
+    // Estimate rupee value for unlocked credits (defaulting to 1 credit = ~₹1 or actual average price)
+    const avgPricePerCredit =
+      totalPurchasedCredits > 0 ? totalRevenue / totalPurchasedCredits : 0.83;
+    const estimatedUnlockRevenue = Math.round(totalCreditsSpent * avgPricePerCredit);
+
+    return res.json({
+      success: true,
+      stats: {
+        totalUnlocks: formattedUnlocks.length,
+        totalCreditsSpent,
+        uniqueUsersCount: uniqueUserIds.size,
+        totalRevenue,
+        estimatedUnlockRevenue,
+      },
+      unlocks: formattedUnlocks,
+    });
+  } catch (error) {
+    console.error("ADMIN GET UNLOCKED REFERRALS ERROR:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+

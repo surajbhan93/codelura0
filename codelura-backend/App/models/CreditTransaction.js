@@ -38,6 +38,10 @@ const creditTransactionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    pricePaid: {
+      type: Number,
+      default: 0,
+    },
     paymentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Payment",
