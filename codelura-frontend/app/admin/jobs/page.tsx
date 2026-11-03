@@ -643,8 +643,19 @@ const styles = `
   @keyframes spin { to { transform:rotate(360deg); } }
 
   @media(max-width:640px) {
-    .aaj-root { padding:24px 16px 60px; }
-    .aaj-toolbar { flex-direction:column; }
-    .aaj-search-wrap { width:100%; }
+    .aaj-root { padding:20px 14px 56px; }
+    .aaj-header { margin-bottom:20px; }
+    .aaj-add-btn { padding:9px 16px; font-size:12.5px; }
+    .aaj-toolbar { flex-direction:column; align-items:stretch; }
+    .aaj-search-wrap, .aaj-select { width:100%; min-width:0; }
+    .aaj-refresh { align-self:flex-end; }
+  }
+
+  @media(max-width:420px) {
+    .aaj-stats { grid-template-columns:repeat(2,1fr); gap:10px; }
+    .aaj-stat { padding:14px 12px; gap:10px; }
+    .aaj-stat-icon { width:34px; height:34px; }
+    .aaj-stat-val { font-size:19px; }
+    .aaj-stat-lbl { font-size:10px; }
   }
 `;
